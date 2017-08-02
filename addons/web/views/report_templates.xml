@@ -146,19 +146,14 @@
     <!-- External layouts styles -->
 
     <template id="address_layout">
-        <t t-set="colclass" t-value="'col-5 offset-7'"/>
         <t t-if="address">
-            <div class="row">
-                <t t-if="information_block">
-                    <t t-set="colclass" t-value="'col-5 offset-1'"/>
-                    <div name="information_block" class="col-6">
-                        <t t-raw="information_block"/>
-                    </div>
-                </t>
-                <div name="address" t-att-class="colclass">
-                    <t t-raw="address"/>
-                </div>
+            <div t-if="information_block" name="information_block" t-att-class="address_justification and company.address_justification == 'left' and 'float-right' or 'float-left'">
+                <t t-raw="information_block"/>
             </div>
+            <div name="address" t-att-class="address_justification and company.address_justification == 'left' and 'float-left' or 'float-right'">
+                <t t-raw="address"/>
+            </div>
+            <div class="clearfix mb8"/>
         </t>
     </template>
 
