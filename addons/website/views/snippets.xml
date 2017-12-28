@@ -930,18 +930,18 @@
         </div>
     </div>
 
-    <div data-js="parallax" data-selector=".parallax">
+    <div data-js="parallax" data-selector="section">
         <div class="dropdown-submenu">
-            <a tabindex="-1" href="#" class="dropdown-item"><i class="fa fa-clock-o"/>Scroll Speed</a>
-            <div class="dropdown-menu" role="menu" name="parallax-scroll">
-                <a href="#" class="dropdown-item" role="menuitem" data-scroll="0">No-scroll</a>
-                <div class="dropdown-divider" role="separator"/>
-                <a href="#" class="dropdown-item" role="menuitem" data-scroll="1">Fixed</a>
-                <div class="dropdown-divider" role="separator"/>
-                <a href="#" class="dropdown-item" role="menuitem" data-scroll="0.6">Very Slow</a>
-                <a href="#" class="dropdown-item" role="menuitem" data-scroll="1.2">Slow</a>
-                <a href="#" class="dropdown-item" role="menuitem" data-scroll="1.6">Fast</a>
-                <a href="#" class="dropdown-item" role="menuitem" data-scroll="2">Very Fast</a>
+            <a tabindex="-1" href="#" class="dropdown-item"><i class="fa fa-magic"/>Parallax</a>
+            <div class="dropdown-menu" data-no-preview="true">
+                <a href="#" class="dropdown-item" data-scroll="0" data-select-class="">None</a>
+                <div class="dropdown-item"/>
+                <a href="#" class="dropdown-item" data-scroll="1" data-select-class="parallax s_parallax_is_fixed">Fixed</a>
+                <div class="dropdown-divider"/>
+                <a href="#" class="dropdown-item" data-scroll="0.6" data-select-class="parallax">Very Slow</a>
+                <a href="#" class="dropdown-item" data-scroll="1.2" data-select-class="parallax">Slow</a>
+                <a href="#" class="dropdown-item" data-scroll="1.6" data-select-class="parallax">Fast</a>
+                <a href="#" class="dropdown-item" data-scroll="2" data-select-class="parallax">Very Fast</a>
             </div>
         </div>
     </div>
