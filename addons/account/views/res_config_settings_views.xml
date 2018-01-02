@@ -210,6 +210,10 @@
                                     <div class="text-muted">
                                         Use follow-up levels and schedule actions
                                     </div>
+
+                                     <div id="account_reports_followup" class="content-group" attrs="{'invisible': [('module_account_reports_followup', '=', False)]}">
+                                        <!--For completion by module-->
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-12 col-lg-6 o_setting_box">
