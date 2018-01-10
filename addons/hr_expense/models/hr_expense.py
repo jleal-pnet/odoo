@@ -129,6 +129,9 @@ class HrExpense(models.Model):
             account = self.product_id.product_tmpl_id._get_product_accounts()['expense']
             if account:
                 self.account_id = account
+            return {'domain': {'product_uom_id': [('category_id', '=', self.product_id.uom_id.category_id.id)]}}
+        else:
+            return {'domain': {'product_uom_id': []}}
 
     @api.onchange('product_uom_id')
     def _onchange_product_uom_id(self):
@@ -466,7 +469,30 @@ class HrExpense(models.Model):
         })
         if account:
             custom_values['account_id'] = account.id
-        return super(HrExpense, self).message_new(msg_dict, custom_values)
+        expense = super(HrExpense, self).message_new(msg_dict, custom_values)
+        self._send_expense_success_mail(msg_dict, expense)
+        return expense
+
+    def _send_expense_success_mail(self, msg_dict, expense):
+        mail_template_id = 'hr_expense.hr_expense_template_register' if expense.employee_id.user_id else 'hr_expense.hr_expense_template_register_no_user'
+        expense_template = self.env.ref(mail_template_id)
+        rendered_body = expense_template.render({'expense': expense}, engine='ir.qweb')
+        body = self.env['mail.thread']._replace_local_links(rendered_body)
+        if expense.employee_id.user_id:
+            self.message_notify(
+                partner_ids=[expense.employee_id.user_id.partner_id.id],
+                subject='Re: %s' % msg_dict.get('subject', ''),
+                body=body,
+                notif_layout='mail.mail_notification_light'
+            )
+        else:
+            self.env['mail.mail'].create({
+                'body_html': body,
+                'subject': 'Re: %s' % msg_dict.get('subject', ''),
+                'email_to': msg_dict.get('email_from', False),
+                'auto_delete': True,
+                'references': msg_dict.get('message_id'),
+            }).send()
 
 
 class HrExpenseSheet(models.Model):
