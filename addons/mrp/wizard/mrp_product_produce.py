@@ -12,6 +12,27 @@ class MrpProductProduce(models.TransientModel):
     _name = "mrp.product.produce"
     _description = "Record Production"
 
+    @api.depends('product_qty')
+    def _compute_pending_production(self):
+        for product_produce in self:
+            main_product_moves = product_produce.production_id.move_finished_ids.filtered(lambda x: x.product_id.id == product_produce.production_id.product_id.id)
+            todo_quantity = product_produce.production_id.product_qty - (product_produce.product_qty + sum(main_product_moves.mapped('quantity_done')))
+            product_produce.is_pending_production = todo_quantity > 0.0
+
+    def _get_todo(self, production):
+        """ This method will return remaining todo quantity of production. """
+        main_product_moves = production.move_finished_ids.filtered(lambda x: x.product_id.id == production.product_id.id)
+        todo_quantity = production.product_qty - sum(main_product_moves.mapped('quantity_done'))
+        todo_quantity = todo_quantity if (todo_quantity > 0) else 0
+        return todo_quantity
+
+    def continue_production(self):
+        self.ensure_one()
+        self.do_produce()
+        action = self.production_id.open_produce_product()
+        action['context'] = {'active_id': self.production_id.id}
+        return action
+
     @api.model
     def default_get(self, fields):
         res = super(MrpProductProduce, self).default_get(fields)
@@ -19,14 +40,11 @@ class MrpProductProduce(models.TransientModel):
             production = self.env['mrp.production'].browse(self._context['active_id'])
             serial_finished = (production.product_id.tracking == 'serial')
             todo_uom = production.product_uom_id.id
+            todo_quantity = self._get_todo(production)
             if serial_finished:
                 todo_quantity = 1.0
                 if production.product_uom_id.uom_type != 'reference':
                     todo_uom = self.env['uom.uom'].search([('category_id', '=', production.product_uom_id.category_id.id), ('uom_type', '=', 'reference')]).id
-            else:
-                main_product_moves = production.move_finished_ids.filtered(lambda x: x.product_id.id == production.product_id.id)
-                todo_quantity = production.product_qty - sum(main_product_moves.mapped('quantity_done'))
-                todo_quantity = todo_quantity if (todo_quantity > 0) else 0
             if 'production_id' in fields:
                 res['production_id'] = production.id
             if 'product_id' in fields:
@@ -47,6 +65,7 @@ class MrpProductProduce(models.TransientModel):
     lot_id = fields.Many2one('stock.production.lot', string='Lot/Serial Number')
     produce_line_ids = fields.One2many('mrp.product.produce.line', 'product_produce_id', string='Product to Track')
     product_tracking = fields.Selection(related="product_id.tracking")
+    is_pending_production = fields.Boolean(compute='_compute_pending_production')
 
     @api.multi
     def do_produce(self):
@@ -68,7 +87,7 @@ class MrpProductProduce(models.TransientModel):
                 'state': 'progress',
                 'date_start': datetime.now(),
             })
-        return {'type': 'ir.actions.act_window_close'}
+        return {'type': 'ir.actions.client', 'tag': 'reload'}
 
     @api.multi
     def check_finished_move_lots(self):

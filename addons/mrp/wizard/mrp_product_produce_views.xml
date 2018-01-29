@@ -18,6 +18,7 @@
                             </div>
                             <field name="product_tracking" invisible="1"/>
                             <field name="lot_id" attrs="{'invisible': [('product_tracking', '=', 'none')], 'required': [('product_tracking', '!=', 'none')]}" domain="[('product_id', '=', product_id)]" context="{'default_product_id': product_id}"/>
+                            <field name="is_pending_production" invisible="1"/>
                         </group>
                     </group>
                     <group>
@@ -35,8 +36,9 @@
                         </field>
                     </group>
                     <footer>
-                        <button name="do_produce" type="object" string="Record Production" class="btn-primary"/>
-                        <button string="Cancel" class="btn-secondary" special="cancel" />
+                        <button name="do_produce" type="object" string="Save &amp; Close" class="btn-primary"/>
+                        <button name="continue_production" attrs="{'invisible':[('is_pending_production', '=', False)]}" type="object" string="Save &amp; New" class="btn-primary"/>
+                        <button string="Discard" class="btn-default" special="cancel" options='{"reload": 1}'/>
                     </footer>
                 </form>
             </field>
