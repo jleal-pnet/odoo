@@ -151,6 +151,7 @@ class ProductTemplate(models.Model):
         help="Small-sized image of the product. It is automatically "
              "resized as a 64x64px image, with aspect ratio preserved. "
              "Use this field anywhere a small image is required.")
+    image_raw = fields.Binary()
 
     @api.depends('product_variant_ids')
     def _compute_product_variant_id(self):
@@ -315,7 +316,7 @@ class ProductTemplate(models.Model):
         ''' Store the initial standard price in order to be able to retrieve the cost of a product template for a given date'''
         # TDE FIXME: context brol
         for vals in vals_list:
-            tools.image_resize_images(vals)
+            tools.image_resize_images(vals, raw_name='image_raw')
         templates = super(ProductTemplate, self).create(vals_list)
         if "create_product_product" not in self._context:
             templates.with_context(create_from_tmpl=True).create_variant_ids()
@@ -340,7 +341,7 @@ class ProductTemplate(models.Model):
 
     @api.multi
     def write(self, vals):
-        tools.image_resize_images(vals)
+        tools.image_resize_images(vals, raw_name='image_raw')
         res = super(ProductTemplate, self).write(vals)
         if 'attribute_line_ids' in vals or vals.get('active'):
             self.create_variant_ids()

@@ -53,7 +53,7 @@ sAnimations.registry.WebsiteSaleOptions = sAnimations.Class.extend({
         }).then(function (modal) {
             var $modal = $(modal);
 
-            $modal.find('img:first').attr("src", "/web/image/product.product/" + product_id + "/image_medium");
+            $modal.find('img:first').attr("src", "/web/image/product.product/" + product_id + "/display_image/512x512");
 
             // disable opacity on the <form> if currently active (in case the product is
             // not published), as it interferes with bs modals

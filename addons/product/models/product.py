@@ -123,6 +123,7 @@ class ProductProduct(models.Model):
     image_medium = fields.Binary(
         "Medium-sized image", compute='_compute_images', inverse='_set_image_medium',
         help="Image of the product variant (Medium-sized image of product template if false).")
+    image_variant_raw = fields.Binary()
 
     standard_price = fields.Float(
         'Cost', company_dependent=True,
@@ -267,13 +268,10 @@ class ProductProduct(models.Model):
 
     @api.one
     def _set_image_value(self, value):
-        if isinstance(value, pycompat.text_type):
-            value = value.encode('ascii')
-        image = tools.image_resize_image_big(value)
         if self.product_tmpl_id.image:
-            self.image_variant = image
+            self.image_variant = value
         else:
-            self.product_tmpl_id.image = image
+            self.product_tmpl_id.image = value
 
     @api.one
     def _get_pricelist_items(self):
@@ -310,6 +308,14 @@ class ProductProduct(models.Model):
     @api.multi
     def write(self, values):
         ''' Store the standard price change in order to be able to retrieve the cost of a product for a given date'''
+        image_variant = values.get('image_variant')
+        if image_variant:
+            if isinstance(image_variant, pycompat.text_type):
+                image_variant = image_variant.encode('ascii')
+            values['image_variant'] = tools.image_resize_image_big(image_variant)
+            values['image_variant_raw'] = image_variant
+        elif 'image_variant' in values:
+            values['image_variant_raw'] = False
         res = super(ProductProduct, self).write(values)
         if 'standard_price' in values:
             self._set_standard_price(values['standard_price'])
