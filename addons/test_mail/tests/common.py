@@ -77,7 +77,7 @@ class BaseFunctionalTest(common.SavepointCase):
                                                      (partner.name, real, expected))
                 if partner_notif:
                     self.assertTrue(all(n.is_email == (notif_type == 'email') for n in partner_notif))
-                    self.assertTrue(all(n.is_read == (notif_read == 'read') for n in partner_notif),
+                    self.assertTrue(all(n.is_read != (notif_read == 'read') for n in partner_notif),
                                     'Invalid read status for %s' % partner.name)
 
             # for simplification, limitate to single message asserts
