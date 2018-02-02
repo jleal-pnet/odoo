@@ -4,6 +4,7 @@ odoo.define('mail.model.Mailbox', function (require) {
 var SearchableThread = require('mail.model.SearchableThread');
 
 var core = require('web.core');
+var session = require('web.session');
 
 var _t = core._t;
 
@@ -142,11 +143,11 @@ var Mailbox = SearchableThread.extend({
      */
     markAllMessagesAsRead: function (domain) {
         if (this._id === 'mailbox_inbox' && this.getMailboxCounter() > 0) {
+            this.trigger_up('move_messages_to_history', { messages: this.getMessages() });
             return this._rpc({
                 model: 'mail.message',
                 method: 'mark_all_as_read',
                 kwargs: {
-                    channel_ids: [],
                     domain: domain,
                 },
             });
@@ -201,6 +202,11 @@ var Mailbox = SearchableThread.extend({
             return [['needaction', '=', true]];
         } else if (this._id === 'mailbox_starred') {
             return [['starred', '=', true]];
+        } else if (this._id === 'mailbox_history') {
+            return [
+                ['notification_ids.active', '=', false],
+                ['notification_ids.res_partner_id', '=', session.partner_id]
+            ];
         } else if (this._id === 'mailbox_moderation') {
             return [['need_moderation', '=', true]];
         } else {

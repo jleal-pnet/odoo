@@ -117,12 +117,13 @@ var SearchableThread = Thread.extend({
      * @override
      * @private
      * @param {mail.model.Message} message
-     * @param {Object} options
+     * @param {Object} [options={}]
      * @param {Array} [options.domain=[]]
      * @param {boolean} [options.incrementUnread=false]
      */
     _addMessage: function (message, options) {
         this._super.apply(this, arguments);
+        options = options || {};
         var cache = this._getCache(options.domain || []);
         var index = _.sortedIndex(cache.messages, message, function (msg) {
             return msg.getID();
@@ -162,7 +163,8 @@ var SearchableThread = Thread.extend({
             args: [domain],
             kwargs: {
                 limit: this._FETCH_LIMIT,
-                context: session.user_context
+                context: session.user_context,
+                active_test: this.getID() !== "mailbox_history"
             },
         }).then(function (messages) {
             if (!cache.allHistoryLoaded) {
