@@ -5,6 +5,17 @@ from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
 
+class InvoiceAnalytic(models.Model):
+    _name = 'invoice.sale.analytic.lines'
+    _description = 'Invoiced analytic quantity'
+    _table = 'invoice_sale_analytic_lines'
+    _rec_name = 'analytic_line_id'
+
+    analytic_line_id = fields.Many2one('account.analytic.line', string="Analytic Line", ondelete='cascade')
+    invoice_line_id = fields.Many2one('account.invoice.line', string="Invoice Line", ondelete='cascade')
+    qty_invoiced = fields.Float("Invoiced quantity", default=0)
+
+
 class AccountAnalyticLine(models.Model):
     _inherit = "account.analytic.line"
 
@@ -15,6 +26,25 @@ class AccountAnalyticLine(models.Model):
         return [('qty_delivered_method', '=', 'analytic')]
 
     so_line = fields.Many2one('sale.order.line', string='Sales Order Line', domain=lambda self: self._default_sale_line_domain())
+    invoice_line_ids = fields.Many2many('account.invoice.line', 'invoice_sale_analytic_lines', 'analytic_line_id', 'invoice_line_id', "Invoiced Analytic Quantities")
+    invoice_status = fields.Selection([
+        ('none', 'None invoiced'),
+        ('partially', 'Partially Invoiced'),
+        ('fully', 'Fully invoiced'),
+    ], compute='_compute_invoice_status')
+    sale_analytic_line_ids = fields.One2many('invoice.sale.analytic.lines', 'analytic_line_id', string="Invoiced analytic Quantities")
+
+    @api.depends('sale_analytic_line_ids.qty_invoiced')
+    def _compute_invoice_status(self):
+        for analytic_line in self:
+            total = sum(analytic_line.sale_analytic_line_ids.mapped('qty_invoiced'))
+            if total:
+                if analytic_line.unit_amount < total:
+                    analytic_line.invoice_status = 'partially'
+                else:
+                    analytic_line.invoice_status = 'fully'
+            else:
+                analytic_line.invoice_status = 'none'
 
     @api.model
     def create(self, values):

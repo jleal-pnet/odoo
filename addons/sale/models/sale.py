@@ -1057,6 +1057,15 @@ class SaleOrderLine(models.Model):
             'account_analytic_id': self.order_id.analytic_account_id.id,
             'analytic_tag_ids': [(6, 0, self.analytic_tag_ids.ids)],
         }
+        if self.qty_delivered_method == 'analytic':
+            vals = []
+            for analytic_line in self.analytic_line_ids:
+                if analytic_line.invoice_status != 'fully':
+                    vals.append((0, 0, {
+                        'analytic_line_id': analytic_line.id,
+                        'qty_invoiced': 0.0
+                    }))
+            res['sale_analytic_line_ids'] = vals
         return res
 
     @api.multi

@@ -41,6 +41,12 @@ class AccountInvoice(models.Model):
         self.partner_shipping_id = addr and addr.get('delivery')
 
     @api.multi
+    def invoice_validate(self):
+        result = super(AccountInvoice, self).invoice_validate()
+
+        return result
+
+    @api.multi
     def action_invoice_paid(self):
         res = super(AccountInvoice, self).action_invoice_paid()
         todo = set()
@@ -101,6 +107,8 @@ class AccountInvoiceLine(models.Model):
         'sale_order_line_invoice_rel',
         'invoice_line_id', 'order_line_id',
         string='Sales Order Lines', readonly=True, copy=False)
+    sale_analytic_line_ids = fields.One2many('invoice.sale.analytic.lines', 'invoice_line_id', string="Invoiced analytic Quantities")
+    analytic_line_ids = fields.Many2many('account.analytic.line', 'invoice_sale_analytic_lines', 'invoice_line_id', 'analytic_line_id', "Invoiced Analytic Quantities")
     layout_category_id = fields.Many2one('sale.layout_category', string='Section')
     layout_category_sequence = fields.Integer(string='Layout Sequence')
     # TODO: remove layout_category_sequence in master or make it work properly
