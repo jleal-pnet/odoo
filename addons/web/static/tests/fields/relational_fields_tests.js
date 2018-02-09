@@ -10327,6 +10327,64 @@ QUnit.module('relational_fields', {
         form.destroy();
     });
 
+    QUnit.test('fieldmany2many tags with edit record', function (assert) {
+        assert.expect(5);
+
+        this.data.partner.fields.partner_ids = {string: "Partner", type: "many2many", relation: 'partner'};
+        var form = createView({
+            View: FormView,
+            model: 'partner',
+            data: this.data,
+            arch:'<form string="Partners">' +
+                    '<field name="partner_ids" widget="many2many_tags"/>' +
+                    '<field name="timmy" widget="many2many_tags" options="{\'color_field\': \'color\', \'no_edit\': True}"/>' +
+                '</form>',
+            archs: {
+                'partner,false,form': '<form string="Partners"><field name="display_name"/></form>',
+            },
+            mockRPC: function (route, args) {
+                if (args.method === 'get_formview_id' && args.model === 'partner') {
+                    return $.when(false);
+                } else if (args.method === 'load_views' && args.model === 'partner') {
+                    assert.ok('form view should open');
+                }
+                return this._super.apply(this, arguments);
+            }
+        });
+
+        // add a tag on field timmy
+        var $input = form.$('.o_field_many2manytags[name="timmy"] input');
+        $input.click(); // opens the dropdown
+        $input.autocomplete('widget').find('li:first()').click(); // adds a tag
+
+        // test case for without edit options
+        form.$('.o_field_many2manytags[name="timmy"] > span').click();
+        assert.strictEqual(form.$('.o_field_many2manytags[name="timmy"] > span .o_tag_dropdown_options').length, 0,
+            "m2m option menu should not visible");
+
+        //add a tag on field partner_ids
+        $input = form.$('.o_field_many2manytags[name="partner_ids"] input');
+        $input.click(); // opens the dropdown
+        $input.autocomplete('widget').find('li:first()').click(); // adds a tag
+
+        // test case for with edit options
+        var $tag = $('.o_field_many2manytags[name="partner_ids"] > span').first();
+        $tag.click();
+        assert.strictEqual($tag.find('.o_tag_dropdown_options').length, 1, "m2m option menu should visible");
+
+        // Edit Record
+        $tag.find('.o_tag_dropdown_menu .o_edit_record').trigger('mousedown');
+
+        assert.strictEqual($('.modal-dialog input[name="display_name"]').length, 1, "should open partner form view dialog");
+        $('.modal-body input[name="display_name"]').val('hello').trigger('change');
+        $('.modal-footer .btn-primary').click();
+
+        assert.strictEqual(form.$('.o_field_many2manytags[name="partner_ids"] > span:first .o_badge_text').text(), 'hello',
+                "value should change after edit");
+
+        form.destroy();
+    });
+
     QUnit.test('fieldmany2many tags with color: rendering and edition', function (assert) {
         assert.expect(28);
 

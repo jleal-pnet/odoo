@@ -827,27 +827,39 @@
         </span>
     </t>
 </t>
-<t t-name="FieldMany2ManyTag.colorpicker">
-    <div class="o_colorpicker dropdown-menu tagcolor_dropdown_menu" role="menu">
-        <ul>
-            <li t-foreach="11" t-as="color">
-                <a href="#"
-                   t-att-data-id="tag_id"
-                   t-att-data-color="color+1"
-                   t-attf-class="o_tag_color_#{color+1}"/>
-            </li>
-            <li> <!-- checkbox for tag color 0 -->
-                <div class="o_hide_in_kanban"
-                     t-att-data-id="tag_id"
-                     t-att-data-color="0">
-                    <div class="o_checkbox">
-                        <input type="checkbox"/>
-                        <span/>
-                    </div> Hide in Kanban
-                </div>
-            </li>
-        </ul>
+<t t-name="FieldMany2ManyTag.TagDropdown">
+    <div class="o_tag_dropdown_menu dropdown-menu" role="menu">
+        <div t-if="has_options" class="o_tag_dropdown_options">
+            <ul>
+                <li><a href="#" class="o_edit_record" t-att-data-id="tag_id">Edit</a></li>
+            </ul>
+        </div>
     </div>
+</t>
+<t t-name="FieldMany2ManyTag.colorpicker" t-extend="FieldMany2ManyTag.TagDropdown">
+    <t t-jquery=".o_tag_dropdown_menu" t-operation="append">
+        <div t-if="has_options" class="divider"/>
+        <div class="o_colorpicker">
+            <ul>
+                <li t-foreach="11" t-as="color">
+                    <a href="#"
+                    t-att-data-id="tag_id"
+                    t-att-data-color="color+1"
+                    t-attf-class="o_tag_color_#{color+1}"/>
+                </li>
+                <li> <!-- checkbox for tag color 0 -->
+                    <div class="o_hide_in_kanban"
+                        t-att-data-id="tag_id"
+                        t-att-data-color="0">
+                        <div class="o_checkbox">
+                            <input type="checkbox"/>
+                            <span/>
+                        </div> Hide in Kanban
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </t>
 </t>
 <t t-name="ProgressBar">
     <div class="o_progressbar">
