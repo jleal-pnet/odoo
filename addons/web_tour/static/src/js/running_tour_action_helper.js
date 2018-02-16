@@ -2,11 +2,26 @@ odoo.define('web_tour.RunningTourActionHelper', function (require) {
 "use strict";
 
 var core = require('web.core');
+var concurrency = require('web.concurrency');
 var utils = require('web_tour.utils');
 var Tip = require('web_tour.Tip');
 
 var get_first_visible_element = utils.get_first_visible_element;
 
+function triggerElementMouseEvent(x, y, type, el) {
+    var ev = document.createEvent("MouseEvent");
+    ev.initMouseEvent(
+        type,
+        true /* bubble */,
+        true /* cancelable */,
+        window, null,
+        x, y, x, y, /* coordinates */
+        false, false, false, false, /* modifier keys */
+        0 /*left button*/, null
+    );
+    el.dispatchEvent(ev);
+    return el;
+}
 var RunningTourActionHelper = core.Class.extend({
     init: function (tip_widget) {
         this.tip_widget = tip_widget;
@@ -25,6 +40,9 @@ var RunningTourActionHelper = core.Class.extend({
     },
     drag_and_drop: function (to, element) {
         this._drag_and_drop(this._get_action_values(element), to);
+    },
+    drag_and_drop_native: function (to, element) {
+        this._drag_and_drop_native(this._get_action_values(element), to);
     },
     keydown: function (keyCodes, element) {
         this._keydown(this._get_action_values(element), keyCodes.split(/[,\s]+/));
@@ -89,8 +107,9 @@ var RunningTourActionHelper = core.Class.extend({
         }
         values.$element.trigger("change");
     },
-    _drag_and_drop: function (values, to) {
+    _drag_and_drop: function (values, to, options) {
         var $to = $(to || document.body);
+        var isNativeDragAndDrop = (options && options.nativeDragAndDrop);
 
         var elementCenter = values.$element.offset();
         elementCenter.left += values.$element.outerWidth()/2;
@@ -99,10 +118,20 @@ var RunningTourActionHelper = core.Class.extend({
         var toCenter = $to.offset();
         toCenter.left += $to.outerWidth()/2;
         toCenter.top += $to.outerHeight()/2;
-
-        values.$element.trigger($.Event("mousedown", {which: 1, pageX: elementCenter.left, pageY: elementCenter.top}));
-        values.$element.trigger($.Event("mousemove", {which: 1, pageX: toCenter.left, pageY: toCenter.top}));
-        values.$element.trigger($.Event("mouseup", {which: 1, pageX: toCenter.left, pageY: toCenter.top}));
+        if (isNativeDragAndDrop) {
+            triggerElementMouseEvent(elementCenter.left, elementCenter.top, 'mousedown', values.$element[0]);
+            triggerElementMouseEvent(toCenter.left, toCenter.top , 'mousemove', $to[0]);
+            concurrency.delay(50).then(function () {
+                triggerElementMouseEvent(toCenter.left, toCenter.top, 'mouseup', values.$element[0]);
+            });
+        } else {
+            values.$element.trigger($.Event("mousedown", {which: 1, pageX: elementCenter.left, pageY: elementCenter.top}));
+            values.$element.trigger($.Event("mousemove", {which: 1, pageX: toCenter.left, pageY: toCenter.top}));
+            values.$element.trigger($.Event("mouseup", {which: 1, pageX: toCenter.left, pageY: toCenter.top}));
+        }
+    },
+    _drag_and_drop_native: function (values, to) {
+        this._drag_and_drop(values, to, {nativeDragAndDrop: true});
     },
     _keydown: function (values, keyCodes) {
         while (keyCodes.length) {

@@ -20,6 +20,10 @@ if (!config.device.isMobile) {
 }
 
 KanbanRenderer.include({
+    custom_events:  _.extend({}, KanbanRenderer.prototype.custom_events, {
+        'kanban_column_swipe_left': '_onMobileSwipeLeft',
+        'kanban_column_swipe_right': '_onMobileSwipeRight'
+    }),
     events: _.extend({}, KanbanRenderer.prototype.events, {
         'click .o_kanban_mobile_tab': '_onMobileTabClicked',
     }),
@@ -110,15 +114,10 @@ KanbanRenderer.include({
      * @param {KanbanColumn} column
      */
     _enableSwipe: function () {
-        var self = this;
         var currentColumn = this.widgets[this.activeColumnIndex];
         currentColumn.$el.swipe({
-            swipeLeft: function () {
-                self._moveToGroup(self.activeColumnIndex + 1, self.ANIMATE);
-            },
-            swipeRight: function () {
-                self._moveToGroup(self.activeColumnIndex - 1, self.ANIMATE);
-            }
+            swipeLeft: this._onMobileSwipeLeft.bind(this),
+            swipeRight: this._onMobileSwipeRight.bind(this)
         });
     },
     /**
@@ -217,6 +216,17 @@ KanbanRenderer.include({
     _onMobileTabClicked: function (event) {
         this._moveToGroup($(event.currentTarget).index(), true);
     },
+    _onMobileSwipeLeft: function (event) {
+        if ((this.activeColumnIndex + 1) < this.$('.o_kanban_group').length) {
+            this._moveToGroup(this.activeColumnIndex + 1, this.ANIMATE);
+        }
+    },
+    _onMobileSwipeRight: function (event) {
+        if (this.activeColumnIndex > 0) {
+            this._moveToGroup(this.activeColumnIndex - 1, this.ANIMATE);
+        }
+    },
+
 });
 
 });

@@ -2996,6 +2996,7 @@ QUnit.module('Views', {
     });
 
     QUnit.test('list with handle widget', function (assert) {
+        var done = assert.async();
         assert.expect(11);
 
         var list = createView({
@@ -3019,6 +3020,9 @@ QUnit.module('Views', {
                 return this._super.apply(this, arguments);
             },
         });
+        // need to prepend view on body because html5 drag and drop is not working if view is not available in DOM
+        var $view = $('#qunit-fixture').contents();
+        $view.prependTo('body');
 
         assert.strictEqual(list.$('tbody tr:eq(0) td:last').text(), '1200',
             "default first record should have amount 1200");
@@ -3032,23 +3036,26 @@ QUnit.module('Views', {
         // Drag and drop the fourth line in second position
         testUtils.dragAndDrop(
             list.$('.ui-sortable-handle').eq(3),
-            list.$('tbody tr').first(),
-            {position: 'bottom'}
-        );
+            list.$('tbody tr').eq(1), {nativeDragAndDrop: true}
+        ).then(function () {
 
-        assert.strictEqual(list.$('tbody tr:eq(0) td:last').text(), '1200',
-            "new first record should have amount 1200");
-        assert.strictEqual(list.$('tbody tr:eq(1) td:last').text(), '0',
-            "new second record should have amount 0");
-        assert.strictEqual(list.$('tbody tr:eq(2) td:last').text(), '500',
-            "new third record should have amount 500");
-        assert.strictEqual(list.$('tbody tr:eq(3) td:last').text(), '300',
-            "new fourth record should have amount 300");
+            assert.strictEqual(list.$('tbody tr:eq(0) td:last').text(), '1200',
+                "new first record should have amount 1200");
+            assert.strictEqual(list.$('tbody tr:eq(1) td:last').text(), '0',
+                "new second record should have amount 0");
+            assert.strictEqual(list.$('tbody tr:eq(2) td:last').text(), '500',
+                "new third record should have amount 500");
+            assert.strictEqual(list.$('tbody tr:eq(3) td:last').text(), '300',
+                "new fourth record should have amount 300");
 
-        list.destroy();
+            list.destroy();
+            $view.remove();
+            done();
+        });
     });
 
     QUnit.test('editable list with handle widget', function (assert) {
+        var done = assert.async();
         assert.expect(12);
 
         var list = createView({
@@ -3073,6 +3080,9 @@ QUnit.module('Views', {
             },
         });
 
+        var $view = $('#qunit-fixture').contents();
+        $view.prependTo('body');
+
         assert.strictEqual(list.$('tbody tr:eq(0) td:last').text(), '1200',
             "default first record should have amount 1200");
         assert.strictEqual(list.$('tbody tr:eq(1) td:last').text(), '500',
@@ -3085,28 +3095,32 @@ QUnit.module('Views', {
         // Drag and drop the fourth line in second position
         testUtils.dragAndDrop(
             list.$('.ui-sortable-handle').eq(3),
-            list.$('tbody tr').first(),
-            {position: 'bottom'}
-        );
+            list.$('tbody tr').eq(1),
+            {nativeDragAndDrop: true}
+        ).then(function () {
 
-        assert.strictEqual(list.$('tbody tr:eq(0) td:last').text(), '1200',
-            "new first record should have amount 1200");
-        assert.strictEqual(list.$('tbody tr:eq(1) td:last').text(), '0',
-            "new second record should have amount 0");
-        assert.strictEqual(list.$('tbody tr:eq(2) td:last').text(), '500',
-            "new third record should have amount 500");
-        assert.strictEqual(list.$('tbody tr:eq(3) td:last').text(), '300',
-            "new fourth record should have amount 300");
+            assert.strictEqual(list.$('tbody tr:eq(0) td:last').text(), '1200',
+                "new first record should have amount 1200");
+            assert.strictEqual(list.$('tbody tr:eq(1) td:last').text(), '0',
+                "new second record should have amount 0");
+            assert.strictEqual(list.$('tbody tr:eq(2) td:last').text(), '500',
+                "new third record should have amount 500");
+            assert.strictEqual(list.$('tbody tr:eq(3) td:last').text(), '300',
+                "new fourth record should have amount 300");
 
-        list.$('tbody tr:eq(1) td:last').click();
+            list.$('tbody tr:eq(1) td:last').click();
 
-        assert.strictEqual(list.$('tbody tr:eq(1) td:last input').val(), '0',
-            "the edited record should be the good one");
+            assert.strictEqual(list.$('tbody tr:eq(1) td:last input').val(), '0',
+                "the edited record should be the good one");
 
-        list.destroy();
+            list.destroy();
+            $view.remove();
+            done();
+        });
     });
 
     QUnit.test('editable list with handle widget with slow network', function (assert) {
+        var done = assert.async();
         assert.expect(15);
 
         var def = $.Deferred();
@@ -3133,6 +3147,9 @@ QUnit.module('Views', {
             },
         });
 
+        var $view = $('#qunit-fixture').contents();
+        $view.prependTo('body');
+
         assert.strictEqual(list.$('tbody tr:eq(0) td:last').text(), '1200',
             "default first record should have amount 1200");
         assert.strictEqual(list.$('tbody tr:eq(1) td:last').text(), '500',
@@ -3145,43 +3162,46 @@ QUnit.module('Views', {
         // drag and drop the fourth line in second position
         testUtils.dragAndDrop(
             list.$('.ui-sortable-handle').eq(3),
-            list.$('tbody tr').first(),
-            {position: 'bottom'}
-        );
+            list.$('tbody tr').eq(1),
+            {nativeDragAndDrop: true}
+        ).then(function () {
 
-        // edit moved row before the end of resequence
-        list.$('tbody tr:eq(3) td:last').click();
+            // edit moved row before the end of resequence
+            list.$('tbody tr:eq(3) td:last').click();
 
-        assert.strictEqual(list.$('tbody tr:eq(3) td:last input').length, 0,
-            "shouldn't edit the line before resequence");
+            assert.strictEqual(list.$('tbody tr:eq(3) td:last input').length, 0,
+                "shouldn't edit the line before resequence");
 
-        def.resolve();
+            def.resolve();
 
-        assert.strictEqual(list.$('tbody tr:eq(3) td:last input').length, 1,
-            "should edit the line after resequence");
+            assert.strictEqual(list.$('tbody tr:eq(3) td:last input').length, 1,
+                "should edit the line after resequence");
 
-        assert.strictEqual(list.$('tbody tr:eq(3) td:last input').val(), '300',
-            "fourth record should have amount 300");
+            assert.strictEqual(list.$('tbody tr:eq(3) td:last input').val(), '300',
+                "fourth record should have amount 300");
 
-        list.$('tbody tr:eq(3) td:last input').val(301).trigger('input');
-        list.$('tbody tr:eq(0) td:last').click();
+            list.$('tbody tr:eq(3) td:last input').val(301).trigger('input');
+            list.$('tbody tr:eq(0) td:last').click();
 
-        list.$buttons.find('.o_list_button_save').click();
+            list.$buttons.find('.o_list_button_save').click();
 
-        assert.strictEqual(list.$('tbody tr:eq(0) td:last').text(), '1200',
-            "first record should have amount 1200");
-        assert.strictEqual(list.$('tbody tr:eq(1) td:last').text(), '0',
-            "second record should have amount 1");
-        assert.strictEqual(list.$('tbody tr:eq(2) td:last').text(), '500',
-            "third record should have amount 500");
-        assert.strictEqual(list.$('tbody tr:eq(3) td:last').text(), '301',
-            "fourth record should have amount 301");
+            assert.strictEqual(list.$('tbody tr:eq(0) td:last').text(), '1200',
+                "first record should have amount 1200");
+            assert.strictEqual(list.$('tbody tr:eq(1) td:last').text(), '0',
+                "second record should have amount 1");
+            assert.strictEqual(list.$('tbody tr:eq(2) td:last').text(), '500',
+                "third record should have amount 500");
+            assert.strictEqual(list.$('tbody tr:eq(3) td:last').text(), '301',
+                "fourth record should have amount 301");
 
-        list.$('tbody tr:eq(3) td:last').click();
-        assert.strictEqual(list.$('tbody tr:eq(3) td:last input').val(), '301',
-            "fourth record should have amount 301");
+            list.$('tbody tr:eq(3) td:last').click();
+            assert.strictEqual(list.$('tbody tr:eq(3) td:last input').val(), '301',
+                "fourth record should have amount 301");
 
-        list.destroy();
+            list.destroy();
+            $view.remove();
+            done();
+        });
     });
 
     QUnit.test('multiple clicks on Add do not create invalid rows', function (assert) {

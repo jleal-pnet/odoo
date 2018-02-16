@@ -91,7 +91,6 @@
         display: table-cell;
     }
 
-
     // Grouped list views
     tbody > tr.o_group_header {
         height: 31px;
@@ -126,6 +125,12 @@
             .focussed {
                 background-color: $o-form-lightsecondary;
             }
+        }
+        tr.o_data_row_ghost {
+            opacity: 0;
+        }
+        tr.o_data_row_clone {
+            opacity: 1 !important;
         }
     }
 

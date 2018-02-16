@@ -11,6 +11,7 @@ odoo.define('web.EditableListRenderer', function (require) {
  * Unlike Odoo v10 and before, this list renderer is independant from the form
  * view. It uses the same widgets, but the code is totally stand alone.
  */
+var config = require('web.config');
 var core = require('web.core');
 var dom = require('web.dom');
 var ListRenderer = require('web.ListRenderer');
@@ -18,6 +19,8 @@ var utils = require('web.utils');
 var Context = require('web.Context');
 
 var _t = core._t;
+
+var Sortable = window.Sortable;
 
 ListRenderer.include({
     custom_events: _.extend({}, ListRenderer.prototype.custom_events, {
@@ -425,6 +428,18 @@ ListRenderer.include({
             });
         }
     },
+    /**
+     * Returns scrollable parent element
+     */
+    getScrollableParent: function () {
+        var scrollableParent;
+        this.trigger_up('get_scrollable_parent', {
+            callback: function (scrollable_parent) {
+                scrollableParent = scrollable_parent;
+            }
+        });
+        return scrollableParent;
+    },
 
     //--------------------------------------------------------------------------
     // Private
@@ -524,12 +539,16 @@ ListRenderer.include({
     _renderBody: function () {
         var $body = this._super();
         if (this.handleField) {
-            $body.sortable({
-                axis: 'y',
-                items: '> tr.o_data_row',
-                helper: 'clone',
+            var scrollableParent = this.getScrollableParent();
+            new Sortable($body[0], {
                 handle: '.o_row_handle',
-                stop: this._resequence.bind(this),
+                ghostClass: 'o_data_row_ghost',
+                draggable: 'tr.o_data_row',
+                // in testcase we are not getting scrollableParent.
+                scroll: scrollableParent ? scrollableParent[0] : true,
+                onEnd: this._resequence.bind(this),
+                forceFallback: true,
+                fallbackClass: 'o_data_row_clone',
             });
         }
         return $body;
@@ -604,13 +623,13 @@ ListRenderer.include({
      * @param {jQuery.Event} event
      * @param {Object} ui jqueryui sortable widget
      */
-    _resequence: function (event, ui) {
+    _resequence: function (event) {
         var self = this;
-        var movedRecordID = ui.item.data('id');
+        var movedRecordID = $(event.item).data('id');
         var rows = this.state.data;
         var row = _.findWhere(rows, {id: movedRecordID});
         var index0 = rows.indexOf(row);
-        var index1 = ui.item.index();
+        var index1 = $(event.item).index();
         var lower = Math.min(index0, index1);
         var upper = Math.max(index0, index1) + 1;
 

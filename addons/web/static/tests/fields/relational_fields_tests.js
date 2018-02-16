@@ -1745,6 +1745,7 @@ QUnit.module('relational_fields', {
     });
 
     QUnit.test('X2Many sequence list in modal', function (assert) {
+        var done = assert.async();
         assert.expect(5);
 
         this.data.partner.fields.sequence = {string: 'Sequence', type: 'integer'};
@@ -1807,6 +1808,10 @@ QUnit.module('relational_fields', {
                 return this._super.apply(this, arguments);
             },
         }).then(function(form) {
+
+            // need to prepend view on body because html5 drag and drop is not working if view is not available in DOM
+            var $view = $('#qunit-fixture').contents();
+            $view.prependTo('body');
             form.$buttons.find('.o_form_button_edit').click();
             form.$('.o_data_cell').click();
             form.$('.o_external_button').click();
@@ -1819,16 +1824,18 @@ QUnit.module('relational_fields', {
             assert.equal($handles.length, 2,
                 'There should be 2 sequence handlers');
 
-            testUtils.dragAndDrop($handles.eq(1), $modal.find('tbody tr').first(),
-                                  {position: 'top'});
+            testUtils.dragAndDrop($handles.eq(1), $modal.find('tbody tr').first(), {nativeDragAndDrop: true}).then(function () {
 
-            // Saving the modal and then the original model
-            $modal.find('.modal-footer .btn-primary').click();
-            form.$buttons.find('.o_form_button_save').click();
+                // Saving the modal and then the original model
+                $modal.find('.modal-footer .btn-primary').click();
+                form.$buttons.find('.o_form_button_save').click();
 
-            assert.verifySteps(['onchange sequence', 'partner_type write']);
+                assert.verifySteps(['onchange sequence', 'partner_type write']);
 
-            form.destroy();
+                form.destroy();
+                $view.remove();
+                done();
+            });
         });
     });
 
@@ -3158,6 +3165,7 @@ QUnit.module('relational_fields', {
     });
 
     QUnit.test('embedded one2many with handle widget', function (assert) {
+        var done = assert.async();
         assert.expect(10);
 
         var nbConfirmChange = 0;
@@ -3195,6 +3203,10 @@ QUnit.module('relational_fields', {
             assert.step(event.data.changes.turtles.data.turtle_int.toString());
         }, true);
 
+        var self = this;
+        var $view = $('#qunit-fixture').contents();
+        $view.prependTo('body');
+
         assert.strictEqual(form.$('td.o_data_cell:not(.o_handle_cell)').text(), "yopblipkawa",
             "should have the 3 rows in the correct order");
 
@@ -3208,32 +3220,35 @@ QUnit.module('relational_fields', {
         testUtils.dragAndDrop(
             form.$('.ui-sortable-handle').eq(1),
             form.$('tbody tr').first(),
-            {position: 'top'}
-        );
+            {nativeDragAndDrop: true}
+        ).then(function () {
 
-        assert.strictEqual(nbConfirmChange, 1, "should have confirmed changes only once");
-        assert.verifySteps(["0", "1"],
-            "sequences values should be incremental starting from the previous minimum one");
+            assert.strictEqual(nbConfirmChange, 1, "should have confirmed changes only once");
+            assert.verifySteps(["0", "1"],
+                "sequences values should be incremental starting from the previous minimum one");
 
-        assert.strictEqual(form.$('td.o_data_cell:not(.o_handle_cell)').text(), "blipyopkawa",
-            "should have the 3 rows in the new order");
+            assert.strictEqual(form.$('td.o_data_cell:not(.o_handle_cell)').text(), "blipyopkawa",
+                "should have the 3 rows in the new order");
 
-        form.$buttons.find('.o_form_button_save').click();
+            form.$buttons.find('.o_form_button_save').click();
 
-        assert.deepEqual(_.map(this.data.turtle.records, function(turtle) {
-            return _.pick(turtle, 'id', 'turtle_foo', 'turtle_int');
-        }), [
-            {id: 1, turtle_foo: "yop", turtle_int: 1},
-            {id: 2, turtle_foo: "blip", turtle_int:0},
-            {id: 3, turtle_foo: "kawa", turtle_int:21}
-        ], "should have save the changed sequence");
+            assert.deepEqual(_.map(self.data.turtle.records, function(turtle) {
+                return _.pick(turtle, 'id', 'turtle_foo', 'turtle_int');
+            }), [
+                {id: 1, turtle_foo: "yop", turtle_int: 1},
+                {id: 2, turtle_foo: "blip", turtle_int:0},
+                {id: 3, turtle_foo: "kawa", turtle_int:21}
+            ], "should have save the changed sequence");
 
-        assert.strictEqual(form.$('td.o_data_cell:not(.o_handle_cell)').text(), "blipyopkawa",
-            "should still have the 3 rows in the new order");
+            assert.strictEqual(form.$('td.o_data_cell:not(.o_handle_cell)').text(), "blipyopkawa",
+                "should still have the 3 rows in the new order");
 
-        testUtils.unpatch(ListRenderer);
+            testUtils.unpatch(ListRenderer);
 
-        form.destroy();
+            form.destroy();
+            $view.remove();
+            done();
+        });
     });
 
     QUnit.test('onchange for embedded one2many in a one2many with a second page', function (assert) {
@@ -3367,6 +3382,7 @@ QUnit.module('relational_fields', {
     });
 
     QUnit.test('onchange for embedded one2many with handle widget', function (assert) {
+        var done = assert.async();
         assert.expect(2);
 
         this.data.partner.records[0].turtles = [1, 2, 3];
@@ -3404,22 +3420,29 @@ QUnit.module('relational_fields', {
             res_id: 1,
         });
 
+        var $view = $('#qunit-fixture').contents();
+        $view.prependTo('body');
+
         form.$buttons.find('.o_form_button_edit').click();
 
         // Drag and drop the second line in first position
         testUtils.dragAndDrop(
             form.$('.ui-sortable-handle').eq(1),
             form.$('tbody tr').first(),
-            {position: 'top'}
-        );
+            {nativeDragAndDrop: true}
+        ).then(function () {
 
-        assert.strictEqual(turtleOnchange, 2, "should trigger one onchange per line updated");
-        assert.strictEqual(partnerOnchange, 1, "should trigger only one onchange on the parent");
+            assert.strictEqual(turtleOnchange, 2, "should trigger one onchange per line updated");
+            assert.strictEqual(partnerOnchange, 1, "should trigger only one onchange on the parent");
 
-        form.destroy();
+            form.destroy();
+            $view.remove();
+            done();
+        });
     });
 
     QUnit.test('onchange for embedded one2many with handle widget using same sequence', function (assert) {
+        var done = assert.async();
         assert.expect(4);
 
         this.data.turtle.records[0].turtle_int = 1;
@@ -3461,6 +3484,9 @@ QUnit.module('relational_fields', {
             },
         });
 
+        var $view = $('#qunit-fixture').contents();
+        $view.prependTo('body');
+
         form.$buttons.find('.o_form_button_edit').click();
 
 
@@ -3471,18 +3497,23 @@ QUnit.module('relational_fields', {
         testUtils.dragAndDrop(
             form.$('.ui-sortable-handle').eq(1),
             form.$('tbody tr').first(),
-            {position: 'top'}
-        );
+            {nativeDragAndDrop: true}
+        ).then(function () {
 
-        assert.strictEqual(form.$('td.o_data_cell:not(.o_handle_cell)').text(), "blipyopkawa",
-            "should still have the 3 rows in the correct order");
-        assert.strictEqual(turtleOnchange, 3, "should update all lines");
+            assert.strictEqual(form.$('td.o_data_cell:not(.o_handle_cell)').text(), "blipyopkawa",
+                "should still have the 3 rows in the correct order");
+            assert.strictEqual(turtleOnchange, 3, "should update all lines");
 
-        form.$buttons.find('.o_form_button_save').click();
-        form.destroy();
+            form.$buttons.find('.o_form_button_save').click();
+            form.destroy();
+            $view.remove();
+            done();
+        });
+
     });
 
     QUnit.test('onchange (with command 5) for embedded one2many with handle widget', function (assert) {
+        var done = assert.async();
         assert.expect(3);
 
         var ids = [];
@@ -3522,6 +3553,9 @@ QUnit.module('relational_fields', {
             res_id: 1,
         });
 
+        var $view = $('#qunit-fixture').contents();
+        $view.prependTo('body');
+
         form.$('.o_pager_next').click();
         assert.strictEqual(form.$('td.o_data_cell:not(.o_handle_cell)').text(), "yopblipkawa",
             "should have the 3 rows in the correct order");
@@ -3534,21 +3568,25 @@ QUnit.module('relational_fields', {
         testUtils.dragAndDrop(
             form.$('.ui-sortable-handle').eq(2),
             form.$('.o_field_one2many tbody tr').eq(1),
-            {position: 'top'}
-        );
+            {nativeDragAndDrop: true}
+        ).then(function () {
 
-        assert.strictEqual(form.$('.o_data_cell').text(), "blurpkawablip", "should display to record in 'turtle_int' order");
+            assert.strictEqual(form.$('.o_data_cell').text(), "blurpkawablip", "should display to record in 'turtle_int' order");
 
-        form.$buttons.find('.o_form_button_save').click();
-        form.$('.o_pager_next').click();
+            form.$buttons.find('.o_form_button_save').click();
+            form.$('.o_pager_next').click();
 
-        assert.strictEqual(form.$('.o_data_cell:not(.o_handle_cell)').text(), "blurpkawablip",
-            "should display to record in 'turtle_int' order");
+            assert.strictEqual(form.$('.o_data_cell:not(.o_handle_cell)').text(), "blurpkawablip",
+                "should display to record in 'turtle_int' order");
 
-        form.destroy();
+            form.destroy();
+            $view.remove();
+            done();
+        });
     });
 
     QUnit.test('onchange with modifiers for embedded one2many on the second page', function (assert) {
+        var done = assert.async();
         assert.expect(7);
 
         var data = this.data;
@@ -3607,6 +3645,9 @@ QUnit.module('relational_fields', {
             res_id: 1,
         });
 
+        var $view = $('#qunit-fixture').contents();
+        $view.prependTo('body');
+
         form.$buttons.find('.o_form_button_edit').click();
 
         assert.equal(form.$('.o_field_one2many td[class="o_data_cell"]').text(), "#20#21#22#23#24#25#26#27#28#29",
@@ -3632,33 +3673,39 @@ QUnit.module('relational_fields', {
         testUtils.dragAndDrop(
             form.$('.ui-sortable-handle').eq(2),
             form.$('.o_field_one2many tbody tr').eq(1),
-            {position: 'top'}
-        );
+            {nativeDragAndDrop: true}
+        ).then(function () {
 
-        assert.equal(form.$('.o_field_one2many td[class="o_data_cell"]').text(), "#20#30#31#32#33#34#35#36#37#38",
-            "should display the records in order after resequence (display record with turtle_int=0)");
+            assert.equal(form.$('.o_field_one2many td[class="o_data_cell"]').text(), "#20#30#31#32#33#34#35#36#37#38",
+                "should display the records in order after resequence (display record with turtle_int=0)");
 
-        // Drag and drop the third line in second position
-        testUtils.dragAndDrop(
-            form.$('.ui-sortable-handle').eq(2),
-            form.$('.o_field_one2many tbody tr').eq(1),
-            {position: 'top'}
-        );
+            // Drag and drop the third line in second position
+            testUtils.dragAndDrop(
+                form.$('.ui-sortable-handle').eq(2),
+                form.$('.o_field_one2many tbody tr').eq(1),
+                {nativeDragAndDrop: true}
+            ).then(function () {
 
-        assert.equal(form.$('.o_field_one2many td[class="o_data_cell"]').text(), "#20#39#40#41#42#43#44#45#46#47",
-            "should display the records in order after resequence (display record with turtle_int=0)");
+                assert.equal(form.$('.o_field_one2many td[class="o_data_cell"]').text(), "#20#39#40#41#42#43#44#45#46#47",
+                    "should display the records in order after resequence (display record with turtle_int=0)");
 
-        form.$buttons.find('.o_form_button_cancel').click();
+                form.$buttons.find('.o_form_button_cancel').click();
 
-        assert.equal(form.$('.o_field_one2many td[class="o_data_cell"]').text(), "#20#39#40#41#42#43#44#45#46#47",
-            "should display the records in order after resequence");
+                assert.equal(form.$('.o_field_one2many td[class="o_data_cell"]').text(), "#20#39#40#41#42#43#44#45#46#47",
+                    "should display the records in order after resequence");
 
-        $('.modal .modal-footer button:first').click();
+                $('.modal .modal-footer button:first').click();
 
-        assert.equal(form.$('.o_field_one2many td[class="o_data_cell"]').text(), "#20#21#22#23#24#25#26#27#28#29",
-            "should cancel changes and display the records in order");
+                assert.equal(form.$('.o_field_one2many td[class="o_data_cell"]').text(), "#20#21#22#23#24#25#26#27#28#29",
+                    "should cancel changes and display the records in order");
 
-        form.destroy();
+                form.destroy();
+                $view.remove();
+                done();
+            });
+
+        });
+
     });
 
     QUnit.test('onchange followed by edition on the second page', function (assert) {
@@ -4112,13 +4159,16 @@ QUnit.module('relational_fields', {
             assert.step(form.model.get(event.data.changes.turtles.id).res_id);
         }, true);
 
+        var $view = $('#qunit-fixture').contents();
+        $view.prependTo('body');
+
         form.$buttons.find('.o_form_button_edit').click();
 
         var steps = [];
         var positions = [
             [6, 0, 'top', [3, 6, 1, 2, 5, 7, 4]], // move the last to the first line
             [5, 1, 'top', [7, 6, 1, 2, 5]], // move the penultimate to the second line
-            [2, 5, 'center', [1, 2, 5, 6]], // move the third to the penultimate line
+            [2, 5, 'bottom', [1, 2, 5, 6]], // move the third to the penultimate line
         ];
         function dragAndDrop() {
             var pos = positions.shift();
@@ -4126,38 +4176,38 @@ QUnit.module('relational_fields', {
             testUtils.dragAndDrop(
                 form.$('.ui-sortable-handle').eq(pos[0]),
                 form.$('tbody tr').eq(pos[1]),
-                {position: pos[2]}
-            );
+                {position: pos[2], nativeDragAndDrop: true}
+            ).then(function () {
+                steps = steps.concat(pos[3]);
+                assert.verifySteps(steps,
+                    "sequences values should be apply from the begin index to the drop index");
 
-            steps = steps.concat(pos[3]);
-            assert.verifySteps(steps,
-                "sequences values should be apply from the begin index to the drop index");
+                if (positions.length) {
+                    dragAndDrop();
+                } else {
+                    assert.deepEqual(_.pluck(form.model.get(form.handle).data.turtles.data, 'data'), [
+                        {  id: 3,  turtle_foo: "kawa",  turtle_int: 2 },
+                        {  id: 7,  turtle_foo: "a4",  turtle_int: 3 },
+                        {  id: 1,  turtle_foo: "yop",  turtle_int: 4 },
+                        {  id: 2,  turtle_foo: "blip",  turtle_int: 5 },
+                        {  id: 5,  turtle_foo: "a2",  turtle_int: 6 },
+                        {  id: 6,  turtle_foo: "a3",  turtle_int: 7 },
+                        {  id: 4,  turtle_foo: "a1",  turtle_int: 8 }
+                    ], "sequences must be apply correctly");
 
-            if (positions.length) {
+                    form.destroy();
+                    $view.remove();
+                    done();
+                }
+            });
 
-                setTimeout(dragAndDrop, 10);
-
-            } else {
-
-                assert.deepEqual(_.pluck(form.model.get(form.handle).data.turtles.data, 'data'), [
-                    {  id: 3,  turtle_foo: "kawa",  turtle_int: 2 },
-                    {  id: 7,  turtle_foo: "a4",  turtle_int: 3 },
-                    {  id: 1,  turtle_foo: "yop",  turtle_int: 4 },
-                    {  id: 2,  turtle_foo: "blip",  turtle_int: 5 },
-                    {  id: 5,  turtle_foo: "a2",  turtle_int: 6 },
-                    {  id: 6,  turtle_foo: "a3",  turtle_int: 7 },
-                    {  id: 4,  turtle_foo: "a1",  turtle_int: 8 }
-                ], "sequences must be apply correctly");
-
-                form.destroy();
-                done();
-            }
         }
 
         dragAndDrop();
     });
 
     QUnit.test('embedded one2many (editable list) with handle widget', function (assert) {
+        var done = assert.async();
         assert.expect(8);
 
         this.data.partner.records[0].p = [1, 2, 4];
@@ -4186,6 +4236,9 @@ QUnit.module('relational_fields', {
             assert.step(event.data.changes.p.data.int_field.toString());
         }, true);
 
+        var $view = $('#qunit-fixture').contents();
+        $view.prependTo('body');
+
         assert.strictEqual(form.$('td.o_data_cell:not(.o_handle_cell)').text(), "My little Foo Valueblipyop",
             "should have the 3 rows in the correct order");
 
@@ -4197,25 +4250,29 @@ QUnit.module('relational_fields', {
         testUtils.dragAndDrop(
             form.$('.ui-sortable-handle').eq(1),
             form.$('tbody tr').first(),
-            {position: 'top'}
-        );
+            {nativeDragAndDrop: true}
+        ).then(function () {
 
-        assert.verifySteps(["0", "1"],
-            "sequences values should be incremental starting from the previous minimum one");
+            assert.verifySteps(["0", "1"],
+                "sequences values should be incremental starting from the previous minimum one");
 
-        assert.strictEqual(form.$('td.o_data_cell:not(.o_handle_cell)').text(), "blipMy little Foo Valueyop",
-            "should have the 3 rows in the new order");
+            assert.strictEqual(form.$('td.o_data_cell:not(.o_handle_cell)').text(), "blipMy little Foo Valueyop",
+                "should have the 3 rows in the new order");
 
-        form.$('tbody tr:first td:first').click();
+            form.$('tbody tr:first td:first').click();
 
-        assert.strictEqual(form.$('tbody tr:first td.o_data_cell:not(.o_handle_cell) input').val(), "blip",
-            "should edit the correct row");
+            assert.strictEqual(form.$('tbody tr:first td.o_data_cell:not(.o_handle_cell) input').val(), "blip",
+                "should edit the correct row");
 
-        form.$buttons.find('.o_form_button_save').click();
-        assert.strictEqual(form.$('td.o_data_cell:not(.o_handle_cell)').text(), "blipMy little Foo Valueyop",
-            "should still have the 3 rows in the new order");
+            form.$buttons.find('.o_form_button_save').click();
+            assert.strictEqual(form.$('td.o_data_cell:not(.o_handle_cell)').text(), "blipMy little Foo Valueyop",
+                "should still have the 3 rows in the new order");
 
-        form.destroy();
+            form.destroy();
+            $view.remove();
+            done();
+        });
+
     });
 
     QUnit.test('one2many field when using the pager', function (assert) {
@@ -9467,6 +9524,7 @@ QUnit.module('relational_fields', {
         // -> This will call a resequence, which calls a name_get.
         // -> With the bug that would fail, if it's ok the test will pass.
         assert.expect(4);
+        var done = assert.async();
 
         this.data.turtle.fields.turtle_int.default = 10;
         this.data.turtle.fields.product_id.default = 37;
@@ -9494,6 +9552,8 @@ QUnit.module('relational_fields', {
             },
         });
 
+        var $view = $('#qunit-fixture').contents();
+        $view.prependTo('body');
         // starting condition
         assert.strictEqual($('.o_data_cell:nth-child(2)').text(), "");
 
@@ -9513,12 +9573,15 @@ QUnit.module('relational_fields', {
 
         testUtils.dragAndDrop($handles.eq(1),
             form.$('tbody tr').first(),
-            {position: 'top'}
-        );
+            {position: 'top', nativeDragAndDrop: true}
+        ).then(function () {
+            assert.strictEqual($('.o_data_cell:nth-child(2)').text(), inputText2 + inputText1);
 
-        assert.strictEqual($('.o_data_cell:nth-child(2)').text(), inputText2 + inputText1);
+            form.destroy();
+            $view.remove();
+            done();
+        });
 
-        form.destroy();
     });
 
     QUnit.test('one2many with several pages, onchange and default order', function (assert) {
@@ -9667,6 +9730,7 @@ QUnit.module('relational_fields', {
     });
 
     QUnit.test('onchange in a one2many with non inline view on an existing record', function (assert) {
+        var done = assert.async();
         assert.expect(6);
 
         this.data.partner.fields.sequence = {string: 'Sequence', type: 'integer'};
@@ -9696,11 +9760,16 @@ QUnit.module('relational_fields', {
             viewOptions: {mode: 'edit'},
         });
 
+        var $view = $('#qunit-fixture').contents();
+        $view.prependTo('body');
         // swap 2 lines in the one2many
-        testUtils.dragAndDrop(form.$('.ui-sortable-handle:eq(1)'), form.$('tbody tr').first(),
-                                {position: 'top'});
-        assert.verifySteps(['load_views', 'read', 'read', 'onchange', 'onchange']);
-        form.destroy();
+        testUtils.dragAndDrop(form.$('.ui-sortable-handle:eq(1)'), form.$('tbody tr').first(), {nativeDragAndDrop: true}).then(function () {
+
+            assert.verifySteps(['load_views', 'read', 'read', 'onchange', 'onchange']);
+            form.destroy();
+            $view.remove();
+            done();
+        });
     });
 
     QUnit.test('onchange in a one2many with non inline view on a new record', function (assert) {

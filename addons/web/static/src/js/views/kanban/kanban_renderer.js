@@ -12,6 +12,8 @@ var utils = require('web.utils');
 
 var qweb = core.qweb;
 
+var Sortable = window.Sortable;
+
 function findInNode(node, predicate) {
     if (predicate(node)) {
         return node;
@@ -220,6 +222,18 @@ var KanbanRenderer = BasicRenderer.extend({
         return $.when();
     },
     /**
+     * Returns scrollable parent element
+     */
+    getScrollableParent: function () {
+        var scrollableParent;
+        this.trigger_up('get_scrollable_parent', {
+            callback: function (scrollable_parent) {
+                scrollableParent = scrollable_parent;
+            }
+        });
+        return scrollableParent;
+    },
+    /**
      * @override
      */
     updateState: function (state) {
@@ -296,16 +310,16 @@ var KanbanRenderer = BasicRenderer.extend({
         }
         if (this.groupedByM2O) {
             // Enable column sorting
-            this.$el.sortable({
-                axis: 'x',
-                items: '> .o_kanban_group',
+            var scrollableParent = this.getScrollableParent();
+            new Sortable(this.el, {
                 handle: '.o_kanban_header_title',
-                cursor: 'move',
-                revert: 150,
-                delay: 100,
-                tolerance: 'pointer',
-                forcePlaceholderSize: true,
-                stop: function () {
+                ghostClass: 'o_kanban_group_ghost',
+                sort: true,
+                draggable: '.o_kanban_group',
+                scroll: scrollableParent && scrollableParent[0],
+                forceFallback: true,
+                fallbackClass: 'o_kanban_group_clone',
+                onEnd: function (event) {
                     var ids = [];
                     self.$('.o_kanban_group').each(function (index, u) {
                         // Ignore 'Undefined' column
@@ -450,7 +464,7 @@ var KanbanRenderer = BasicRenderer.extend({
      * @param {string} direction  contains either 'LEFT' or 'RIGHT'
      */
     _focusOnCardInColumn: function(eventTarget, direction) {
-        var currentColumn = eventTarget.parentElement;
+        var currentColumn = !this.state.groupedBy.length ? eventTarget.parentElement : eventTarget.parentElement.parentElement;
         var hasSelectedACard = false;
         var cannotSelectAColumn = false;
         while (!hasSelectedACard && !cannotSelectAColumn) {

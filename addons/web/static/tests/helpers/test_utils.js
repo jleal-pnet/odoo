@@ -15,6 +15,7 @@ var ajax = require('web.ajax');
 var basic_fields = require('web.basic_fields');
 var config = require('web.config');
 var ControlPanel = require('web.ControlPanel');
+var concurrency = require('web.concurrency');
 var core = require('web.core');
 var dom = require('web.dom');
 var session = require('web.session');
@@ -544,7 +545,9 @@ function createParent(params) {
  * @param {string} [options.disableDrop=false] whether to trigger the drop action
  */
 function dragAndDrop($el, $to, options) {
+    var def = $.Deferred();
     var position = (options && options.position) || 'center';
+    var isNativeDragAndDrop = (options && options.nativeDragAndDrop);
     var elementCenter = $el.offset();
     elementCenter.left += $el.outerWidth()/2;
     elementCenter.top += $el.outerHeight()/2;
@@ -556,40 +559,67 @@ function dragAndDrop($el, $to, options) {
     if (position === 'top') {
         toOffset.top -= $to.outerHeight()/2 + vertical_offset;
     } else if (position === 'bottom') {
-        toOffset.top += $to.outerHeight()/2 - vertical_offset;
+        toOffset.top += $to.outerHeight()/2 + vertical_offset;
     } else if (position === 'left') {
         toOffset.left -= $to.outerWidth()/2;
     } else if (position === 'right') {
         toOffset.left += $to.outerWidth()/2;
     }
 
-    $el.trigger($.Event("mousedown", {
-        which: 1,
-        pageX: elementCenter.left,
-        pageY: elementCenter.top
-    }));
+    if (isNativeDragAndDrop) {
+        // Need to trigger extra mousemove, like literally we have to trigger mousemove two times
+        // if dropping area is available after two or more element
+        // for example drag and drop from 1st stage to 3rd or 4th or any stage after 3rd stage
+        // https://github.com/RubaXa/Sortable/issues/1303#issuecomment-379166526
+        var isExtraMousemove = (options && options.extraMousemove);
+        // in case of extra mousemove (two times) first mousemove shouldn't be till $to element
+        var left = (isExtraMousemove) ? toOffset.left - 10 : toOffset.left;
+        triggerPositionalMouseEvent(elementCenter.left, elementCenter.top, 'mousedown', $el[0]);
+        triggerPositionalMouseEvent(left, toOffset.top , 'mousemove', $to[0]);
+        if (isExtraMousemove) {
+            concurrency.delay(50).then(function () {
+                triggerPositionalMouseEvent(toOffset.left, toOffset.top, 'mousemove', $to[0]);
+                return concurrency.delay(50);
+            }).then(function () {
+                triggerPositionalMouseEvent(toOffset.left, toOffset.top, 'mouseup', $to[0]);
+                def.resolve();
+            });
+        } else {
+            concurrency.delay(50).then(function () {
+                triggerPositionalMouseEvent(toOffset.left, toOffset.top, 'mouseup', $el[0]);
+                def.resolve();
+            });
+        }
+    } else {
+        $el.trigger($.Event("mousedown", {
+            which: 1,
+            pageX: elementCenter.left,
+            pageY: elementCenter.top
+        }));
 
-    $el.trigger($.Event("mousemove", {
-        which: 1,
-        pageX: toOffset.left,
-        pageY: toOffset.top
-    }));
-
-    if (!(options && options.disableDrop)) {
-        $el.trigger($.Event("mouseup", {
+        $el.trigger($.Event("mousemove", {
             which: 1,
             pageX: toOffset.left,
             pageY: toOffset.top
         }));
-    } else {
-        // It's impossible to drag another element when one is already
-        // being dragged. So it's necessary to finish the drop when the test is
-        // over otherwise it's impossible for the next tests to drag and
-        // drop elements.
-        $el.on("remove", function () {
-            $el.trigger($.Event("mouseup"));
-        });
+
+        if (!(options && options.disableDrop)) {
+            $el.trigger($.Event("mouseup", {
+                which: 1,
+                pageX: toOffset.left,
+                pageY: toOffset.top
+            }));
+        } else {
+            // It's impossible to drag another element when one is already
+            // being dragged. So it's necessary to finish the drop when the test is
+            // over otherwise it's impossible for the next tests to drag and
+            // drop elements.
+            $el.on("remove", function () {
+                $el.trigger($.Event("mouseup"));
+            });
+        }
     }
+    return def;
 }
 
 /**
@@ -617,10 +647,11 @@ function triggerMouseEvent($el, type) {
  * @param {integer} x
  * @param {integer} y
  * @param {string} type a mouse event type, such as 'mousedown' or 'mousemove'
+ * @param {DOM Node} el
  */
-function triggerPositionalMouseEvent(x, y, type){
+function triggerPositionalMouseEvent(x, y, type, el){
     var ev = document.createEvent("MouseEvent");
-    var el = document.elementFromPoint(x,y);
+    el = el || document.elementFromPoint(x,y);
     ev.initMouseEvent(
         type,
         true /* bubble */,
