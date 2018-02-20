@@ -10,6 +10,7 @@ var Pager = require('web.Pager');
 var utils = require('web.utils');
 
 var _t = core._t;
+var qweb = core.qweb;
 
 // Allowed decoration on the list's rows: bold, italic and bootstrap semantics classes
 var DECORATIONS = [
@@ -42,6 +43,7 @@ var ListRenderer = BasicRenderer.extend({
         'keypress thead tr td': '_onKeyPress',
         'keydown tr': '_onKeyDown',
         'keydown thead tr': '_onKeyDown',
+        'click .o_list_view_select_action': '_onClickSelectAction',
     },
     /**
      * @constructor
@@ -65,6 +67,7 @@ var ListRenderer = BasicRenderer.extend({
         this.hasSelectors = params.hasSelectors;
         this.selection = params.selectedRecords || [];
         this.pagers = []; // instantiated pagers (only for grouped lists)
+        this.allSelected = false;
         this.editable = params.editable;
         this.isGrouped = this.state.groupedBy.length > 0;
     },
@@ -204,6 +207,15 @@ var ListRenderer = BasicRenderer.extend({
             }
             return reject;
         });
+    },
+    /**
+     * Remove selection bar.
+     *
+     * @private
+     */
+    _removeSelectionBar: function () {
+        this.allSelected = false;
+        this.$el.find('.o_list_view_select_all').remove();
     },
     /**
      * Render a list of <td>, with aggregates if available.  It can be displayed
@@ -610,6 +622,30 @@ var ListRenderer = BasicRenderer.extend({
         return _.map(this.state.data, this._renderRow.bind(this));
     },
     /**
+     * Render selection label to select all records
+     *
+     * @private
+     */
+    _renderSelectionBar: function () {
+        var values = {
+            title: _.str.sprintf('All %s records of this page are selected', this.state.data.length),
+            action_type: 'select_all',
+            action_label: _.str.sprintf('Select all %s', this.state.count)
+        };
+        if (this.allSelected) {
+            this.$el.find('.o_list_view_select_all').remove();
+            // make thead input checked if all records are selected.
+            // so that we can get domain while exporting records.
+            this.$('thead .o_list_record_selector input').prop('checked', true);
+            values = {
+                title: _.str.sprintf('All %s records are selected', this.state.count),
+                action_type: 'clear_selection',
+                action_label: 'Clear Selection'
+            };
+        }
+        this.$el.prepend(qweb.render('ListView.SelectAll', values));
+    },
+    /**
      * A 'selector' is the small checkbox on the left of a record in a list
      * view.  This is rendered as an input inside a div, so we can properly
      * style it.
@@ -724,7 +760,10 @@ var ListRenderer = BasicRenderer.extend({
         this.selection = _.map($selectedRows, function (row) {
             return $(row).data('id');
         });
-        this.trigger_up('selection_changed', { selection: this.selection });
+        if (this.selection.length === this.state.data.length && this.state.count > this.selection.length) {
+            this._renderSelectionBar();
+        }
+        this.trigger_up('selection_changed', { selection: this.selection, allSelected: this.allSelected });
         this._updateFooter();
     },
 
@@ -778,11 +817,27 @@ var ListRenderer = BasicRenderer.extend({
      * @private
      * @param {MouseEvent} event
      */
+    _onClickSelectAction: function (event) {
+        var actionType = $(event.currentTarget).data('action-type');
+        if (actionType == 'select_all') {
+            this.allSelected = true;
+            this._renderSelectionBar();
+        } else {
+            this.$('.o_list_record_selector input').prop('checked', false);
+            this._removeSelectionBar();
+        }
+        this._updateSelection();
+    },
+    /**
+     * @private
+     * @param {MouseEvent} event
+     */
     _onSelectRecord: function (event) {
         event.stopPropagation();
         this._updateSelection();
         if (!$(event.currentTarget).find('input').prop('checked')) {
             this.$('thead .o_list_record_selector input').prop('checked', false);
+            this._removeSelectionBar();
         }
     },
     /**
@@ -813,6 +868,10 @@ var ListRenderer = BasicRenderer.extend({
     _onToggleSelection: function (event) {
         var checked = $(event.currentTarget).prop('checked') || false;
         this.$('tbody .o_list_record_selector input:not(":disabled")').prop('checked', checked);
+        if (!checked) {
+            this._removeSelectionBar();
+        }
+        this.allSelected = false;
         this._updateSelection();
     },
 });
