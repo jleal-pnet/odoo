@@ -360,7 +360,7 @@ class ProcurementGroup(models.Model):
                                             self.env['procurement.group'].run(orderpoint.product_id, qty_rounded, orderpoint.product_uom, orderpoint.location_id,
                                                                               orderpoint.name, orderpoint.name, values)
                                     except UserError as error:
-                                        self.env['procurement.rule']._log_next_activity(orderpoint.product_id, error.name)
+                                        self.env['procurement.rule']._log_next_activity(orderpoint.product_id, error.args[0])
                                     self._procurement_from_orderpoint_post_process([orderpoint.id])
                                 if use_new_cursor:
                                     cr.commit()
