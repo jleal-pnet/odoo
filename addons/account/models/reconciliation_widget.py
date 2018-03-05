@@ -267,11 +267,9 @@ class AccountReconciliation(models.AbstractModel):
         res_alias = is_partner and 'p' or 'a'
 
         query = ("""
-            SELECT {0} account_id, account_name, account_code, max_date,
-                   to_char(last_time_entries_checked, 'YYYY-MM-DD') AS last_time_entries_checked
+            SELECT {0} account_id, account_name, account_code, max_date
             FROM (
                     SELECT {1}
-                        {res_alias}.last_time_entries_checked AS last_time_entries_checked,
                         a.id AS account_id,
                         a.name AS account_name,
                         a.code AS account_code,
@@ -302,10 +300,8 @@ class AccountReconciliation(models.AbstractModel):
                             {7}
                             AND l.amount_residual < 0
                         )
-                    GROUP BY {8} a.id, a.name, a.code, {res_alias}.last_time_entries_checked
-                    ORDER BY {res_alias}.last_time_entries_checked
+                    GROUP BY {8} a.id, a.name, a.code
                 ) as s
-            WHERE (last_time_entries_checked IS NULL OR max_date > last_time_entries_checked)
         """.format(
                 is_partner and 'partner_id, partner_name,' or ' ',
                 is_partner and 'p.id AS partner_id, p.name AS partner_name,' or ' ',
@@ -315,8 +311,7 @@ class AccountReconciliation(models.AbstractModel):
                 res_ids and 'AND ' + res_alias + '.id in %(res_ids)s' or '',
                 self.env.user.company_id.id,
                 is_partner and 'AND l.partner_id = p.id' or ' ',
-                is_partner and 'l.partner_id, p.id,' or ' ',
-                res_alias=res_alias
+                is_partner and 'l.partner_id, p.id,' or ' '
             ))
         self.env.cr.execute(query, locals())
 
@@ -357,13 +352,6 @@ class AccountReconciliation(models.AbstractModel):
         for datum in data:
             if len(datum['mv_line_ids']) >= 1 or len(datum['mv_line_ids']) + len(datum['new_mv_line_dicts']) >= 2:
                 self._process_move_lines(datum['mv_line_ids'], datum['new_mv_line_dicts'])
-
-            if datum['type'] == 'partner':
-                partners = Partner.browse(datum['id'])
-                partners.mark_as_reconciled()
-            if datum['type'] == 'account':
-                accounts = Account.browse(datum['id'])
-                accounts.mark_as_reconciled()
 
     ####################################################
     # Private
