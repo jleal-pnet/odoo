@@ -714,7 +714,9 @@ ActionManager.include({
         var def = $.Deferred();
 
         // determine the action to execute according to the actionData
-        if (actionData.special) {
+        if (actionData.special && actionData.options.reload) {
+            def = $.when({type: 'ir.actions.client', tag: 'reload'});
+        } else if (actionData.special) {
             def = $.when({type: 'ir.actions.act_window_close', infos: 'special'});
         } else if (actionData.type === 'object') {
             // call a Python Object method, which may return an action to execute
