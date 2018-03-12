@@ -78,7 +78,7 @@ var MrpBomReport = Widget.extend(ControlPanelMixin, {
             searchVariant: this.reportContext.searchVariant
         }
         session.get_file({
-            url: '/mrp/pdf/mrp_bom_report/' + this.reportContext['active_id'],
+            url: '/stock/pdf/mrp_bom_report/mrp_bom_report/' + this.given_context.active_id,
             data: values,
             complete: framework.unblockUI,
             error: crash_manager.rpc_error.bind(crash_manager),
