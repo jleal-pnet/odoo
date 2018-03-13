@@ -79,8 +79,8 @@ var MrpBomReport = stock_report_generic.extend({
         this.$buttonPrint = $(QWeb.render('mrp.button'));
         this.$buttonPrint.on('click', this._onClickPrint.bind(this));
         this.$searchView = $(QWeb.render('mrp.report_bom_search', _.omit(this.data, 'lines')));
-        this.$searchView.find('.o_mrp_bom_report_qty').on('focusout', this._onFocusoutQty.bind(this));
-        this.$searchView.find('.o_mrp_bom_report_variants').on('click', this._onClickVariants.bind(this));
+        this.$searchView.find('.o_mrp_bom_report_qty').on('change', this._onChangeQty.bind(this));
+        this.$searchView.find('.o_mrp_bom_report_variants').on('change', this._onChangeVariants.bind(this));
     },
     _onClickPrint: function () {
         var childBomIDs = _.map(this.$el.find('.o_mrp_bom_foldable').closest('tr'), function (el) {
@@ -100,16 +100,15 @@ var MrpBomReport = stock_report_generic.extend({
             error: crash_manager.rpc_error.bind(crash_manager),
         });
     },
-    _onFocusoutQty: function (ev) {
-        var self = this;
+    _onChangeQty: function (ev) {
         var qty = $(ev.currentTarget).val().trim();
         if (qty) {
-            this.reportContext.searchQty = qty;
+            this.given_context.searchQty = qty;
             this._reload();
         }
     },
-    _onClickVariants: function (ev) {
-        this.reportContext.searchVariant = $(ev.currentTarget).val();
+    _onChangeVariants: function (ev) {
+        this.given_context.searchVariant = $(ev.currentTarget).val();
         this._reload();
     },
     _removeLines: function ($el) {
