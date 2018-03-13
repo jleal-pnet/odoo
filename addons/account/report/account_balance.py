@@ -64,7 +64,7 @@ class ReportTrialBalance(models.AbstractModel):
             raise UserError(_("Form content is missing, this report cannot be printed."))
 
         self.model = self.env.context.get('active_model')
-        docs = self.env[self.model].browse(self.env.context.get('active_ids', []))
+        docs = self.env[self.model].get_active_records()
         display_account = data['form'].get('display_account')
         accounts = docs if self.model == 'account.account' else self.env['account.account'].search([])
         account_res = self.with_context(data['form'].get('used_context'))._get_accounts(accounts, display_account)

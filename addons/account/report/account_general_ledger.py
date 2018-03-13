@@ -114,7 +114,7 @@ class ReportGeneralLedger(models.AbstractModel):
             raise UserError(_("Form content is missing, this report cannot be printed."))
 
         self.model = self.env.context.get('active_model')
-        docs = self.env[self.model].browse(self.env.context.get('active_ids', []))
+        docs = self.env[self.model].get_active_records()
 
         init_balance = data['form'].get('initial_balance', True)
         sortby = data['form'].get('sortby', 'sort_date')
