@@ -63,11 +63,10 @@ class MrpBomReport(models.TransientModel):
         return price
 
     @api.model
-    def get_lines(self, bom_id=False, line_qty=False, line_id=False, level=False):
-        context = self.env.context or {}
+    def get_lines(self, bom_id=False, line_qty=False, line_id=False, level=False, searchQty=0, searchVariant=False):
         lines = {}
-        bom = self.env['mrp.bom'].browse(bom_id or context.get('active_id'))
-        bom_quantity = float(context.get('searchQty') or 0) or bom.product_qty
+        bom = self.env['mrp.bom'].browse(bom_id)
+        bom_quantity = float(searchQty) or bom.product_qty
         bom_product_variants = {}
         bom_uom_name = ''
         if line_id:
@@ -82,8 +81,8 @@ class MrpBomReport(models.TransientModel):
                     bom_product_variants[variant.id] = variant.display_name
 
             # Display bom components for current selected product variant
-            if context.get('searchVariant'):
-                product = self.env['product.product'].browse(int(context.get('searchVariant')))
+            if searchVariant:
+                product = self.env['product.product'].browse(int(searchVariant))
             else:
                 product = bom.product_id or bom.product_tmpl_id.product_variant_id
 
@@ -134,17 +133,17 @@ class MrpBomReport(models.TransientModel):
         }
 
     @api.model
-    def get_html(self, given_context=None, bom_id=False, line_qty=False, line_id=False, level=False):
-        res = self.with_context(given_context).get_lines(bom_id, line_qty, line_id, level)
+    def get_html(self, bom_id=False, searchQty=1, searchVariant=False, line_qty=False, line_id=False, level=False):
+        res = self.get_lines(bom_id=bom_id, searchQty=searchQty, searchVariant=searchVariant, line_qty=line_qty, line_id=line_id, level=level)
         template = 'mrp.report_mrp_bom'
-        # Render particular bom line
-        if bom_id:
+        if level:
             template = 'mrp.report_mrp_bom_line'
         res['lines'] = self.env.ref(template).render({'data': res['lines']})
         return res
 
     @api.model
-    def get_pdf(self, bom_id):
+    def get_pdf(self, bom_id, child_bom_ids=[], searchQty=0, searchVariant=False):
+        bom_id = self.env.context.get('active_id')
         if not config['test_enable']:
             self = self.with_context(commit_assetsbundle=True)
         datas = self.with_context(print_mode=True)._get_pdf_lines(bom_id)
@@ -161,9 +160,10 @@ class MrpBomReport(models.TransientModel):
             specific_paperformat_args={'data-report-margin-top': 10, 'data-report-header-spacing': 10}
         )
 
-    def _get_pdf_lines(self, bom_id):
-        child_bom_ids = json.loads(self.env.context.get('child_bom_ids'))
-        res = self.get_lines(bom_id)
+    def _get_pdf_lines(self, bom_id, child_bom_ids=[], searchQty=0, searchVariant=False):
+        if child_bom_ids:
+            child_bom_ids = json.loads(child_bom_ids)
+        res = self.get_lines(bom_id=bom_id, searchQty=searchQty, searchVariant=searchVariant)
         data = {}
         if res:
             lines = res['lines']
