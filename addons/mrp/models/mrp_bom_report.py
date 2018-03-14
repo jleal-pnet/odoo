@@ -63,7 +63,7 @@ class MrpBomReport(models.TransientModel):
         return price
 
     @api.model
-    def get_lines(self, bom_id=False, line_qty=False, line_id=False, level=False, searchQty=0, searchVariant=False):
+    def get_lines(self, bom_id=False, line_qty=False, line_id=False, level=False, searchQty=0, searchVariant=False, report_type='html'):
         lines = {}
         bom = self.env['mrp.bom'].browse(bom_id)
         bom_quantity = float(searchQty) or bom.product_qty
@@ -89,6 +89,7 @@ class MrpBomReport(models.TransientModel):
             components = []
             operations_data = self._get_operations(bom, product, False, bom_quantity, [])
             lines = {
+                'report_type': report_type,
                 'bom': bom,
                 'bom_qty': bom_quantity,
                 'bom_prod_name': product.display_name,
@@ -144,63 +145,18 @@ class MrpBomReport(models.TransientModel):
     @api.model
     def get_pdf(self, bom_id, child_bom_ids=[], searchQty=0, searchVariant=False):
         bom_id = self.env.context.get('active_id')
+        data = self.with_context(print_mode=True).get_lines(bom_id, report_type='pdf')
         if not config['test_enable']:
             self = self.with_context(commit_assetsbundle=True)
-        datas = self.with_context(print_mode=True)._get_pdf_lines(bom_id)
         report_values = {
             'mode': 'print',
             'base_url': self.env['ir.config_parameter'].sudo().get_param('web.base.url'),
         }
         IrActionsReport = self.env['ir.actions.report']
-        body = self.env['ir.ui.view'].render_template('mrp.report_mrp_bom_pdf', values=dict(report_values, datas=[datas], report=self, context=self))
+        body = self.env['ir.ui.view'].render_template('mrp.report_mrp_bom_pdf', values=dict(report_values, data=data['lines'], report=self, context=self))
         header = IrActionsReport.render_template('web.internal_layout', values=report_values)
         header = IrActionsReport.render_template('web.minimal_layout', values=dict(report_values, subst=True, body=header))
         return self.env['ir.actions.report']._run_wkhtmltopdf(
             [body], header=header, landscape=True,
             specific_paperformat_args={'data-report-margin-top': 10, 'data-report-header-spacing': 10}
         )
-
-    def _get_pdf_lines(self, bom_id, child_bom_ids=[], searchQty=0, searchVariant=False):
-        if child_bom_ids:
-            child_bom_ids = json.loads(child_bom_ids)
-        res = self.get_lines(bom_id=bom_id, searchQty=searchQty, searchVariant=searchVariant)
-        data = {}
-        if res:
-            lines = res['lines']
-            body = {}
-            counter = 0
-            data['header'] = {
-                'bom': lines['bom'],
-                'bom_qty': lines['bom_qty'],
-                'bom_prod_name': lines['bom_prod_name'],
-                'currency': lines['currency'],
-                'total': lines['total'],
-                'operations': lines['operations'],
-                'operations_total': lines['operations_total'],
-            }
-            for component in lines['components']:
-                body[counter] = dict(component)
-                body[counter]['expanded'] = False
-
-                if component.get('child_bom') in child_bom_ids:
-                    body[counter]['expanded'] = True
-                    sub_lines, counter = self._get_pdf_child_lines(component['child_bom'], component['prod_qty'], component['level'], counter, child_bom_ids)
-                    body.update(sub_lines)
-                counter += 1
-            data['body'] = body
-        return data
-
-    def _get_pdf_child_lines(self, bom_id, bom_qty, level, counter, child_bom_ids):
-        data = {}
-        lines = self.get_lines(bom_id, bom_qty, False, level + 1)
-
-        for line in lines['lines']['components']:
-            counter += 1
-            data[counter] = dict(line)
-            data[counter]['expanded'] = False
-
-            if line.get('child_bom') in child_bom_ids:
-                data[counter]['expanded'] = True
-                sub_lines, counter = self._get_pdf_child_lines(line['child_bom'], line['prod_qty'], line['level'], counter, child_bom_ids)
-                data.update(sub_lines)
-        return data, counter
