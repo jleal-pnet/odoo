@@ -27,8 +27,8 @@
                                         <th>Product</th>
                                         <th>Quantity</th>
                                         <th groups="uom.group_uom">Unit of Measure</th>
-                                        <th>Unit Cost</th>
-                                        <th>Total Cost</th>
+                                        <th>Product Cost</th>
+                                        <th>BoM Cost</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -47,60 +47,6 @@
                         </div>
                     </div>
                 </div>
-                <div t-if="data['operations']" groups="mrp.group_mrp_routings" class="row">
-                    <div class="col-md-12">
-                        <div class="mt16">
-                            <h4><b>Operations</b></h4>
-                            <table width="100%">
-                                <thead>
-                                    <tr>
-                                        <th>Operation</th>
-                                        <th>Work Center</th>
-                                        <th>Duration (Minutes)</th>
-                                        <th>Cost per Hour</th>
-                                        <th>Total Cost</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr class="o_mrp_bom_report_line" t-foreach="data['operations']" t-as="operation">
-                                        <td>
-                                            <span>
-                                                <a t-att-data-res-id="operation['operation'].id" t-att-data-model="operation['operation']._name" class="o_mrp_bom_action">
-                                                    <t t-esc="operation['name']"/>
-                                                </a>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span>
-                                                <a t-att-data-res-id="operation['operation'].workcenter_id.id" t-att-data-model="operation['operation'].workcenter_id._name" class="o_mrp_bom_action">
-                                                    <t t-esc="operation['operation'].workcenter_id.name"/>
-                                                </a>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span><t t-esc="operation['duration_expected']" t-options='{"widget": "float_time"}'/></span>
-                                        </td>
-                                        <td>
-                                            <span><t t-esc="operation['operation'].workcenter_id.costs_hour" t-options="{'widget': 'monetary', 'display_currency': currency}"/></span>
-                                        </td>
-                                        <td>
-                                            <span><t t-esc="operation['total']"/></span>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td><strong>Total Cost of Operations</strong></td>
-                                        <td><strong><t t-esc="data['operations_total']"/></strong></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    </div>
-                </div>
             </t>
             <t t-else="">
                 <h1 class="text-center">No data available.</h1>
@@ -110,13 +56,13 @@
 
     <template id="report_mrp_bom_line">
         <t t-set="currency" t-value="data['currency']"/>
+        <t t-set="space_td" t-value="'margin-left: '+ str(data['level'] * 20) + 'px;'"/>
         <t t-foreach="data['components']" t-as="l">
-            <t t-set="space_td" t-value="'margin-left: '+ str(l['level'] * 20) + 'px;'"/>
-            <tr class="o_mrp_bom_report_line" t-att-data-id="l['child_bom']" t-att-parent_id="l['parent_id']" t-att-data-line="l['line_id']" t-att-data-qty="l['prod_qty']" t-att-data-level="l['level']">
+            <tr class="o_mrp_bom_report_line" t-att-data-id="l['child_bom']" t-att-parent_id="l['parent_id']" t-att-data-line="l['line_id']" t-att-data-product_id="l['prod_id']" t-att-data-qty="l['prod_qty']" t-att-data-level="data['level']">
                 <td>
                     <span t-att-style="space_td"/>
-                    <t t-if="l['child_bom'] and data['report_type'] == 'html'">
-                        <span class="o_mrp_bom_unfoldable fa fa-fw fa-caret-right"/>
+                    <t t-if="l['child_bom']">
+                        <span t-att-data-function="'get_bom'" class="o_mrp_bom_unfoldable fa fa-fw fa-caret-right"/>
                     </t>
                     <span t-att-class="None if l['child_bom'] else 'o_mrp_bom_no_fold'">
                         <a t-att-data-res-id="l['prod_id']" t-att-data-model="'product.product'" class="o_mrp_bom_action"><t t-esc="l['prod_name']"/></a>
@@ -128,6 +74,44 @@
                 <td><span t-esc="l['total']" t-options='{"widget": "monetary", "display_currency": currency}'/></td>
             </tr>
         </t>
+        <t t-if="data['operations']">
+            <tr class="o_mrp_bom_report_line" t-att-data-id="'operation-' + str(data['bom'].id)" t-att-data-bom-id="data['bom'].id" t-att-parent_id="data['bom'].id" t-att-data-qty="data['bom_qty']" t-att-data-level="data['level']">
+                <td>
+                    <span t-att-style="space_td"/>
+                    <span class="o_mrp_bom_unfoldable fa fa-fw fa-caret-right" t-att-data-function="'get_operations'"/>
+                    Operations
+                </td>
+                <td>
+                    <span t-esc="data['operations_time']" t-options='{"widget": "float_time"}'/>
+                </td>
+                <td>
+                </td>
+                <td>
+                    <span t-esc="data['operations_cost']" t-options='{"widget": "monetary", "display_currency": currency}'/>
+                </td>
+            </tr>
+        </t>
+    </template>
+
+    <template id="report_mrp_operation_line">
+      <t t-set="currency" t-value="data['currency']"/>
+      <t t-foreach="data['operations']" t-as="op">
+        <t t-set="space_td" t-value="'margin-left: '+ str(op['level'] * 20) + 'px;'"/>
+          <tr class="o_mrp_bom_report_line" t-att-parent_id="'operation-' + str(data['bom_id'])">
+              <td>
+                  <span t-att-style="space_td"/>
+                  <a t-att-data-res-id="op['operation'].id" t-att-data-model="'mrp.routing.workcenter'" class="o_mrp_bom_action"><t t-esc="op['name']"/></a>
+              </td>
+              <td>
+                  <span t-esc="op['duration_expected']" t-options='{"widget": "float_time"}'/>
+              </td>
+              <td groups="uom.group_uom">minutes</td>
+              <td></td>
+              <td>
+                  <span t-esc="op['total']" t-options='{"widget": "monetary", "display_currency": currency}'/>
+              </td>
+          </tr>
+      </t>
     </template>
 
     <template id="report_mrp_bom_pdf">
