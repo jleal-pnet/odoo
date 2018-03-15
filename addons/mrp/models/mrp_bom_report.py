@@ -43,7 +43,7 @@ class MrpBomReport(models.TransientModel):
         return price
 
     @api.model
-    def get_report_data(self, bom_id, searchQty=0, searchVariant=False):
+    def _get_report_data(self, bom_id, searchQty=0, searchVariant=False):
         lines = {}
         bom = self.env['mrp.bom'].browse(bom_id)
         bom_quantity = float(searchQty) or bom.product_qty
@@ -58,7 +58,7 @@ class MrpBomReport(models.TransientModel):
                 for variant in bom.product_tmpl_id.product_variant_ids:
                     bom_product_variants[variant.id] = variant.display_name
 
-        lines = self.get_bom_line(bom_id, product_id=searchVariant, line_qty=bom_quantity)
+        lines = self._get_bom(bom_id, product_id=searchVariant, line_qty=bom_quantity, level=1)
 
         return {
             'lines': lines,
@@ -69,7 +69,7 @@ class MrpBomReport(models.TransientModel):
             'is_uom_applied': self.env.user.user_has_groups('uom.group_uom')
         }
 
-    def get_bom_line(self, bom_id=False, product_id=False, line_qty=False, line_id=False, level=False):
+    def _get_bom(self, bom_id=False, product_id=False, line_qty=False, line_id=False, level=False):
         bom = self.env['mrp.bom'].browse(bom_id)
         current_line = self.env['mrp.bom.line'].browse(int(line_id))
         bom_quantity = current_line.product_uom_id._compute_quantity(line_qty, bom.product_uom_id)
@@ -80,7 +80,6 @@ class MrpBomReport(models.TransientModel):
         else:
             product = bom.product_id or bom.product_tmpl_id.product_variant_id
 
-        components = []
         operations = self._get_operation_line(bom.routing_id, (bom_quantity / bom.product_qty), 0)
         lines = {
             'bom': bom,
@@ -88,6 +87,7 @@ class MrpBomReport(models.TransientModel):
             'bom_prod_name': product.display_name,
             'currency': self.env.user.company_id.currency_id,
             'product': product,
+            'price': product.uom_id._compute_price(product.standard_price, bom.product_uom_id) * bom_quantity,
             'total': sum([op['total'] for op in operations]),
             'level': level or 0,
             'operations': operations,
@@ -95,7 +95,14 @@ class MrpBomReport(models.TransientModel):
             'operations_cost': sum([op['total'] for op in operations]),
             'operations_time': sum([op['duration_expected'] for op in operations])
         }
+        components, total = self._get_bom_lines(bom, bom_quantity, product, line_id)
+        lines['components'] = components
+        lines['total'] += total
+        return lines
 
+    def _get_bom_lines(self, bom, bom_quantity, product, line_id):
+        components = []
+        total = 0
         for line in bom.bom_line_ids:
             line_quantity = (bom_quantity) * line.product_qty
             if line._skip_bom_line(product):
@@ -112,15 +119,14 @@ class MrpBomReport(models.TransientModel):
                 'prod_qty': line_quantity,
                 'prod_uom': line.product_uom_id.name,
                 'prod_cost': price,
-                'parent_id': bom_id,
+                'parent_id': bom.id,
                 'line_id': line.id,
                 'total': total,
                 'child_bom': line.child_bom_id.id,
                 'phantom_bom': line.child_bom_id and line.child_bom_id.type == 'phantom' or False,
             })
-            lines['total'] += total
-        lines['components'] = components
-        return lines
+            total += total
+        return components, total
 
     @api.model
     def get_operations(self, bom_id=False, qty=0, level=0):
@@ -135,12 +141,12 @@ class MrpBomReport(models.TransientModel):
 
     @api.model
     def get_bom(self, bom_id=False, product_id=False, line_qty=False, line_id=False, level=False):
-        lines = self.get_bom_line(bom_id=bom_id, product_id=product_id, line_qty=line_qty, line_id=line_id, level=level)
+        lines = self._get_bom(bom_id=bom_id, product_id=product_id, line_qty=line_qty, line_id=line_id, level=level)
         return self.env.ref('mrp.report_mrp_bom_line').render({'data': lines})
 
     @api.model
     def get_html(self, bom_id=False, searchQty=1, searchVariant=False):
-        res = self.get_report_data(bom_id=bom_id, searchQty=searchQty, searchVariant=searchVariant)
+        res = self._get_report_data(bom_id=bom_id, searchQty=searchQty, searchVariant=searchVariant)
         res['lines'] = self.env.ref('mrp.report_mrp_bom').render({'data': res['lines']})
         return res
 

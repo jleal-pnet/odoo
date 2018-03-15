@@ -20,7 +20,6 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="mt16">
-                            <h4><b>Components</b></h4>
                             <table width="100%" class="o_mrp_bom_expandable">
                                 <thead>
                                     <tr>
@@ -32,15 +31,24 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <tr>
+                                        <td>
+                                            <span><a t-att-data-res-id="data['product'].id" t-att-data-model="'product.product'" class="o_mrp_bom_action"><t t-esc="data['bom_prod_name']"/></a></span>
+                                        </td>
+                                        <td><span><t t-esc="data['bom_qty']"/></span></td>
+                                        <td groups="uom.group_uom"><span><t t-esc="data['bom'].product_uom_id.name"/></span></td>
+                                        <td><span><t t-esc="data['price']" t-options='{"widget": "monetary", "display_currency": currency}'/></span></td>
+                                        <td><span><t t-esc="data['total']" t-options='{"widget": "monetary", "display_currency": currency}'/></span></td>
+                                    </tr>
                                     <t t-call="mrp.report_mrp_bom_line"/>
                                 </tbody>
                                 <tfoot>
                                     <tr>
                                         <td></td>
-                                        <td></td>
+                                        <td><span><strong>Unit Cost</strong></span></td>
                                         <td groups="uom.group_uom"></td>
-                                        <td><span><strong>Total Cost of Components</strong></span></td>
-                                        <td><span><t t-esc="data['total']" t-options='{"widget": "monetary", "display_currency": currency}'/></span></td>
+                                        <td><span><t t-esc="data['price']/data['bom_qty']" t-options='{"widget": "monetary", "display_currency": currency}'/></span></td>
+                                        <td><span><t t-esc="data['total']/data['bom_qty']" t-options='{"widget": "monetary", "display_currency": currency}'/></span></td>
                                     </tr>
                                 </tfoot>
                             </table>
