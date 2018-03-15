@@ -244,7 +244,7 @@
     <record id="pcg_121" model="account.account.template">
         <field name="name">Profit sau pierdere</field>
         <field name="code">121</field>
-        <field name="user_type_id" ref="account.data_account_type_equity"/>
+        <field name="user_type_id" ref="account.data_unaffected_earnings"/>
         <field name="chart_template_id" ref="ro_chart_template"/>
     </record>
 
@@ -258,14 +258,14 @@
     <record id="pcg_1411" model="account.account.template">
         <field name="name">Câştiguri legate de vânzarea instrumentelor de capitaluri proprii</field>
         <field name="code">1411</field>
-        <field name="user_type_id" ref="account.data_unaffected_earnings"/>
+        <field name="user_type_id" ref="account.data_account_type_equity"/>
         <field name="chart_template_id" ref="ro_chart_template"/>
     </record>
 
     <record id="pcg_1412" model="account.account.template">
         <field name="name">Câştiguri legate de anularea instrumentelor de capitaluri proprii</field>
         <field name="code">1412</field>
-        <field name="user_type_id" ref="account.data_unaffected_earnings"/>
+        <field name="user_type_id" ref="account.data_account_type_equity"/>
         <field name="chart_template_id" ref="ro_chart_template"/>
     </record>
 
