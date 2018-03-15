@@ -117,6 +117,7 @@ class MrpBomReport(models.TransientModel):
                 'line_id': line.id,
                 'total': total,
                 'child_bom': line.child_bom_id.id,
+                'phantom_bom': line.child_bom_id and line.child_bom_id.type == 'phantom' or False,
             })
             lines['total'] += total
         lines['components'] = components
