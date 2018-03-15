@@ -100,13 +100,12 @@ class MrpBomReport(models.TransientModel):
             line_quantity = (bom_quantity) * line.product_qty
             if line._skip_bom_line(product):
                 continue
+            price = line.product_id.uom_id._compute_price(line.product_id.standard_price, line.product_uom_id) * line_quantity
             if line.child_bom_id:
                 factor = line.product_uom_id._compute_quantity(line_quantity, line.child_bom_id.product_uom_id) * line.child_bom_id.product_qty
-                price = self._get_price(line.child_bom_id, factor) / line_quantity
+                total = self._get_price(line.child_bom_id, factor)
             else:
-                price = line.product_id.uom_id._compute_price(line.product_id.standard_price, line.product_uom_id)
-            prod_qty = line_quantity
-            total = prod_qty * price
+                total = price
             components.append({
                 'prod_id': line.product_id.id,
                 'prod_name': line.product_id.display_name,
