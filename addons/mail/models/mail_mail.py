@@ -8,7 +8,6 @@ import psycopg2
 import threading
 
 from collections import defaultdict
-from email.utils import formataddr
 
 from odoo import _, api, fields, models
 from odoo import tools
@@ -169,7 +168,7 @@ class MailMail(models.Model):
         body = self._send_prepare_body()
         body_alternative = tools.html2plaintext(body)
         if partner:
-            email_to = [formataddr((partner.name or 'False', partner.email or 'False'))]
+            email_to = [tools.formataddr((partner.name or 'False', partner.email or 'False'))]
         else:
             email_to = tools.email_split_and_format(self.email_to)
         res = {
@@ -288,6 +287,7 @@ class MailMail(models.Model):
                 # build an RFC2822 email.message.Message object and send it without queuing
                 res = None
                 for email in email_list:
+                    print('sending from itme in email_list')
                     msg = IrMailServer.build_email(
                         email_from=mail.email_from,
                         email_to=email.get('email_to'),

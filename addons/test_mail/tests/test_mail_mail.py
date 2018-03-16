@@ -8,6 +8,47 @@ from odoo.tests import common
 from odoo.tools import mute_logger
 
 
+class TestUtils(common.SavepointCase, mail_common.MockEmails):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestUtils, cls).setUpClass()
+        _quick_create_ctx = {
+            'no_reset_password': True,
+            'mail_create_nolog': True,
+            'mail_create_nosubscribe': True,
+            'mail_notrack': True,
+        }
+        cls.user_employee = cls.env['res.users'].with_context(_quick_create_ctx).create({
+            'name': 'Frédéric, le Grand',
+            'login': 'fred',
+            'email': 'fred@example.com',
+            'signature': '--\nFrédéric le Grand',
+            'groups_id': [(6, 0, [cls.env.ref('base.group_user').id])]
+        })
+        cls.recipient_1 = cls.env['res.partner'].with_context(_quick_create_ctx).create({
+            'name': 'Frédérique, la Petiote',
+            'email': 'fred2@example.com',
+        })
+        cls.recipient_2 = cls.env['res.partner'].with_context(_quick_create_ctx).create({
+            'name': 'Amię Wiadomość',
+            'email': 'amy@example.com',
+        })
+
+    def test_build_email_from_mail(self):
+        # print('--------------------------------------------------')
+        mail = self.env['mail.mail'].sudo(self.user_employee).create({
+            'subject': 'Żółta kartka',
+            'body': '<p>Zizisse top body</p>',
+            'recipient_ids': [(4, self.recipient_1.id), (4, self.recipient_2.id)],
+            'email_to': ', '.join(['Alexandra, Méga Défonçeuse <alexandra@example.com>', 'Amię Wiadomość <amy@example.com>']),
+            # 'email_cc':', '.join(['Alexandra, Méga Défonçeuse <alexandra@example.com>', 'Amię Wiadomość <amy@example.com>']),
+        })
+        # print('--------------------------------------------------')
+        mail.send()
+        # print('--------------------------------------------------')
+
+
 class TestMail(common.SavepointCase, mail_common.MockEmails):
 
     @classmethod

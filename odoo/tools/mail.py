@@ -10,8 +10,9 @@ import socket
 import threading
 import time
 
-from email.header import decode_header
-from email.utils import getaddresses, formataddr
+from email import utils
+from email.header import Header, decode_header
+from email.utils import getaddresses
 from lxml import etree
 
 import odoo
@@ -477,28 +478,36 @@ def email_send(email_from, email_to, subject, body, email_cc=None, email_bcc=Non
             cr.close()
     return res
 
+
+def formataddr(addr):
+    """ Wrapper for emails.utils.formataddr that encode the name to avoid
+    UnicodeEncodeError: 'ascii' codec can't encode character ... -like errors """
+    name, email = addr
+    # print('before', name, '-', email)
+    name = Header(pycompat.to_text(name)).encode()
+    # print('after', name, '-', email)
+    return utils.formataddr((name, email))
+
+
 def email_split(text):
     """ Return a list of the email addresses found in ``text`` """
     if not text:
         return []
-    return [addr[1] for addr in getaddresses([text])
-                # getaddresses() returns '' when email parsing fails, and
-                # sometimes returns emails without at least '@'. The '@'
-                # is strictly required in RFC2822's `addr-spec`.
-                if addr[1]
-                if '@' in addr[1]]
+    # getaddresses() returns '' when email parsing fails, and sometimes returns emails without at
+    # least '@'. The '@' is strictly required in RFC2822's `addr-spec`.
+    addresses = [addr for addr in getaddresses([pycompat.to_native(ustr(text))]) if addr[1] and '@' in addr[1]]
+    return [addr[1] for addr in addresses]
+
 
 def email_split_and_format(text):
-    """ Return a list of email addresses found in ``text``, formatted using
-    formataddr. """
+    """ Return a list a formatted emails found in text using formataddr """
     if not text:
         return []
-    return [formataddr((addr[0], addr[1])) for addr in getaddresses([text])
-                # getaddresses() returns '' when email parsing fails, and
-                # sometimes returns emails without at least '@'. The '@'
-                # is strictly required in RFC2822's `addr-spec`.
-                if addr[1]
-                if '@' in addr[1]]
+    # getaddresses() returns '' when email parsing fails, and sometimes returns emails without at
+    # least '@'. The '@' is strictly required in RFC2822's `addr-spec`.
+    addresses = [addr for addr in getaddresses([pycompat.to_native(ustr(text))]) if addr[1] and '@' in addr[1]]
+    return [formataddr((addr[0], addr[1])) for addr in addresses]
+
 
 def email_references(references):
     ref_match, model, thread_id, hostname, is_private = False, False, False, False, False
