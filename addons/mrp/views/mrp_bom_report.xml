@@ -26,8 +26,8 @@
                                         <th>Product</th>
                                         <th>Quantity</th>
                                         <th groups="uom.group_uom">Unit of Measure</th>
-                                        <th class="o_mrp_prod_cost">Product Cost</th>
-                                        <th class="o_mrp_bom_cost">BoM Cost</th>
+                                        <th class="o_mrp_prod_cost" title="This is the cost defined on the product.">Product Cost</th>
+                                        <th class="o_mrp_bom_cost" title="This is the cost based on the BoM of the product. It is computed by summing the costs of the components and operations needed to build the product.">BoM Cost</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -84,7 +84,7 @@
                         <a t-att-data-res-id="l['prod_id']" t-att-data-model="'product.product'" class="o_mrp_bom_action"><t t-esc="l['prod_name']"/></a>
                     </span>
                     <t t-if="l['phantom_bom']">
-                        <span class="fa fa-dropbox"/>
+                        <span class="fa fa-dropbox" title="This is a BoM of type Kit!"/>
                     </t>
                 </td>
                 <td><span><t t-esc="l['prod_qty']"/></span></td>
