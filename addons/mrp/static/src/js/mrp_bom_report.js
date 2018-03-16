@@ -42,7 +42,13 @@ var MrpBomReport = stock_report_generic.extend({
             self.update_cp();
         });
     },
+    render_html: function(event, $el, result){
+        $el.after(result);
+        $(event.currentTarget).toggleClass('o_mrp_bom_foldable o_mrp_bom_unfoldable fa-caret-right fa-caret-down');
+        this._reload_report_type();
+    },
     get_bom: function(event) {
+      var self = this;
       var $parent = $(event.currentTarget).closest('tr');
       var activeID = $parent.data('id');
       var productID = $parent.data('product_id');
@@ -61,11 +67,11 @@ var MrpBomReport = stock_report_generic.extend({
               ]
           })
           .then(function (result) {
-              $parent.after(result);
-              $(event.currentTarget).toggleClass('o_mrp_bom_foldable o_mrp_bom_unfoldable fa-caret-right fa-caret-down');
+              self.render_html(event, $parent, result);
           });
     },
     get_operations: function(event) {
+      var self = this;
       var $parent = $(event.currentTarget).closest('tr');
       var activeID = $parent.data('bom-id');
       var qty = $parent.data('qty');
@@ -80,8 +86,7 @@ var MrpBomReport = stock_report_generic.extend({
               ]
           })
           .then(function (result) {
-              $parent.after(result);
-              $(event.currentTarget).toggleClass('o_mrp_bom_foldable o_mrp_bom_unfoldable fa-caret-right fa-caret-down');
+              self.render_html(event, $parent, result);
           });
     },
     update_cp: function () {
@@ -99,6 +104,7 @@ var MrpBomReport = stock_report_generic.extend({
         this.$searchView = $(QWeb.render('mrp.report_bom_search', _.omit(this.data, 'lines')));
         this.$searchView.find('.o_mrp_bom_report_qty').on('change', this._onChangeQty.bind(this));
         this.$searchView.find('.o_mrp_bom_report_variants').on('change', this._onChangeVariants.bind(this));
+        this.$searchView.find('.o_mrp_bom_report_type').on('change', this._onChangeType.bind(this));
     },
     _onClickPrint: function () {
         var childBomIDs = _.map(this.$el.find('.o_mrp_bom_foldable').closest('tr'), function (el) {
@@ -125,6 +131,11 @@ var MrpBomReport = stock_report_generic.extend({
             this._reload();
         }
     },
+    _onChangeType: function (ev) {
+        var report_type = $("option:selected", $(ev.currentTarget)).data('type');
+        this.given_context.report_type = report_type;
+        this._reload_report_type();
+    },
     _onChangeVariants: function (ev) {
         this.given_context.searchVariant = $(ev.currentTarget).val();
         this._reload();
@@ -150,12 +161,22 @@ var MrpBomReport = stock_report_generic.extend({
         var self = this;
         return this.get_html().then(function () {
             self.$el.html(self.data.lines);
+            self._reload_report_type();
         });
+    },
+    _reload_report_type: function () {
+        this.$('.o_mrp_bom_cost').show();
+        this.$('.o_mrp_prod_cost').show();
+        if (this.given_context.report_type === 'bom_structure') {
+            this.$('.o_mrp_bom_cost').hide();
+        }
+        if (this.given_context.report_type === 'bom_cost') {
+            this.$('.o_mrp_prod_cost').hide();
+        }
     },
     _removeLines: function ($el) {
         var self = this;
         var activeID = $el.data('id');
-        debugger;
         _.each(this.$('tr[parent_id='+ activeID +']'), function (parent) {
             var $parent = self.$(parent);
             var $el = self.$('tr[parent_id='+ $parent.data('id') +']');
