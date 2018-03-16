@@ -25,10 +25,12 @@ class StockReportController(http.Controller):
         domain = [('create_uid', '=', uid)]
         model_name = model_name.replace('_', '.')
         stock_report = request.env[model_name].sudo(uid).search(domain, limit=1)
+        for arg in kw:
+            kw[arg] = json.loads(kw[arg])
         try:
             if output_format == 'pdf':
                 response = request.make_response(
-                    stock_report.with_context(active_id=report_id).get_pdf(*kw),
+                    stock_report.with_context(active_id=report_id).get_pdf(**kw),
                     headers=[
                         ('Content-Type', 'application/pdf'),
                         ('Content-Disposition', 'attachment; filename=' + report_name + '.pdf;')

@@ -21,7 +21,7 @@ var MrpBomReport = stock_report_generic.extend({
         var args = [
             this.given_context.active_id,
             this.given_context.searchQty || 1,
-            this.given_context.searchVariant || false,
+            this.given_context.searchVariant,
         ];
         return this._rpc({
                 model: 'mrp.bom.report',
@@ -111,15 +111,17 @@ var MrpBomReport = stock_report_generic.extend({
             return $(el).data('id');
         });
         framework.blockUI();
-        var values = {
+        var kwargs = {
+            searchQty: this.given_context.searchQty || 1,
             child_bom_ids: JSON.stringify(childBomIDs),
-            searchQty: this.given_context.searchQty,
-            searchVariant: this.given_context.searchVariant
+            report_structure: this.given_context.report_type || 'all',
         };
-
+        if (this.given_context.searchVariant) {
+            kwargs.searchVariant = this.given_context.searchVariant;
+        }
         session.get_file({
             url: '/stock/pdf/mrp_bom_report/mrp_bom_report/' + this.given_context.active_id,
-            data: values,
+            data: kwargs,
             complete: framework.unblockUI,
             error: crash_manager.rpc_error.bind(crash_manager),
         });
@@ -127,7 +129,7 @@ var MrpBomReport = stock_report_generic.extend({
     _onChangeQty: function (ev) {
         var qty = $(ev.currentTarget).val().trim();
         if (qty) {
-            this.given_context.searchQty = qty;
+            this.given_context.searchQty = parseFloat(qty);
             this._reload();
         }
     },
