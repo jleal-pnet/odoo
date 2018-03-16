@@ -4,6 +4,7 @@ odoo.define('mail.Chatter', function (require) {
 var Activity = require('mail.Activity');
 var ChatterComposer = require('mail.composer.Chatter');
 var Followers = require('mail.Followers');
+var InlineActivityFormView = require('mail.inline_activity').InlineActivityFormView;
 var ThreadField = require('mail.ThreadField');
 var mailUtils = require('mail.utils');
 
@@ -30,7 +31,7 @@ var Chatter = Widget.extend({
     events: {
         'click .o_chatter_button_new_message': '_onOpenComposerMessage',
         'click .o_chatter_button_log_note': '_onOpenComposerNote',
-        'click .o_chatter_button_schedule_activity': '_onScheduleActivity',
+        'click .o_chatter_button_schedule_activity': '_onOpenScheduleActivity',
     },
     supportedFieldTypes: ['one2many'],
 
@@ -106,6 +107,7 @@ var Chatter = Widget.extend({
         // close the composer if we switch to another record as it is record dependent
         if (this.record.res_id !== record.res_id) {
             this._closeComposer(true);
+            this._closeScheduleActivity(true);
         }
 
         // update the state
@@ -194,6 +196,22 @@ var Chatter = Widget.extend({
     },
     /**
      * @private
+     * @param {boolean}
+     */
+    _closeScheduleActivity: function (force) {
+        this.$el.removeClass('o_chatter_active');
+        this.$('.o_chatter_button_schedule_activity').removeClass('o_active');
+        if (this.activityFormController) {
+            if (force) {
+                this.activityFormController.destroy();
+                this.activityFormController = false;
+            } else {
+                this.activityFormController.do_hide();
+            }
+        }
+    },
+    /**
+     * @private
      */
     _enableChatter: function () {
         this.$('.btn').prop('disabled', false); // enable buttons
@@ -206,6 +224,7 @@ var Chatter = Widget.extend({
      */
     _openComposer: function (options) {
         var self = this;
+        this._closeScheduleActivity();
         var oldComposer = this._composer;
         // create the new composer
         this._composer = new ChatterComposer(this, this.record.model, options.suggested_partners || [], {
@@ -241,7 +260,7 @@ var Chatter = Widget.extend({
             self._composer.on('need_refresh', self, self.trigger_up.bind(self, 'reload'));
             self._composer.on('close_composer', null, self._closeComposer.bind(self, true));
 
-            self.$el.addClass('o_chatter_composer_active');
+            self.$el.addClass('o_chatter_active');
             self.$('.o_chatter_button_new_message, .o_chatter_button_log_note').removeClass('o_active');
             self.$('.o_chatter_button_new_message').toggleClass('o_active', !self._composer.options.isLog);
             self.$('.o_chatter_button_log_note').toggleClass('o_active', self._composer.options.isLog);
@@ -264,6 +283,35 @@ var Chatter = Widget.extend({
                    messageData.partner_ids &&
                    messageData.partner_ids.length
                 );
+    },
+    /**
+     * @private
+     */
+    _openScheduleActivity: function () {
+        var self = this;
+        var context = _.extend({}, this.record.context, {
+            form_view_ref: 'mail.mail_activity_view_form_popup',
+            invisible_buttons: true,
+        });
+        if (!this.schedule_activity_view_def) {
+            this.schedule_activity_view_def = $.Deferred();
+            this.loadViews('mail.activity', context, [[false, 'form']]).then(function (fieldsViews) {
+                self.schedule_activity_view_def.resolve(fieldsViews);
+            });
+        }
+        this.schedule_activity_view_def.then(function (fieldsViews) {
+            var activityFormView = new InlineActivityFormView(fieldsViews.form, {
+                context: _.extend(self.context, {
+                    default_res_model: self.record.model
+                }),
+                modelName: 'mail.activity',
+                userContext: self.getSession().user_context,
+            });
+            return activityFormView.getController(self).then(function (controller) {
+                self.activityFormController = controller;
+                return controller.insertAfter(self.$('.o_chatter_topbar'));
+            });
+        });
     },
     /**
      * @private
@@ -423,6 +471,7 @@ var Chatter = Widget.extend({
         var fieldNames = [];
         if (this.fields.activity && event.data.activity) {
             fieldNames.push(this.fields.activity.name);
+            this._closeScheduleActivity();
         }
         if (this.fields.followers && event.data.followers) {
             fieldNames.push(this.fields.followers.name);
@@ -438,8 +487,15 @@ var Chatter = Widget.extend({
     /**
      * @private
      */
-    _onScheduleActivity: function () {
-        this.fields.activity.scheduleActivity(false);
+    _onOpenScheduleActivity: function () {
+        this._closeComposer(true);
+        this.$el.addClass('o_chatter_active');
+        this.$('.o_chatter_button_schedule_activity').addClass('o_active');
+        if (this.activityFormController) {
+            this.activityFormController.do_show();
+            return;
+        }
+        this._openScheduleActivity();
     },
 });
 
