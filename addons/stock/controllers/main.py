@@ -26,7 +26,10 @@ class StockReportController(http.Controller):
         model_name = model_name.replace('_', '.')
         stock_report = request.env[model_name].sudo(uid).search(domain, limit=1)
         for arg in kw:
-            kw[arg] = json.loads(kw[arg])
+            try:
+                kw[arg] = json.loads(kw[arg])
+            except json.JSONDecodeError:
+                pass
         try:
             if output_format == 'pdf':
                 response = request.make_response(
