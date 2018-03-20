@@ -25,6 +25,9 @@
 // Fields
 //------------------------------------------------------------------------------
 
+select.o_field_widget.o_input {
+    padding: 1px;
+}
 .o_field_widget {
     // Default display and alignment of widget and internal <input/>
     &, input.o_input {
