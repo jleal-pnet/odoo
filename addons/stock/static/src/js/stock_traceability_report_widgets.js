@@ -41,7 +41,7 @@ var ReportWidget = Widget.extend({
             context: {
                 active_id : $el.data('lot_id'),
                 active_model : 'stock.production.lot',
-                url: '/stock/output_format/stock/active_id'
+                url: '/stock/output_format/stock/stock_traceability_report/active_id'
             },
         });
     },
@@ -57,7 +57,7 @@ var ReportWidget = Widget.extend({
                 active_model : $el.data('model'),
                 auto_unfold: true,
                 lot_name: $el.data('lot_name') !== undefined && $el.data('lot_name').toString(),
-                url: '/stock/output_format/stock/active_id'
+                url: '/stock/output_format/stock/stock_traceability_report/active_id'
             },
         });
     },

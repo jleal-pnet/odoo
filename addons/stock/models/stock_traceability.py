@@ -187,8 +187,8 @@ class MrpStockReport(models.TransientModel):
             lines.append(self._final_vals_to_lines(final_vals, line['level'])[0])
         return lines
 
-    def get_pdf(self, line_data=[]):
-        lines = self.with_context(print_mode=True).get_pdf_lines(line_data)
+    def get_pdf(self, data=[]):
+        lines = self.with_context(print_mode=True).get_pdf_lines(data)
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
         rcontext = {
             'mode': 'print',
