@@ -77,7 +77,7 @@ class MrpBomReport(models.TransientModel):
             'variants': bom_product_variants,
             'bom_uom_name': bom_uom_name,
             'bom_qty': bom_quantity,
-            'is_variant_applied': self.env.user.user_has_groups('product.group_product_variant'),
+            'is_variant_applied': self.env.user.user_has_groups('product.group_product_variant') and len(bom_product_variants) > 1,
             'is_uom_applied': self.env.user.user_has_groups('uom.group_uom')
         }
 
@@ -144,9 +144,7 @@ class MrpBomReport(models.TransientModel):
         operations = []
         total = 0.0
         for operation in routing.operation_ids:
-            cycle_number = float_round(qty / operation.workcenter_id.capacity, precision_digits=1, rounding_method='UP')
-            duration_expected = cycle_number * operation.time_cycle * 100.0 / operation.workcenter_id.time_efficiency
-            duration_expected += operation.workcenter_id.time_stop + operation.workcenter_id.time_start
+            duration_expected = qty * operation.time_cycle + operation.workcenter_id.time_stop + operation.workcenter_id.time_start
             total = ((duration_expected / 60.0) * operation.workcenter_id.costs_hour)
             operations.append({
                 'level': level or 0,
@@ -214,8 +212,9 @@ class MrpBomReport(models.TransientModel):
                             'level': level + 1,
                         })
             return lines
+
         bom = self.env['mrp.bom'].browse(bom_id)
-        product = bom.product_id or bom.product_tmpl_id.product_variant_id
+        product = product_id or bom.product_id or bom.product_tmpl_id.product_variant_id
         pdf_lines = get_sub_liness(bom, product, qty, False, 1)
         data['components'] = []
         data['lines'] = pdf_lines
