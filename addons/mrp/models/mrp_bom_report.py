@@ -173,7 +173,7 @@ class MrpBomReport(models.TransientModel):
                 price += (line.product_id.uom_id._compute_price(line.product_id.standard_price, line.product_uom_id) * prod_qty)
         return price
 
-    def _get_pdf_line(self, bom_id, product_id=False, qty=1, child_bom_ids=[]):
+    def _get_pdf_line(self, bom_id, product_id=False, qty=1, child_bom_ids=[], unfolded=False):
 
         data = self._get_bom(bom_id=bom_id, product_id=product_id, line_qty=qty)
 
@@ -191,7 +191,7 @@ class MrpBomReport(models.TransientModel):
                     'bom_cost': bom_line['total'],
                     'level': bom_line['level'],
                 })
-                if bom_line['child_bom'] and bom_line['child_bom'] in child_bom_ids:
+                if bom_line['child_bom'] and (unfolded or bom_line['child_bom'] in child_bom_ids):
                     line = self.env['mrp.bom.line'].browse(bom_line['line_id'])
                     lines += (get_sub_liness(line.child_bom_id, line.product_id, line.product_qty * data['bom_qty'], line, level + 1))
             if data['operations']:
@@ -204,7 +204,7 @@ class MrpBomReport(models.TransientModel):
                     'level': level,
                 })
                 for operation in data['operations']:
-                    if 'operation-' + str(bom.id) in child_bom_ids:
+                    if unfolded or 'operation-' + str(bom.id) in child_bom_ids:
                         lines.append({
                             'name': operation['name'],
                             'type': 'operation',

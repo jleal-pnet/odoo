@@ -38,6 +38,7 @@
         'views/mrp_templates.xml',
         'views/stock_scrap_views.xml',
         'report/mrp_report_views_main.xml',
+        'report/mrp_report_bom_structure.xml',
         'report/mrp_production_templates.xml',
     ],
     'qweb': ['static/src/xml/mrp.xml'],

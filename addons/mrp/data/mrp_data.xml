@@ -2,6 +2,13 @@
 <odoo>
     <data noupdate="1">
 
+        <record id="paperformat_euro_landscape" model="report.paperformat">
+            <field name="name">European A4 landscape</field>
+            <field name="inherit_id" ref="base.paperformat_euro"/>
+            <field name="mode">primary</field>
+            <field name="orientation">Landscape</field>
+        </record>
+
         <record id="sequence_mrp_prod" model="ir.sequence">
             <field name="name">Production order</field>
             <field name="code">mrp.production</field>
