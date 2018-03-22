@@ -23,7 +23,7 @@ class StockReportController(http.Controller):
     def report(self, output_format, report_name, model_name, token, report_id=False, **kw):
         uid = request.session.uid
         domain = [('create_uid', '=', uid)]
-        model_name = model_name.replace('_', '.')
+        model_name = model_name.replace('-', '.')
         stock_report = request.env[model_name].sudo(uid).search(domain, limit=1)
         for arg in kw:
             try:

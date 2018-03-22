@@ -5,7 +5,7 @@
         <record id="action_report_mrp_bom" model="ir.actions.client">
             <field name="name">Cost &amp; Structure</field>
             <field name="tag">mrp_bom_report</field>
-            <field name="context" eval="{'model': 'mrp.bom.report'}" />
+            <field name="context" eval="{'model': 'report.mrp.report_bom_structure'}" />
         </record>
 
         <record id="mrp_bom_form_view" model="ir.ui.view">

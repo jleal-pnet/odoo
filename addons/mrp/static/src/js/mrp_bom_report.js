@@ -24,7 +24,7 @@ var MrpBomReport = stock_report_generic.extend({
             this.given_context.searchVariant,
         ];
         return this._rpc({
-                model: 'mrp.bom.report',
+                model: 'report.mrp.report_bom_structure',
                 method: 'get_html',
                 args: args
             })
@@ -56,7 +56,7 @@ var MrpBomReport = stock_report_generic.extend({
       var qty = $parent.data('qty');
       var level = $parent.data('level') || 0;
       return this._rpc({
-              model: 'mrp.bom.report',
+              model: 'report.mrp.report_bom_structure',
               method: 'get_bom',
               args: [
                   activeID,
@@ -77,7 +77,7 @@ var MrpBomReport = stock_report_generic.extend({
       var qty = $parent.data('qty');
       var level = $parent.data('level') || 0;
       return this._rpc({
-              model: 'mrp.bom.report',
+              model: 'report.mrp.report_bom_structure',
               method: 'get_operations',
               args: [
                   activeID,
@@ -120,7 +120,7 @@ var MrpBomReport = stock_report_generic.extend({
             kwargs.searchVariant = this.given_context.searchVariant;
         }
         session.get_file({
-            url: '/stock/pdf/mrp_bom_report/mrp_bom_report/' + this.given_context.active_id,
+            url: '/stock/pdf/mrp_bom_structure_report/report-mrp-report_bom_structure/' + this.given_context.active_id,
             data: kwargs,
             complete: framework.unblockUI,
             error: crash_manager.rpc_error.bind(crash_manager),
