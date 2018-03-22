@@ -1065,7 +1065,7 @@ class SaleOrderLine(models.Model):
                         'analytic_line_id': analytic_line.id,
                         'qty_invoiced': 0.0
                     }))
-            res['sale_analytic_line_ids'] = vals
+            res['invoice_analytic_quantity_ids'] = vals
         return res
 
     @api.multi

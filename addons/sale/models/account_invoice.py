@@ -43,7 +43,30 @@ class AccountInvoice(models.Model):
     @api.multi
     def invoice_validate(self):
         result = super(AccountInvoice, self).invoice_validate()
+        for invoice in self:
+            for invoice_line in invoice.invoice_line_ids:
+                mapping = {}
+                qty_to_invoice = invoice_line.quantity
+                for analytic_line in invoice_line.analytic_line_ids:
+                    if not analytic_line.invoice_status != 'fully':
+                        # TODO JEM: UoM conversion
+                        if analytic_line.qty_to_invoice >= qty_to_invoice:
+                            mapping[analytic_line.id] = qty_to_invoice
+                            break
+                        if analytic_line.qty_to_invoice < qty_to_invoice:
+                            mapping[analytic_line.id] = analytic_line.qty_to_invoice
+                            qty_to_invoice = qty_to_invoice - analytic_line.qty_to_invoice
+                # invoice more than the quantity on AAL
+                if qty_to_invoice:
+                    pass  # TODO JEM what to do ? maybe we should added in on the last AAL qty_invoice will be greater than unit_amount (and qty_to_inv negative), but this is not a problem
 
+                # add the quantity to invoice
+                for invoice_analytic_qty in invoice_line.invoice_analytic_quantity_ids:
+                    for analytic_line_id, qty_to_invoice in mapping.items():
+                        if invoice_analytic_qty.analytic_line_id == analytic_line_id:
+                            invoice_analytic_qty.write({
+                                'qty_invoiced': invoice_analytic_qty.qty_invoiced + qty_to_invoice
+                            })
         return result
 
     @api.multi
@@ -107,8 +130,8 @@ class AccountInvoiceLine(models.Model):
         'sale_order_line_invoice_rel',
         'invoice_line_id', 'order_line_id',
         string='Sales Order Lines', readonly=True, copy=False)
-    sale_analytic_line_ids = fields.One2many('invoice.sale.analytic.lines', 'invoice_line_id', string="Invoiced analytic Quantities")
-    analytic_line_ids = fields.Many2many('account.analytic.line', 'invoice_sale_analytic_lines', 'invoice_line_id', 'analytic_line_id', "Invoiced Analytic Quantities")
+    invoice_analytic_quantity_ids = fields.One2many('account.invoice.analytic.quantity', 'invoice_line_id', string="Invoiced Analytic Quantities")
+    analytic_line_ids = fields.Many2many('account.analytic.line', 'account_invoice_analytic_quantity', 'invoice_line_id', 'analytic_line_id', "Analytic Lines")
     layout_category_id = fields.Many2one('sale.layout_category', string='Section')
     layout_category_sequence = fields.Integer(string='Layout Sequence')
     # TODO: remove layout_category_sequence in master or make it work properly

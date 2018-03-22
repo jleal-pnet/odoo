@@ -6,14 +6,15 @@ from odoo.exceptions import UserError
 
 
 class InvoiceAnalytic(models.Model):
-    _name = 'invoice.sale.analytic.lines'
+    _name = 'account.invoice.analytic.quantity'
     _description = 'Invoiced analytic quantity'
-    _table = 'invoice_sale_analytic_lines'
+    _table = 'account_invoice_analytic_quantity'
     _rec_name = 'analytic_line_id'
 
     analytic_line_id = fields.Many2one('account.analytic.line', string="Analytic Line", ondelete='cascade')
     invoice_line_id = fields.Many2one('account.invoice.line', string="Invoice Line", ondelete='cascade')
     qty_invoiced = fields.Float("Invoiced quantity", default=0)
+    uom_id = fields.Many2one('uom.uom', related='invoice_line_id.uom_id')  # store ?
 
 
 class AccountAnalyticLine(models.Model):
@@ -26,18 +27,20 @@ class AccountAnalyticLine(models.Model):
         return [('qty_delivered_method', '=', 'analytic')]
 
     so_line = fields.Many2one('sale.order.line', string='Sales Order Line', domain=lambda self: self._default_sale_line_domain())
-    invoice_line_ids = fields.Many2many('account.invoice.line', 'invoice_sale_analytic_lines', 'analytic_line_id', 'invoice_line_id', "Invoiced Analytic Quantities")
+    invoice_line_ids = fields.Many2many('account.invoice.line', 'account_invoice_analytic_quantity', 'analytic_line_id', 'invoice_line_id', "Invoiced Analytic Quantities")
     invoice_status = fields.Selection([
         ('none', 'None invoiced'),
         ('partially', 'Partially Invoiced'),
         ('fully', 'Fully invoiced'),
     ], compute='_compute_invoice_status')
-    sale_analytic_line_ids = fields.One2many('invoice.sale.analytic.lines', 'analytic_line_id', string="Invoiced analytic Quantities")
+    invoice_analytic_quantity_ids = fields.One2many('account.invoice.analytic.quantity', 'analytic_line_id', string="Invoiced analytic Quantities")
+    qty_invoiced = fields.Float("Invoiced Quantity", compute='_compute_qty_invoiced', compute_sudo=True)
+    qty_to_invoice = fields.Float("Quantity to invoice", compute='_compute_qty_to_invoice', compute_sudo=True)
 
-    @api.depends('sale_analytic_line_ids.qty_invoiced')
+    @api.depends('qty_invoiced', 'unit_amount')
     def _compute_invoice_status(self):
         for analytic_line in self:
-            total = sum(analytic_line.sale_analytic_line_ids.mapped('qty_invoiced'))
+            total = analytic_line.qty_invoiced
             if total:
                 if analytic_line.unit_amount < total:
                     analytic_line.invoice_status = 'partially'
@@ -46,11 +49,28 @@ class AccountAnalyticLine(models.Model):
             else:
                 analytic_line.invoice_status = 'none'
 
+    @api.multi
+    @api.depends('invoice_analytic_quantity_ids.qty_invoiced')
+    def _compute_qty_invoiced(self):
+        # TODO JEM use read_group here
+        for analytic_line in self:
+            analytic_line.qty_invoiced = sum(analytic_line.invoice_analytic_quantity_ids.mapped('qty_invoiced'))
+
+    @api.multi
+    @api.depends('invoice_analytic_quantity_ids.qty_invoiced', 'unit_amount')
+    def _compute_qty_to_invoice(self):
+        for analytic_line in self:
+            analytic_line.qty_to_invoice = analytic_line.unit_amount - sum(analytic_line.invoice_analytic_quantity_ids.mapped('qty_invoiced'))
+
     @api.model
     def create(self, values):
         result = super(AccountAnalyticLine, self).create(values)
         if 'so_line' not in values and not result.so_line and result.product_id and result.product_id.expense_policy != 'no':  # allow to force a False value for so_line
             result.sudo()._sale_determine_order_line()
+        if 'so_line' in values:
+            # now the AAL are linked to SO line, generated the the invoiced quantity for the ordered ones
+            result._sale_generate_invoice_analytic_quantity()
+
         return result
 
     @api.multi
@@ -59,6 +79,10 @@ class AccountAnalyticLine(models.Model):
         if 'so_line' not in values:  # allow to force a False value for so_line
             # only take the AAL from expense or vendor bill, meaning having a negative amount
             self.sudo().filtered(lambda aal: not aal.so_line and aal.product_id and aal.product_id.expense_policy != 'no' and aal.amount <= 0)._sale_determine_order_line()
+        # now the AAL are linked to SO line, generated the the invoiced quantity for the ordered ones
+        if 'so_line' in values:
+            self._sale_generate_invoice_analytic_quantity()
+            # TODO JEM: if unlinking AAL from a SO line, what to do with the IAQ ?
 
     # ----------------------------------------------------------
     # Vendor Bill / Expense : determine the Sale Order to reinvoice
@@ -163,3 +187,29 @@ class AccountAnalyticLine(models.Model):
         for so_line_id, analytic_lines in value_to_write.items():
             if analytic_lines:
                 analytic_lines.write({'so_line': so_line_id})
+
+    # TODO JEM: should be called when writing the so_line field, so it will be generic (including the timesheet use case), since here we are in the reinvoice expense flow.
+    def _sale_generate_invoice_analytic_quantity(self):
+        """ For AAL linked to SO with product based ordered quantity, compute the invoiced quantity of the current AAL by creating account.invoice.analytic.quantity """
+        InvoiceAnalyticQuantity_sudo = self.env['account.invoice.analytic.quantity'].sudo()
+        for analytic_line in self:
+            # if SO line already exists, and it was at least one invoiced, then if product in ordered qty, add invoice.analytic.quantity
+            if analytic_line.so_line.product_id.invoice_policy == 'order' and analytic_line.so_line.invoice_lines:
+                qty_to_distribute = analytic_line.unit_amount
+                for invoice_line in analytic_line.so_line.invoice_lines:
+                    if qty_to_distribute <= invoice_line.quantity:
+                        # create qty=qty_to_distribute
+                        InvoiceAnalyticQuantity_sudo.create({
+                            'qty_invoiced': qty_to_distribute,
+                            'analytic_line_id': analytic_line.id,
+                            'invoice_line_id': invoice_line.id,
+                        })
+                        break
+                    if qty_to_distribute >= invoice_line.quantity:
+                        # create qty=invoice_line.quantity
+                        InvoiceAnalyticQuantity_sudo.create({
+                            'qty_invoiced': invoice_line.quantity,
+                            'analytic_line_id': analytic_line.id,
+                            'invoice_line_id': invoice_line.id,
+                        })
+                        qty_to_distribute = qty_to_distribute - invoice_line.quantity
