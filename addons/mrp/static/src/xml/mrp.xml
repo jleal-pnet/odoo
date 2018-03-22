@@ -17,7 +17,7 @@
             </div>
         </div>
         <div t-if="is_variant_applied" class="form-group col-md-4">
-            <label>Variants:</label>
+            <label>Variant:</label>
             <select class="o_input o_mrp_bom_report_variants">
                 <option t-foreach="variants" t-as="variant" t-att-value="variant">
                     <t t-esc="variants[variant]"/>

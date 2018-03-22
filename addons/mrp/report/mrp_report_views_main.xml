@@ -11,7 +11,7 @@
             print_report_name="'Production Order - %s' % object.name"
         />
         <report 
-            string="Bom Structure" 
+            string="BoM Structure" 
             id="action_report_bom_structure" 
             model="mrp.bom" 
             name="mrp.report_bom_structure"
