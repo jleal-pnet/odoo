@@ -190,16 +190,12 @@ class Message(models.Model):
     #------------------------------------------------------
 
     @api.model
-    def mark_all_as_read(self, channel_ids=None, domain=None):
-        """ Archive all needactions of the current partner. If channel_ids is
-            given, restrict to messages written in one of those channels. """
+    def mark_all_as_read(self, domain=None):
         partner_id = self.env.user.partner_id.id
         # not really efficient method: it does one db request for the
         # search, and one for each message in the result set to archive the
         # current notifications from the relation.
         msg_domain = [('needaction_partner_ids', 'in', partner_id)]
-        if channel_ids:
-            msg_domain += [('channel_ids', 'in', channel_ids)]
         unread_messages = self.search(expression.AND([msg_domain, domain]))
         notifications = self.env['mail.notification'].sudo().search([
             ('mail_message_id', 'in', unread_messages.ids),
@@ -208,7 +204,7 @@ class Message(models.Model):
         notifications.write({'active': False})
         ids = unread_messages.mapped('id')
 
-        notification = {'type': 'mark_as_read', 'message_ids': ids, 'channel_ids': channel_ids}
+        notification = {'type': 'mark_as_read', 'message_ids': ids}
         self.env['bus.bus'].sendone((self._cr.dbname, 'res.partner', self.env.user.partner_id.id), notification)
 
         return ids
