@@ -2,6 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 from odoo import api, fields, models, tools, _
 from odoo.addons import decimal_precision as dp
+from odoo.modules.module import get_resource_path
 
 from odoo.tools import pycompat
 from odoo.tools.translate import html_translate
@@ -207,6 +208,18 @@ class Product(models.Model):
     def website_publish_button(self):
         self.ensure_one()
         return self.product_tmpl_id.website_publish_button()
+
+    # method will call by js tour to test b2b, b2c product price
+    @api.model
+    def set_test_product_tax(self):
+        product = self.env.ref('product.product_product_7')
+        file_path = 'test', 'account_minimal_test.xml'
+        tools.convert_file(self.env.cr, 'website_sale',
+                           get_resource_path('account', *file_path),
+                           {}, 'init', False, 'test', self.env.registry._assertion_report)
+        tax_id = self.env.ref('website_sale.sale_tax').id
+        product.write({'taxes_id': [(4, tax_id)]})
+
 
 
 class ProductAttribute(models.Model):

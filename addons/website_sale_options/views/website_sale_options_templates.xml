@@ -11,6 +11,12 @@
     </xpath>
 </template>
 
+<template id="assets_common" inherit_id="web.assets_common">
+        <xpath expr="." position="inside">
+            <script type="text/javascript" src="/website_sale_options/static/src/js/website_sale_tour.test.js"></script>
+        </xpath>
+</template>
+
 <template id="optional_products" inherit_id="website_sale.cart_lines" name="Optional products">
   <xpath expr="//table[@id='cart_products']/tbody//td[hasclass('td-qty')]/div" position="attributes">
     <attribute name="t-if">not line.linked_line_id</attribute>
