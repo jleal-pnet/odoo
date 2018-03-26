@@ -563,6 +563,8 @@ class IrActionsServer(models.Model):
                 if not active_id and self._context.get('onchange_self'):
                     active_id = self._context['onchange_self']._origin.id
                 active_ids = self._context.get('active_ids', [active_id] if active_id else [])
+                if self._context.get('active_domain'):
+                    active_ids = self.env[self._context.get('active_model')].get_active_records().ids
                 for active_id in active_ids:
                     # run context dedicated to a particular active_id
                     run_self = self.with_context(active_ids=[active_id], active_id=active_id)
