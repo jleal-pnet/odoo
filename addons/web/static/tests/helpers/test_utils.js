@@ -469,6 +469,10 @@ function addMockEnvironment(widget, params) {
             // ajax service is already mocked by the server
             var route = ev.data.args[0];
             args = ev.data.args[1];
+            if (args.kwargs && args.kwargs.context && args.kwargs.context.active_domain) {
+                var records = mockServer._getRecords(args.model, args.kwargs.context.active_domain);
+                args.args[0] = _.pluck(records, 'id');
+            }
             result = mockServer.performRpc(route, args);
         } else if (services[ev.data.service]) {
             var service = services[ev.data.service];
