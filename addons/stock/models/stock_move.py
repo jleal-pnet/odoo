@@ -477,9 +477,10 @@ class StockMove(models.Model):
         }
 
     def _do_unreserve(self):
-        if any(move.state in ('done', 'cancel') for move in self):
+        moves = self.filtered(lambda m: not m.scrapped)
+        if any(move.state in ('done', 'cancel') for move in moves):
             raise UserError(_('Cannot unreserve a done move'))
-        self.mapped('move_line_ids').unlink()
+        moves.mapped('move_line_ids').unlink()
         return True
 
     def _push_apply(self):
