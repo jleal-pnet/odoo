@@ -387,6 +387,7 @@ var SelectCreateDialog = ViewDialog.extend({
                 modelName: self.dataset.model,
                 hasSelectors: !self.options.disable_multiple_selection,
                 readonly: true,
+                hasSelectionBar: false,
             }, self.options.list_view_options));
             listView.setController(SelectCreateListController);
             return listView.getController(self);
