@@ -14,7 +14,7 @@ class SurveyComposeMessage(models.TransientModel):
         if self._context.get('active_model') == 'crm.lead' and self._context.get('active_ids'):
             partner_ids = []
             emails_list = []
-            for lead in self.env['crm.lead'].browse(self._context.get('active_ids')):
+            for lead in self.env['crm.lead'].get_active_records():
                 if lead.partner_id:
                     partner_ids.append(lead.partner_id.id)
                 else:
