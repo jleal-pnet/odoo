@@ -190,9 +190,9 @@
                             <field name="user_id"/>
                             <field name="amount" string="Activation Cost" help="Cost that is paid only once at the creation of the contract"/>
                             <label for="cost_generated"/>
-                            <div>
-                                <field name="cost_generated" class="oe_inline" attrs="{'invisible': [('cost_frequency','=','no')]}" />
-                                <field name="cost_frequency" class="oe_inline"  />
+                            <div class="o_row">
+                                <field name="cost_generated" attrs="{'invisible': [('cost_frequency','=','no')]}" />
+                                <field name="cost_frequency" />
                             </div>
                         </group>
                         <group string="Odometer details">

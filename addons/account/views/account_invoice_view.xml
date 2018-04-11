@@ -63,9 +63,9 @@
                             <field name="product_id"
                                  context="parent and {'partner_id': parent.partner_id}"/>
                             <label for="quantity"/>
-                            <div>
-                                <field name="quantity" class="oe_inline"/>
-                                <field name="uom_id" class="oe_inline" groups="uom.group_uom"/>
+                            <div class="o_row">
+                                <field name="quantity"/>
+                                <field name="uom_id" groups="uom.group_uom"/>
                             </div>
                             <field name="price_unit"/>
                             <field name="discount" groups="base.group_no_one"/>

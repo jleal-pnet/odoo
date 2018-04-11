@@ -104,10 +104,10 @@
                         <field name="holiday_status_id" context="{'employee_id':employee_id, 'default_date_from':date_from}"/>
                         <label for="number_of_days_temp" string="Duration"/>
                         <div>
-                            <div>
-                                <field name="date_from" class="oe_inline"/>
-                                <label string="-" class="oe_inline"/>
-                                <field name="date_to" class="oe_inline"/>
+                            <div class="o_row">
+                                <field name="date_from"/>
+                                <label string="-"/>
+                                <field name="date_to"/>
                             </div>
                             <div>
                                 <field name="number_of_days_temp" class="oe_inline"/> days

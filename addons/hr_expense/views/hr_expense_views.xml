@@ -69,9 +69,9 @@
                             <field name="product_id" context="{'default_can_be_expensed': 1}"/>
                             <field name="unit_amount" required="1" widget="monetary" options="{'currency_field': 'currency_id'}"/>
                             <label for="quantity"/>
-                            <div>
-                                <field name="quantity" class="oe_inline"/>
-                                <field name="product_uom_id" widget="selection" class="oe_inline" groups="uom.group_uom"/>
+                            <div class="o_row">
+                                <field name="quantity"/>
+                                <field name="product_uom_id" widget="selection" groups="uom.group_uom"/>
                             </div>
                             <field name="tax_ids" domain="[('type_tax_use', '=', 'purchase')]" widget="many2many_tags" groups="account.group_account_user"/>
                         </group><group>
