@@ -426,52 +426,80 @@ class HrExpense(models.Model):
         ], limit=1)
 
         expense_description = msg_dict.get('subject', '')
-
-        # Match the first occurence of '[]' in the string and extract the content inside it
-        # Example: '[foo] bar (baz)' becomes 'foo'. This is potentially the product code
-        # of the product to encode on the expense. If not, take the default product instead
-        # which is 'Fixed Cost'
-        default_product = self.env.ref('hr_expense.product_product_fixed_cost')
-        pattern = '\[([^)]*)\]'
-        product_code = re.search(pattern, expense_description)
-        if product_code is None:
-            product = default_product
-        else:
-            expense_description = expense_description.replace(product_code.group(), '')
-            products = self.env['product.product'].search([('default_code', 'ilike', product_code.group(1))]) or default_product
-            product = products.filtered(lambda p: p.default_code == product_code.group(1)) or products[0]
-        account = product.product_tmpl_id._get_product_accounts()['expense']
-
-        pattern = '[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?'
-        # Match the last occurence of a float in the string
-        # Example: '[foo] 50.3 bar 34.5' becomes '34.5'. This is potentially the price
-        # to encode on the expense. If not, take 1.0 instead
-        expense_price = re.findall(pattern, expense_description)
-        # TODO: International formatting
-        if not expense_price:
-            price = 1.0
-        else:
-            price = expense_price[-1][0]
-            expense_description = expense_description.replace(price, '')
-            try:
-                price = float(price)
-            except ValueError:
-                price = 1.0
-
-        custom_values.update({
-            'name': expense_description.strip(),
-            'employee_id': employee.id,
-            'product_id': product.id,
-            'product_uom_id': product.uom_id.id,
-            'quantity': 1,
-            'unit_amount': price,
-            'company_id': employee.company_id.id,
-        })
-        if account:
-            custom_values['account_id'] = account.id
+        vals = self._parse_expense_subject(expense_description, employee)
+        custom_values.update(vals)
         expense = super(HrExpense, self).message_new(msg_dict, custom_values)
         self._send_expense_success_mail(msg_dict, expense)
         return expense
+
+    @api.model
+    def _parse_expense_subject(self, expense_description, employee):
+        """ Fetch product, price and currency info from mail subject.
+
+            Product can be identified based on product name or product code.
+            It can be passed between [] or it can be placed at start.
+
+            If multi currencies is activated then this will allow all active
+            currencies else only company currency is allowed. This will fetch
+            currency in symbol($) or ISO name (USD).
+
+            Some valid examples:
+                Travel by Air [TICKET] USD 1205.91
+                TICKET $1205.91 Travel by Air
+                Extra expenses 29.10EUR [EXTRA]
+        """
+        vals = {
+            'employee_id': employee.id,
+            'company_id': employee.company_id.id
+        }
+
+        product_pattern = '\[(.*?)\]'  # To fetch product between []
+        match = re.search(product_pattern, expense_description)
+        product_str = expense_description.split(' ')[0]  # To fetch product as first word from subject
+        product_code, str_to_replace = (match.group(1), match.group()) if match else (product_str, product_str)
+        product = self.env['product.product'].search([('can_be_expensed', '=', True), '|', ('name', '=ilike', product_code), ('default_code', '=ilike', product_code)], limit=1)
+        if product:
+            expense_description = expense_description.replace(str_to_replace, '')
+        product = product or self.env.ref('hr_expense.product_product_fixed_cost')
+
+        # Fetch price and currency from subject  (TODO: International formatting)
+        price, currency_id = False, employee.company_id.currency_id
+        symbols, symbols_pattern, float_pattern = [], '', '[+-]?(\d+(?:\.\d+)?|\.\d+)'
+        currencies = currency_id
+        if employee.user_id and employee.user_id.has_group('base.group_multi_currency'):
+            currencies = self.env['res.currency'].search([])  # all active currencies
+        for currency in currencies:
+            symbols.append(re.escape(currency.symbol))
+            symbols.append(re.escape(currency.name))
+        symbols_pattern = '|'.join(symbols)
+        currency_pattern = "((%s)?\s?%s\s?(%s)?)" % (symbols_pattern, float_pattern, symbols_pattern)
+        match = re.findall(currency_pattern, expense_description)
+        if match:
+            match.sort(key=lambda data: len([d for d in data if d]), reverse=True)
+            full_str, currency_start, price, currency_end = match[0]
+            if currency_start or currency_end:
+                currency_id = currencies.filtered(lambda c: c.symbol in [currency_start, currency_end] or c.name in [currency_start, currency_end])[0]
+            expense_description = expense_description.replace(full_str, ' ')
+            expense_description = re.sub(' +', ' ', expense_description.strip())
+
+        try:
+            price = float(price)
+        except ValueError:
+            price = 1.0
+
+        account = product.product_tmpl_id._get_product_accounts()['expense']
+        if account:
+            vals['account_id'] = account.id
+
+        vals.update({
+            'name': expense_description,
+            'unit_amount': price,
+            'quantity': 1,
+            'product_id': product.id,
+            'product_uom_id': product.uom_id.id,
+            'currency_id': currency_id.id
+        })
+        return vals
 
     def _send_expense_success_mail(self, msg_dict, expense):
         mail_template_id = 'hr_expense.hr_expense_template_register' if expense.employee_id.user_id else 'hr_expense.hr_expense_template_register_no_user'
