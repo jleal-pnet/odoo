@@ -139,14 +139,10 @@ class TestOnChange(common.TransactionCase):
         self.env.cache.invalidate()
         result = self.Discussion.onchange(values, 'name', field_onchange)
         self.assertIn('messages', result['value'])
-        self.assertItemsEqual(result['value']['messages'], [
+        self.assertEqual(result['value']['messages'], [
             (5,),
             (1, message.id, {
                 'name': "[%s] %s" % ("Foo", USER.name),
-                'body': message.body,
-                'author': message.author.name_get()[0],
-                'size': message.size,
-                'important': message.important,
             }),
             (0, 0, {
                 'name': "[%s] %s" % ("Foo", USER.name),
@@ -191,7 +187,7 @@ class TestOnChange(common.TransactionCase):
         self.env.cache.invalidate()
         result = self.Discussion.onchange(values, 'name', field_onchange)
         self.assertIn('messages', result['value'])
-        self.assertItemsEqual(result['value']['messages'], [
+        self.assertEqual(result['value']['messages'], [
             (5,),
             (0, REFERENCE, {
                 'name': "[%s] %s" % ("Foo", USER.name),
@@ -212,6 +208,7 @@ class TestOnChange(common.TransactionCase):
         self.assertEqual(field_onchange, {
             'name': '1',
             'partner': '1',
+            'count': '1',
             'lines': None,
             'lines.name': None,
             'lines.partner': None,
@@ -219,10 +216,15 @@ class TestOnChange(common.TransactionCase):
             'lines.tags.name': None,
         })
 
-        values = multi._convert_to_write({key: multi[key] for key in ('name', 'partner', 'lines')})
+        values = multi._convert_to_write({
+            key: multi[key]
+            for key in field_onchange
+            if '.' not in key
+        })
         self.assertEqual(values, {
             'name': partner1.name,
             'partner': partner1.id,
+            'count': 0,
             'lines': [(6, 0, [line1.id])],
         })
 
@@ -234,6 +236,7 @@ class TestOnChange(common.TransactionCase):
         values = {
             'name': partner1.name,
             'partner': partner2.id,             # this one just changed
+            'count': 0,
             'lines': [(6, 0, [line1.id]),
                       (0, 0, {'name': False, 'partner': False, 'tags': [(5,)]})],
         }
@@ -244,12 +247,15 @@ class TestOnChange(common.TransactionCase):
             'name': partner2.name,
             'lines': [
                 (5,),
-                (1, line1.id, {'name': partner2.name,
-                               'partner': (partner2.id, partner2.name),
-                               'tags': [(5,)]}),
-                (0, 0, {'name': partner2.name,
-                        'partner': (partner2.id, partner2.name),
-                        'tags': [(5,)]}),
+                (1, line1.id, {
+                    'name': partner2.name,
+                    'partner': (partner2.id, partner2.name),
+                }),
+                (0, 0, {
+                    'name': partner2.name,
+                    'partner': (partner2.id, partner2.name),
+                    'tags': [(5,)],
+                }),
             ],
         })
 
@@ -257,6 +263,7 @@ class TestOnChange(common.TransactionCase):
         values = {
             'name': partner1.name,
             'partner': partner2.id,             # this one just changed
+            'count': 0,
             'lines': [(6, 0, [line1.id]),
                       (0, 0, {'name': False,
                               'partner': False,
@@ -269,14 +276,70 @@ class TestOnChange(common.TransactionCase):
             'name': partner2.name,
             'lines': [
                 (5,),
-                (1, line1.id, {'name': partner2.name,
-                               'partner': (partner2.id, partner2.name),
-                               'tags': [(5,)]}),
-                (0, 0, {'name': partner2.name,
-                        'partner': (partner2.id, partner2.name),
-                        'tags': [(5,), (0, 0, {'name': 'Tag'})]}),
+                (1, line1.id, {
+                    'name': partner2.name,
+                    'partner': (partner2.id, partner2.name),
+                }),
+                (0, 0, {
+                    'name': partner2.name,
+                    'partner': (partner2.id, partner2.name),
+                    'tags': [(5,), (0, 0, {'name': 'Tag'})],
+                }),
             ],
         })
+
+    def test_onchange_one2many_count(self):
+        """ test the effect of an onchange method that adds/removes lines """
+        partner1 = self.env.ref('base.res_partner_1')
+        multi = self.env['test_new_api.multi'].create({'partner': partner1.id})
+        line1 = multi.lines.create({'multi': multi.id})
+
+        field_onchange = multi._onchange_spec()
+        self.assertEqual(field_onchange, {
+            'name': '1',
+            'partner': '1',
+            'count': '1',
+            'lines': None,
+            'lines.name': None,
+            'lines.partner': None,
+            'lines.tags': None,
+            'lines.tags.name': None,
+        })
+
+        line2_vals = {
+            'name': partner1.name,
+            'partner': (partner1.id, partner1.name),
+            'tags': [(5,)],
+        }
+        values = {
+            'name': partner1.name,
+            'partner': partner1.id,
+            'count': 2,
+            'lines': [(6, 0, [line1.id]), (0, 0, line2_vals)],
+        }
+        self.env.cache.invalidate()
+
+        # keep the same number of lines
+        result = multi.onchange(values, 'count', field_onchange)
+        self.assertEqual(result['value'], {})
+
+        # add two lines
+        values['count'] = 4
+        result = multi.onchange(values, 'count', field_onchange)
+        self.assertEqual(result['value'], {
+            'lines': [
+                (5,),
+                (4, line1.id),
+                (0, 0, line2_vals),
+                (0, 0, {'name': False, 'partner': False, 'tags': [(5,)]}),
+                (0, 0, {'name': False, 'partner': False, 'tags': [(5,)]}),
+            ],
+        })
+
+        # remove two lines
+        values['count'] = 0
+        result = multi.onchange(values, 'count', field_onchange)
+        self.assertEqual(result['value'], {'lines': [(5,)]})
 
     def test_onchange_specific(self):
         """ test the effect of field-specific onchange method """
@@ -308,8 +371,7 @@ class TestOnChange(common.TransactionCase):
         self.assertIn('participants', result['value'])
         self.assertItemsEqual(
             result['value']['participants'],
-            [(5,)] + [(1, user.id, {'display_name': user.display_name})
-                      for user in discussion.participants + demo],
+            [(5,)] + [(4, user.id) for user in discussion.participants + demo],
         )
 
     def test_onchange_default(self):
@@ -345,6 +407,8 @@ class TestOnChange(common.TransactionCase):
         self.assertEqual(len(discussion.messages), 3)
         messages = [(4, msg.id) for msg in discussion.messages]
         messages[0] = (1, messages[0][1], {'body': 'test onchange'})
+        msg_data = [(msg.name, msg.body) for msg in discussion.messages]
+        msg_data[0] = (msg_data[0][0], 'test onchange')
         values = {
             'name': discussion.name,
             'moderator': demo.id,
@@ -356,7 +420,7 @@ class TestOnChange(common.TransactionCase):
         result = discussion.onchange(values, 'messages', field_onchange)
         self.assertIn('message_concat', result['value'])
         self.assertEqual(result['value']['message_concat'],
-                         "\n".join(["%s:%s" % (m.name, m.body) for m in discussion.messages]))
+                         "\n".join(["%s:%s" % data for data in msg_data]))
 
     def test_onchange_one2many_with_domain_on_related_field(self):
         """ test the value of the one2many field when defined with a domain on a related field"""
@@ -409,22 +473,13 @@ class TestOnChange(common.TransactionCase):
         result = discussion.onchange(values, 'name', field_onchange)
 
         # When one2many domain contains non-computed field, things are ok
-        self.assertEqual(result['value']['important_messages'],
-                         [(5,)] + [(4, msg.id) for msg in discussion.important_messages])
+        self.assertNotIn('important_messages', result['value'])
 
         # But here with commit 5676d81, we get value of: [(2, email.id)]
-        self.assertEqual(
-            result['value']['important_emails'],
-            [(5,),
-             (1, email.id, {
-                 'name': u'[Foo Bar] %s' % USER.name,
-                 'body': email.body,
-                 'author': USER.name_get()[0],
-                 'important': True,
-                 'email_to': demo.email,
-                 'size': email.size,
-             })]
-        )
+        self.assertEqual(result['value']['important_emails'], [
+            (5,),
+            (1, email.id, {'name': u'[Foo Bar] %s' % USER.name}),
+        ])
 
     def test_onchange_related(self):
         value = {
@@ -445,12 +500,12 @@ class TestOnChange(common.TransactionCase):
 
         self.env.cache.invalidate()
         Message = self.env['test_new_api.related']
-        result = Message.onchange(value, ['message', 'message_name', 'message_currency'], field_onchange)
+        result = Message.onchange(value, ['message'], field_onchange)
 
         self.assertEqual(result['value'], onchange_result)
 
         self.env.cache.invalidate()
         Message = self.env(user=self.env.ref('base.user_demo').id)['test_new_api.related']
-        result = Message.onchange(value, ['message', 'message_name', 'message_currency'], field_onchange)
+        result = Message.onchange(value, ['message'], field_onchange)
 
         self.assertEqual(result['value'], onchange_result)

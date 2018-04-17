@@ -62,7 +62,7 @@ class MembershipLine(models.Model):
                     ml.id = %s
                     )
                 )
-            ''', (line.id,))
+            ''', (line.id or 0,))
             fetched = self._cr.fetchone()
             if not fetched:
                 line.state = 'canceled'

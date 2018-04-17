@@ -272,6 +272,7 @@
                         <group>
                             <field name="name"/>
                             <field name="partner"/>
+                            <field name="count"/>
                         </group>
                         <label for="lines"/>
                         <field name="lines">

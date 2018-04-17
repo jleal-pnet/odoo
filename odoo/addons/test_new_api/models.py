@@ -193,6 +193,7 @@ class Multi(models.Model):
 
     name = fields.Char(related='partner.name', readonly=True)
     partner = fields.Many2one('res.partner')
+    count = fields.Integer()
     lines = fields.One2many('test_new_api.multi.line', 'multi')
 
     @api.onchange('name')
@@ -204,6 +205,16 @@ class Multi(models.Model):
     def _onchange_partner(self):
         for line in self.lines:
             line.partner = self.partner
+
+    @api.onchange('count')
+    def _onchange_count(self):
+        self.count = max(self.count, 0)
+        if self.count < len(self.lines):
+            self.lines = self.lines[:self.count]
+        elif self.count > len(self.lines):
+            self.lines = self.lines.concat(*(
+                self.lines.new() for _ in range(self.count - len(self.lines))
+            ))
 
 
 class MultiLine(models.Model):

@@ -5040,31 +5040,69 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
         if not all(name in self._fields for name in names):
             return {}
 
-        # filter out keys in field_onchange that do not refer to actual fields
-        dotnames = []
+        # determine the tree of fields from the form view
+        Tree = lambda: defaultdict(Tree)
+        nametree = Tree()
         for dotname in field_onchange:
             try:
                 model = self.browse()
+                subtree = nametree
                 for name in dotname.split('.'):
                     model = model[name]
-                dotnames.append(dotname)
+                    subtree = subtree[name]
             except Exception:
+                # simply skip invalid field names
                 pass
+
+        def snapshot(record, tree=nametree):
+            """ Return a dict with the values of record, following nametree. """
+            vals = {}
+            for name, subnames in tree.items():
+                if subnames:
+                    # use an OrderedDict to keep lines in order
+                    vals[name] = OrderedDict(
+                        (line.id, snapshot(line, subnames))
+                        for line in record[name]
+                    )
+                else:
+                    vals[name] = record[name]
+            return vals
+
+        def other(value, field):
+            """ Return a value for ``field`` that is different from ``value``. """
+            if value:
+                return False
+            if field.type == 'date':
+                return "1932-11-02"
+            if field.type == 'datetime':
+                return "1932-11-02 08:00:00"
+            if field.type == 'selection':
+                return (field.get_values(self.env) + [False])[0]
+            if field.type == 'reference':
+                model = field.get_values(self.env)[0]
+                value = self.env[model].search([], limit=1)
+                return "%s,%s" % (value._name, value.id)
+            if field.relational:
+                return self.env[field.comodel_name].new()
+            return 1
 
         # create a new record with values, and attach ``self`` to it
         with env.do_in_onchange():
-            record = self.new(values)
-            values = {name: record[name] for name in record._cache}
+            record = self.new({
+                name: other(value, self._fields[name]) if name in names else value
+                for name, value in values.items()
+            })
+            # force evaluation of computed fields with other values
+            snapshot(record)
+            for name in names:
+                field = self._fields[name]
+                record._cache[name] = field.convert_to_cache(values[name], record)
+            old_vals = snapshot(record)
             # attach ``self`` with a different context (for cache consistency)
             record._origin = self.with_context(__onchange=True)
 
-        # load fields on secondary records, to avoid false changes
-        with env.do_in_onchange():
-            for dotname in dotnames:
-                record.mapped(dotname)
-
         # determine which field(s) should be triggered an onchange
-        todo = list(names) or list(values)
+        todo = list(names) or list(old_vals)
         done = set()
 
         # dummy assignment: trigger invalidations on the record
@@ -5080,7 +5118,6 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                 record[name] = value
 
         result = {}
-        dirty = set()
 
         # process names in order (or the keys of values if no name given)
         while todo:
@@ -5090,38 +5127,68 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             done.add(name)
 
             with env.do_in_onchange():
-                # apply field-specific onchange methods
-                if field_onchange.get(name):
-                    record._onchange_eval(name, field_onchange[name], result)
+                if not field_onchange.get(name):
+                    continue
 
-                # force re-evaluation of function fields on secondary records
-                for dotname in dotnames:
-                    record.mapped(dotname)
+                # apply field-specific onchange methods
+                record._onchange_eval(name, field_onchange[name], result)
 
                 # determine which fields have been modified
-                for name, oldval in values.items():
-                    field = self._fields[name]
-                    newval = record[name]
-                    if newval != oldval or (
-                        field.type in ('one2many', 'many2many') and newval._is_dirty()
-                    ):
+                new_vals = snapshot(record)
+                for name in new_vals:
+                    if new_vals[name] != old_vals[name]:
                         todo.append(name)
-                        dirty.add(name)
 
-        # determine subfields for field.convert_to_onchange() below
-        Tree = lambda: defaultdict(Tree)
-        subnames = Tree()
-        for dotname in dotnames:
-            subtree = subnames
-            for name in dotname.split('.'):
-                subtree = subtree[name]
+        class Nil(collections.Mapping):
+            """ Dummy empty dictionary to diff on new records. """
+            __slots__ = []
+            def __getitem__(self, key):
+                return Nil()
+            def __iter__(self):
+                return iter(())
+            def __len__(self):
+                return 0
+            def __eq__(self, other):
+                return False
 
-        # collect values from dirty fields
+        def diff(record, old_vals, new_vals, nametree):
+            """ Return the values that have changed for ``record`` by comparing
+                ``old_vals`` with ``new_vals``.
+            """
+            result = {}
+            for name, subnames in nametree.items():
+                old_val = old_vals[name]
+                new_val = new_vals[name]
+                if old_val == new_val:
+                    continue
+                field = record._fields[name]
+                if not subnames:
+                    result[name] = field.convert_to_onchange(new_val, record, subnames)
+                    continue
+                # x2many fields: send commands
+                result[name] = commands = [(5,)]
+                for line_id, line_vals in new_val.items():
+                    line = record[name].browse([line_id])
+                    if not line_id:
+                        # (0, virtual_id, vals)
+                        line_diff = diff(line, Nil(), line_vals, subnames)
+                        commands.append((0, line_id.ref or 0, line_diff))
+                    else:
+                        # (4, id) or (1, id, vals)
+                        line_vals0 = old_val.get(line_id) or snapshot(line, subnames)
+                        line_diff = diff(line, line_vals0, line_vals, subnames)
+                        if line_diff:
+                            commands.append((1, line_id, line_diff))
+                        else:
+                            commands.append((4, line_id))
+            return result
+
+        # collect values that have changed
         with env.do_in_onchange():
-            result['value'] = {
-                name: self._fields[name].convert_to_onchange(record[name], record, subnames[name])
-                for name in dirty
-            }
+            new_vals = snapshot(record)
+
+        self.invalidate_cache()
+        result['value'] = diff(record, old_vals, new_vals, nametree)
 
         return result
 
