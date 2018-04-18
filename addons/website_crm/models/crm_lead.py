@@ -29,7 +29,6 @@ class Website(models.Model):
 
     crm_default_team_id = fields.Many2one(
         'crm.team', string='Default Sales Channels',
-        default=lambda self: self.env['crm.team'].search([], limit=1),
         domain=lambda self: self._get_crm_default_team_domain(),
         help='Default sales channel for new leads created through the Contact Us form.')
     crm_default_user_id = fields.Many2one(
