@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="account_journal_dashboard_kanban_view_inherit_import_invoice_xml" model="ir.ui.view">
+            <field name="name">account.journal.dashboard.kanban.inherit.import.invoice.xml</field>
+            <field name="model">account.journal</field>
+            <field name="inherit_id" ref="account.account_journal_dashboard_kanban_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//t[@id='account.JournalBodySalePurchase']/div[hasclass('o_kanban_primary_left')]" position="inside">
+                    <t t-if="journal_type == 'purchase'">
+                        <button type="action" name="%(account_invoice_xml_import_action)d"
+                                class="btn btn-primary btn-sm">
+                            <span>Import Bills</span>
+                        </button>
+                    </t>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
