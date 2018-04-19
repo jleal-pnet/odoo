@@ -275,6 +275,48 @@ class TestAdvMailPerformance(TransactionCase):
         with self.assertQueryCount(admin=19, emp=19):  # test_mail only: 18 - 18
             record.message_subscribe(partner_ids=self.user_test.partner_id.ids, subtype_ids=subtype_ids)
 
+    @mute_logger('odoo.models.unlink')
+    @users('admin', 'emp')
+    @warmup
+    def test_message_track(self):
+        umbrella = self.env['mail.test'].with_context(tracking_disable=True).create({'name': 'Test'})
+
+        record = self.env['mail.test.track'].create({
+            'name': 'Test',
+            'user_id': self.env.uid,
+            'umbrella_id': umbrella.id,
+        })
+        tracked_fields = record._get_tracked_fields([])
+
+        with self.assertQueryCount(admin=9, emp=9):  # test_mail only: 7 - 7
+            record.message_track(tracked_fields, {record.id: {'umbrella_id': False, 'user_id': False}})
+
+        self.assertEqual(set(record.sudo().message_ids[0].mapped('tracking_value_ids.field')),
+                         set(['user_id', 'umbrella_id']))
+        self.assertEqual(record.sudo().message_ids[0].needaction_partner_ids, self.env['res.partner'])
+
+    @mute_logger('odoo.models.unlink')
+    @users('admin', 'emp')
+    @warmup
+    def test_message_track_subtype(self):
+        umbrella = self.env['mail.test'].with_context(tracking_disable=True).create({'name': 'Test'})
+
+        record = self.env['mail.test.full'].create({
+            'name': 'Test',
+            'user_id': self.env.uid,
+            'umbrella_id': umbrella.id,
+        })
+        tracked_fields = record._get_tracked_fields([])
+
+        with self.assertQueryCount(admin=35, emp=50):  # test_mail only: 33 - 47
+            record.message_track(tracked_fields, {record.id: {'umbrella_id': False, 'user_id': False, 'customer_id': False, 'email_from': False}})
+
+        self.assertEqual(record.message_ids[0].subtype_id, self.env.ref('test_mail.st_mail_test_full_umbrella_upd'))
+
+        self.assertEqual(set(record.sudo().message_ids[0].mapped('tracking_value_ids.field')),
+                         set(['user_id', 'umbrella_id']))
+        self.assertEqual(record.sudo().message_ids[0].needaction_partner_ids, self.env['res.partner'])
+
 
 class TestHeavyMailPerformance(TransactionCase):
 
