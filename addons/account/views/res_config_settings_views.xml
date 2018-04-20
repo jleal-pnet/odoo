@@ -200,24 +200,29 @@
                                 </div>
                             </div>
                         </t>
-                        <h2>Customer Payments</h2>
+                        <h2>Follow-up Reports
+                        <span class="fa fa-lg fa-building-o" title="This feature is useful if you issue a high amounts of invoices." groups="base.group_multi_company"/></h2>
                         <div class="row mt16 o_settings_container">
-                            <div class="col-xs-12 col-md-6 o_setting_box" id="account_followup" title="This feature is useful if you issue a high amounts of invoices.">
-                                <div class="o_setting_left_pane">
-                                    <field name="module_account_reports_followup" widget="upgrade_boolean"/>
-                                </div>
+                            <div class="col-xs-12 col-md-6 o_setting_box" id="account_followup">
+                                <div class="o_setting_left_pane"/>
                                 <div class="o_setting_right_pane">
-                                    <label for="module_account_reports_followup"/>
-                                    <div class="text-muted">
-                                        Use follow-up levels and schedule actions
+                                    <field name="module_account_reports_followup" invisible="1"/>
+                                    <field name="payment_followup" widget="upgrade_radio" class="mb0"/>
+                                    <div id="payment_followup" class="text-muted mt0 ml16">
+                                        Set duration between two reminders
                                     </div>
-                                    <div id="account_reports_followup" class="content-group" attrs="{'invisible': [('module_account_reports_followup', '=', False)]}">
-                                        <div class="text-warning mt16 mb4">
-                                            Save this page and come back here to set up the feature.
-                                        </div>
+                                    <field name="followup_levels" widget="upgrade_radio" class="mt8 mb0"/>
+                                    <div id="account_reports_followup" class="text-muted mt0 ml16">
+                                        Configure advanced follow-up levels and schedule actions
+                                    </div>
+                                    <div class="text-warning mt16 mb4 ml16" attrs="{'invisible': ['|', ('module_account_reports_followup', '=', True), ('followup_levels', '=', False)]}">
+                                        Save this page and come back here to set up the feature.
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                        <h2>Customer Payments</h2>
+                        <div class="row mt16 o_settings_container">
                             <div class="col-xs-12 col-md-6 o_setting_box">
                                 <div class="o_setting_left_pane">
                                     <field name="module_account_payment"/>

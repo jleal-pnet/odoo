@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import api, fields, models, _
+from odoo import api, fields, models, release, _
 
 
 class ResConfigSettings(models.TransientModel):
@@ -58,12 +58,39 @@ class ResConfigSettings(models.TransientModel):
     tax_exigibility = fields.Boolean(string='Cash Basis', related='company_id.tax_exigibility')
     tax_cash_basis_journal_id = fields.Many2one('account.journal', related='company_id.tax_cash_basis_journal_id', string="Tax Cash Basis Journal")
     account_hide_setup_bar = fields.Boolean(string='Hide Setup Bar', related='company_id.account_setup_bar_closed',help="Tick if you wish to hide the setup bar on the dashboard")
+    payment_followup = fields.Selection([('payment_followup', 'Payment Follow-up')], string='Payment Followup')
+    followup_levels = fields.Selection([('followup_levels', 'Follow-up Levels')], string='Followup Levels')
+
+    @api.onchange('payment_followup')
+    def _onchange_payment_followup(self):
+        if release.version_info[5] == 'e' and self.payment_followup == 'payment_followup':
+            self.followup_levels = False
+        else:
+            self.payment_followup = False
+
+    @api.onchange('followup_levels')
+    def _onchange_followup_levels(self):
+        if release.version_info[5] == 'e' and self.followup_levels == 'followup_levels':
+            self.payment_followup = False
+        else:
+            self.followup_levels = False
+
+    @api.model
+    def get_values(self):
+        res = super(ResConfigSettings, self).get_values()
+        module_account_reports_followup = self.env['ir.module.module'].search([('name', '=', 'account_reports_followup')], limit=1)
+        if module_account_reports_followup.state == 'installed':
+            res.update({'followup_levels': 'followup_levels', 'payment_followup': False})
+        else:
+            res.update({'followup_levels': False, 'payment_followup': 'payment_followup'})
+        return res
 
     @api.multi
     def set_values(self):
         super(ResConfigSettings, self).set_values()
         if self.group_multi_currency:
             self.env.ref('base.group_user').write({'implied_ids': [(4, self.env.ref('product.group_sale_pricelist').id)]})
+        self.module_account_reports_followup = False if not self.followup_levels else True
         """ install a chart of accounts for the given company (if required) """
         if self.chart_template_id and self.chart_template_id != self.company_id.chart_template_id:
             wizard = self.env['wizard.multi.charts.accounts'].create({
