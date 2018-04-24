@@ -794,7 +794,9 @@ if (config.debug) {
             var debugManager = _.find(this.systray_menu.widgets, function(item) {
                 return item instanceof DebugManager;
             });
-            debugManager.update('action', action, controller && controller.widget);
+            if (debugManager) {
+                debugManager.update('action', action, controller && controller.widget);
+            }
         },
     });
 
