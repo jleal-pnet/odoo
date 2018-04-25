@@ -3,7 +3,6 @@ odoo.define('web.WebClient', function (require) {
 
 var AbstractWebClient = require('web.AbstractWebClient');
 var config = require('web.config');
-var data_manager = require('web.data_manager');
 var dom = require('web.dom');
 var framework = require('web.framework');
 var Menu = require('web.Menu');

@@ -1,13 +1,14 @@
 odoo.define('web.web_client_tests', function (require) {
 "use strict";
 
+var mailTestUtils = require('mail.testUtils');
+
 var core = require('web.core');
 var session = require('web.session');
 var SystrayMenu = require('web.SystrayMenu');
 var testUtils = require('web.test_utils');
 var WebClient = require('web.WebClient');
 var Widget = require('web.Widget');
-
 
 var WEBCLIENT_HTML =
     '<div class="o_web_client">' +
@@ -149,6 +150,7 @@ QUnit.module('Web Client', {
         var webClient = createWebClient({
             data: this.data,
             actions: this.actions,
+            services: [mailTestUtils.createBusService()],
             mockRPC: function (route) {
                 assert.step(route);
                 return this._super.apply(this, arguments);
@@ -170,6 +172,7 @@ QUnit.module('Web Client', {
         var webClient = createWebClient({
             data: this.data,
             actions: this.actions,
+            services: [mailTestUtils.createBusService()],
             archs: this.archs,
             mockRPC: function (route) {
                 assert.step(route);
@@ -204,6 +207,7 @@ QUnit.module('Web Client', {
         var loadInitialActionDef = $.Deferred();
         var webClient = createWebClient({
             data: this.data,
+            services: [mailTestUtils.createBusService()],
             actions: this.actions,
             archs: this.archs,
             mockRPC: function (route, args) {
