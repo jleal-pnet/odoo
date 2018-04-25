@@ -5054,50 +5054,107 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                 # simply skip invalid field names
                 pass
 
-        def snapshot(record, tree=nametree):
+        class Nil(collections.Mapping):
+            """ Dummy empty dictionary to diff on new records. """
+            __slots__ = []
+            def __repr__(self):
+                return "<Nil>"
+            def __getitem__(self, key):
+                return Nil()
+            def __iter__(self):
+                return iter(())
+            def __len__(self):
+                return 0
+            def __eq__(self, other):
+                return self is other
+
+        def prefetch(record_values, tree=nametree):
+            if not record_values:
+                return
+            model = next(iter(record_values)).browse()
+
+            # read the stored fields of record
+            stored = []
+            for name in tree:
+                field = model._fields[name].base_field
+                if field.store:
+                    stored.append(name)
+                elif field.type in ('many2one', 'one2many', 'many2many'):
+                    for record in record_values:
+                        record._cache[name] = (NewId(),)
+                else:
+                    for record in record_values:
+                        record._cache[name] = Nil()
+            records = model.concat(*record_values).filtered('id')
+            if records:
+                records.read(stored, load='_classic_write')
+
+            # put values in cache, and process recursively
+            to_prefetch = defaultdict(dict)
+            for record, values in record_values.items():
+                for name, value in values.items():
+                    field = record._fields.get(name)
+                    if not field:
+                        continue
+                    subnames = tree.get(name, {})
+                    if subnames:
+                        comodel = model[name]
+                        line_ids = []
+                        for command in (value or []):
+                            if command[0] == 0:
+                                line = comodel.new(ref=command[1])
+                                line_ids.append(line.id)
+                                to_prefetch[name][line] = command[2]
+                            elif command[0] == 1:
+                                line = comodel.browse(command[1])
+                                line_ids.append(line.id)
+                                to_prefetch[name][line] = command[2]
+                            elif command[0] == 4:
+                                line = comodel.browse(command[1])
+                                line_ids.append(line.id)
+                                to_prefetch[name][line] = {}
+                            elif command[0] == 6:
+                                lines = comodel.browse(command[2])
+                                line_ids = lines.ids
+                                for line in lines:
+                                    to_prefetch[name][line] = {}
+                        record._cache[name] = tuple(line_ids)
+                        for invf in model._field_inverses[field]:
+                            invf._update(record[name], record)
+                    else:
+                        record._cache[name] = field.convert_to_cache(value, record)
+                        for invf in model._field_inverses[field]:
+                            invf._update(record[name], record)
+                for name, subnames in tree.items():
+                    if subnames and name not in values:
+                        for line in record[name]:
+                            to_prefetch[name][line] = {}
+
+            # recursively prefetch subrecords
+            for name, record_values in to_prefetch.items():
+                prefetch(record_values, tree.get(name, {}))
+
+        def snapshot(record, tree=nametree, nillable=False):
             """ Return a dict with the values of record, following nametree. """
             vals = {}
             for name, subnames in tree.items():
-                if subnames:
+                if nillable and name not in record._cache:
+                    vals[name] = Nil()
+                elif subnames:
                     # use an OrderedDict to keep lines in order
                     vals[name] = OrderedDict(
-                        (line.id, snapshot(line, subnames))
+                        (line.id, snapshot(line, subnames, nillable))
                         for line in record[name]
                     )
                 else:
                     vals[name] = record[name]
             return vals
 
-        def other(value, field):
-            """ Return a value for ``field`` that is different from ``value``. """
-            if value:
-                return False
-            if field.type == 'date':
-                return "1932-11-02"
-            if field.type == 'datetime':
-                return "1932-11-02 08:00:00"
-            if field.type == 'selection':
-                return (field.get_values(self.env) + [False])[0]
-            if field.type == 'reference':
-                model = field.get_values(self.env)[0]
-                value = self.env[model].search([], limit=1)
-                return "%s,%s" % (value._name, value.id)
-            if field.relational:
-                return self.env[field.comodel_name].new()
-            return 1
-
         # create a new record with values, and attach ``self`` to it
         with env.do_in_onchange():
-            record = self.new({
-                name: other(value, self._fields[name]) if name in names else value
-                for name, value in values.items()
-            })
-            # force evaluation of computed fields with other values
-            snapshot(record)
-            for name in names:
-                field = self._fields[name]
-                record._cache[name] = field.convert_to_cache(values[name], record)
-            old_vals = snapshot(record)
+            record = self.new()
+            prefetch({record: values})
+            old_vals = snapshot(record, nillable=True)
             # attach ``self`` with a different context (for cache consistency)
             record._origin = self.with_context(__onchange=True)
 
@@ -5138,18 +5195,6 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                 for name in new_vals:
                     if new_vals[name] != old_vals[name]:
                         todo.append(name)
-
-        class Nil(collections.Mapping):
-            """ Dummy empty dictionary to diff on new records. """
-            __slots__ = []
-            def __getitem__(self, key):
-                return Nil()
-            def __iter__(self):
-                return iter(())
-            def __len__(self):
-                return 0
-            def __eq__(self, other):
-                return False
 
         def diff(record, old_vals, new_vals, nametree):
             """ Return the values that have changed for ``record`` by comparing
