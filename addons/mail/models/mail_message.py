@@ -1043,7 +1043,6 @@ class Message(models.Model):
         self.ensure_one()
 
         email_cids = [r[0] for r in rdata['channels'] if r[2] == 'email']
-        email_pids = [r[0] for r in rdata['partners'] if r[2] == 'email']
         inbox_pids = [r[0] for r in rdata['partners'] if r[2] == 'inbox']
 
         message_values = {}
@@ -1051,24 +1050,27 @@ class Message(models.Model):
             message_values['channel_ids'] = [(6, 0, [r[0] for r in rdata['channels']])]
         if rdata['partners']:
             message_values['needaction_partner_ids'] = [(6, 0, [r[0] for r in rdata['partners']])]
-        if message_values and record and hasattr(record, 'message_get_message_notify_values'):
-            message_values.update(record.message_get_message_notify_values(self, message_values))
+        if message_values and record and hasattr(record, '_notify_customize_recipients'):
+            message_values.update(record._notify_customize_recipients(self, msg_vals, message_values))
         if message_values:
             self.write(message_values)
 
         # notify partners and channels
-        # those methods are called as SUPERUSER because portal users posting messages
-        # have no access to partner model. Maybe propagating a real uid could be necessary.
-        if email_cids or email_pids:
-            self.env['res.partner'].sudo().search([
-                '|',
-                ('id', 'in', email_pids),
+        if email_cids:
+            new_pids = self.env['res.partner'].sudo().search([
+                ('id', 'not in', [r[0] for r in rdata['partners']]),
                 ('channel_ids', 'in', email_cids),
-                ('email', '!=', self.author_id.email or self.email_from),
-            ])._notify(self, record, force_send=force_send, send_after_commit=send_after_commit, model_description=model_description, mail_auto_delete=mail_auto_delete)
+                ('email', 'not in', [self.author_id.email, self.email_from]),
+            ])
+            for partner in new_pids:
+                rdata['partners'].append((partner.id, True, 'email', 'customer', []))
+
+        email_pids = [r for r in rdata['partners'] if r[2] == 'email']
+        if email_pids:
+            self.env['res.partner']._notify(self, email_pids, record, force_send=force_send, send_after_commit=send_after_commit, model_description=model_description, mail_auto_delete=mail_auto_delete)
 
         if inbox_pids:
-            self.env['res.partner'].sudo().browse(inbox_pids)._notify_by_chat(self)
+            self.env['res.partner'].browse(inbox_pids)._notify_by_chat(self)
 
         if rdata['channels']:
             self.env['mail.channel'].sudo().browse([r[0] for r in rdata['channels']])._notify(self)
