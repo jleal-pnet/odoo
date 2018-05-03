@@ -1966,14 +1966,30 @@ class MailThread(models.AbstractModel):
                 subtype = 'mail.%s' % subtype
             subtype_id = self.env['ir.model.data'].xmlid_to_res_id(subtype)
 
+        msg_vals = {
+            'author_id': author.id,
+            'email_from': email_from,
+            'message_type': message_type,
+            'subtype_id': subtype_id,
+            'partner_ids': [(4, pid) for pid in partner_ids],
+            'channel_ids': kwargs.get('channel_ids', []),
+        }
+
+        # compute recipients, to perform a shortcut if noone has to be notified
+        speedup = False
+        rdata = self.env['mail.message']._notify_compute_recipients(self, msg_vals)
+        if not rdata['partners'] and not rdata['channels']:
+            speedup = True
+
         # compute record-related data
         res_id = self.ids[0] if model and self else False
         record_name = kwargs.pop('record_name', None)
-        record_name = self.display_name if self and record_name is None else record_name
+        if not speedup:
+            record_name = self.display_name if self and record_name is None else record_name
 
         # compute reply-to
         reply_to = kwargs.pop('reply_to', None)
-        if reply_to is None:
+        if reply_to is None and not speedup:
             reply_to = self.env['mail.thread']._notify_get_reply_to_on_records(default=email_from, records=self, doc_names={res_id: record_name})[res_id]
 
         # automatically subscribe recipients if asked to
@@ -1999,20 +2015,15 @@ class MailThread(models.AbstractModel):
                 parent_id = message.id
 
         values = kwargs
+        values.update(msg_vals)
         values.update({
-            'author_id': author.id,
-            'email_from': email_from,
             'model': model,
             'res_id': res_id,
             'record_name': record_name,
             'body': body,
             'subject': subject or False,
             'reply_to': reply_to,
-            'message_type': message_type,
             'parent_id': parent_id,
-            'subtype_id': subtype_id,
-            'partner_ids': [(4, pid) for pid in partner_ids],
-            'channel_ids': kwargs.get('channel_ids', []),
             'add_sign': add_sign
         })
         if notif_layout:
@@ -2029,22 +2040,30 @@ class MailThread(models.AbstractModel):
 
         # Post the message
         new_message = self.env['mail.message'].create(values)
-        self._message_post_after_hook(new_message, values, model_description=model_description, mail_auto_delete=mail_auto_delete)
+        self._message_post_after_hook(new_message, values, rdata, model_description=model_description, mail_auto_delete=mail_auto_delete)
         return new_message
 
-    def _message_post_after_hook(self, message, msg_vals, model_description=False, mail_auto_delete=True):
+    def _message_post_after_hook(self, message, msg_vals, rdata, model_description=False, mail_auto_delete=True):
         """ Hook to add custom behavior after having posted the message. Both
         message and computed value are given, to try to lessen query count by
         using already-computed values instead of having to rebrowse things. """
         # Notify recipients of the newly-created message (Inbox / Email + channels)
         if msg_vals.get('moderation_status') != 'pending_moderation':
-            message._notify(
-                self, msg_vals,
-                force_send=self.env.context.get('mail_notify_force_send', True),
-                send_after_commit=True,
-                model_description=model_description,
-                mail_auto_delete=mail_auto_delete,
-            )
+            # message._notify(
+            #     self, msg_vals,
+            #     force_send=self.env.context.get('mail_notify_force_send', True),
+            #     send_after_commit=True,
+            #     model_description=model_description,
+            #     mail_auto_delete=mail_auto_delete,
+            # )
+            if rdata['partners'] or rdata['channels']:
+                message._notify_recipients(
+                    rdata, self, msg_vals,
+                    force_send=self.env.context.get('mail_notify_force_send', True),
+                    send_after_commit=True,
+                    model_description=model_description,
+                    mail_auto_delete=mail_auto_delete
+                )
 
             # Post-process: subscribe author
             if msg_vals['author_id'] and msg_vals['model'] and self.ids and msg_vals['message_type'] != 'notification' and not self._context.get('mail_create_nosubscribe'):

@@ -229,7 +229,7 @@ class TestAdvMailPerformance(TransactionCase):
     def test_message_log_with_post(self):
         record = self.env['mail.test.simple'].create({'name': 'Test'})
 
-        with self.assertQueryCount(admin=7, emp=12):  # test_mail only: 7 - 12
+        with self.assertQueryCount(admin=6, emp=11):  # test_mail only: 6 - 11
             record.message_post(
                 body='<p>Test message_post as log</p>',
                 subtype='mail.mt_note',
@@ -240,7 +240,7 @@ class TestAdvMailPerformance(TransactionCase):
     def test_message_post_no_notification(self):
         record = self.env['mail.test.simple'].create({'name': 'Test'})
 
-        with self.assertQueryCount(admin=7, emp=12):  # test_mail only: 7 - 12
+        with self.assertQueryCount(admin=6, emp=11):  # test_mail only: 6 - 11
             record.message_post(
                 body='<p>Test Post Performances basic</p>',
                 partner_ids=[],
