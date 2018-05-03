@@ -50,6 +50,26 @@ QUnit.module('Views', {
                     {id: 1, name: 'The end'},
                 ],
             },
+            mainModel: {
+                fields : {
+                    name: {string: "name", type: "char" },
+                    one2ManyModel : { string : "one2ManyModel", type: "one2many", relation: "one2ManyModel" },
+                },
+                records: [
+                    {id: 1, name: 'The end'},
+                ],
+            },
+            one2ManyModel: {
+                fields: {
+                    name: {string: "name", type: "char"},
+                    many2OneModel: { string: "many2OneModel", type: "many2one", relation: "many2OneModel"}
+                }
+            },
+            many2OneModel: {
+                fields: {
+                    name: {string: "name", type: "char"},
+                }
+            }
         };
     },
 
@@ -321,7 +341,7 @@ QUnit.module('Views', {
                     return $.when(false);
                 }
                 if (route === '/web/dataset/call_kw/instrument/create') {
-                    assert.deepEqual(args.args, [{badassery: [[6, false, [1]]], name: false}], 
+                    assert.deepEqual(args.args, [{badassery: [[6, false, [1]]], name: false}],
                         'The method create should have been called with the right arguments');
                     return $.when(false);
                 }
@@ -420,6 +440,48 @@ QUnit.module('Views', {
 
         testUtils.unpatch(ListController);
         parent.destroy();
+    });
+
+    QUnit.test('using ESCAPE to discard a popup in a many2one in a one2many', function (assert) {
+        assert.expect(2);
+
+        var form = createView({
+            View: FormView,
+            model: 'mainModel',
+            data: this.data,
+            arch: '<form>' +
+                     '<field name="one2ManyModel">' +
+                        '<tree editable="top">' +
+                            '<field name="many2OneModel" />' +
+                        '</tree>' +
+                    '</field>' +
+                  '</form>',
+            res_id: 1,
+            archs: {
+            'many2OneModel,false,form': '<form>' +
+                                    '<field name="name" />' +
+                                '</form>' ,
+            },
+        });
+
+        form.$buttons.find('.o_form_button_edit').click();
+        form.$('.o_field_x2many_list_row_add a').click();
+        form.$('.o_field_widget .o_field_many2one[name=many2OneModel] input').click();
+        $('ul.ui-autocomplete.ui-front.ui-menu.ui-widget.ui-widget-content li.o_m2o_dropdown_option').first().click();
+
+        var $modal = $('.modal-dialog.modal-lg');
+
+        assert.equal($modal.length, 1, 'There should be one modal');
+
+        $modal.find("input[name=name]").focus();
+        var escapeKeyDownEvent = $.Event('keydown', {
+            which: $.ui.keyCode.ESCAPE,
+            keyCode: $.ui.keyCode.ESCAPE,
+        });
+
+        $(document.activeElement).trigger(escapeKeyDownEvent);
+        assert.strictEqual($('.modal-dialog.modal-lg').length, 0, "the modal should be discarded");
+        form.destroy();
     });
 });
 

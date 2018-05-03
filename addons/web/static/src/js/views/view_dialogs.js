@@ -68,6 +68,9 @@ var ViewDialog = Dialog.extend({
  * Create and edit dialog (displays a form view record and leave once saved)
  */
 var FormViewDialog = ViewDialog.extend({
+    custom_events: _.extend({}, ViewDialog.prototype.custom_events, {
+        'navigation_move': '_onNavigationMove',
+    }),
     /**
      * @param {Widget} parent
      * @param {Object} [options]
@@ -230,6 +233,20 @@ var FormViewDialog = ViewDialog.extend({
             self.on_saved(record, !!changedFields.length);
         });
     },
+
+    //--------------------------------------------------------------------------
+    // Handlers
+    //--------------------------------------------------------------------------
+    /**
+     * @private
+     * @param {OdooEvent} event
+     */
+    _onNavigationMove: function (event) {
+        if (event.data.direction === 'cancel') {
+            event.stopPropagation();
+            this.close();
+        }
+    }
 });
 
 var SelectCreateListController = ListController.extend({
