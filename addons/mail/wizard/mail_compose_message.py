@@ -5,6 +5,7 @@ import base64
 import re
 
 from odoo import _, api, fields, models, SUPERUSER_ID, tools
+from odoo.models import BaseModel
 from odoo.tools import pycompat
 from odoo.tools.safe_eval import safe_eval
 
@@ -49,48 +50,24 @@ class MailComposer(models.TransientModel):
             - comment: default mode, model and ID of a record the user comments
                 - default_model or active_model
                 - default_res_id or active_id
-            - reply: active_id of a message the user replies to
-                - default_parent_id or message_id or active_id: ID of the
-                    mail.message we reply to
-                - message.res_model or default_model
-                - message.res_id or default_res_id
             - mass_mail: model and IDs of records the user mass-mails
                 - active_ids: record IDs
                 - default_model or active_model
         """
         result = super(MailComposer, self).default_get(fields)
 
-        # v6.1 compatibility mode
+        if not result.get('composition_mode'):
+            result['composition_mode'] = 'comment'
         result['composition_mode'] = result.get('composition_mode', self._context.get('mail.compose.message.mode', 'comment'))
         result['model'] = result.get('model', self._context.get('active_model'))
         result['res_id'] = result.get('res_id', self._context.get('active_id'))
-        result['parent_id'] = result.get('parent_id', self._context.get('message_id'))
         if 'no_auto_thread' not in result and (result['model'] not in self.env or not hasattr(self.env[result['model']], 'message_post')):
             result['no_auto_thread'] = True
 
-        # default values according to composition mode - NOTE: reply is deprecated, fall back on comment
-        if result['composition_mode'] == 'reply':
-            result['composition_mode'] = 'comment'
-        vals = {}
         if 'active_domain' in self._context:  # not context.get() because we want to keep global [] domains
-            vals['active_domain'] = '%s' % self._context.get('active_domain')
+            result['active_domain'] = '%s' % self._context.get('active_domain')
         if result['composition_mode'] == 'comment':
-            vals.update(self.get_record_data(result))
-
-        for field in vals:
-            if field in fields:
-                result[field] = vals[field]
-
-        # TDE HACK: as mailboxes used default_model='res.users' and default_res_id=uid
-        # (because of lack of an accessible pid), creating a message on its own
-        # profile may crash (res_users does not allow writing on it)
-        # Posting on its own profile works (res_users redirect to res_partner)
-        # but when creating the mail.message to create the mail.compose.message
-        # access rights issues may rise
-        # We therefore directly change the model and res_id
-        if result['model'] == 'res.users' and result['res_id'] == self._uid:
-            result['model'] = 'res.partner'
-            result['res_id'] = self.env.user.partner_id.id
+            result.update(self.get_record_data(result))
 
         if fields is not None:
             [result.pop(field, None) for field in list(result) if field not in fields]
@@ -127,29 +104,46 @@ class MailComposer(models.TransientModel):
 
     @api.multi
     def check_access_rule(self, operation):
-        """ Access rules of mail.compose.message:
-            - create: if
-                - model, no res_id, I create a message in mass mail mode
-            - then: fall back on mail.message acces rules
-        """
-        # Author condition (CREATE (mass_mail))
-        if operation == 'create' and self._uid != SUPERUSER_ID:
-            # read mail_compose_message.ids to have their values
-            message_values = {}
-            self._cr.execute('SELECT DISTINCT id, model, res_id FROM "%s" WHERE id = ANY (%%s) AND res_id = 0' % self._table, (self.ids,))
-            for mid, rmod, rid in self._cr.fetchall():
-                message_values[mid] = {'model': rmod, 'res_id': rid}
-            # remove from the set to check the ids that mail_compose_message accepts
-            author_ids = [mid for mid, message in message_values.items()
-                          if message.get('model') and not message.get('res_id')]
-            self = self.browse(list(set(self.ids) - set(author_ids)))  # not sure slef = ...
+        """ Access rules of mail.compose.message
 
-        return super(MailComposer, self).check_access_rule(operation)
+         * comment mode (model, res_id) -> access rights will be checked when
+           accessing the document and posting the message;
+         * mass mailing mode (model, no res_id) -> creating the wizard is ok
+           as rights are performed at mail creation which creates a message
+           that perform access right check;
+         * mass post mode (model, no res_id, mass_post): will be batch of
+           message post and therefore check access rights
+
+        Let us therefore fall back on classic transient access check and let
+        message post / creation handle real access rights check.
+        """
+        return BaseModel.check_access_rule(self, operation)
+
+    @api.model
+    def create(self, values):
+        """ Override to avoid computing unnecessary values at create; see
+        mail_message.py for more details. """
+        if 'reply_to' not in values:
+            values['reply_to'] = False
+        return super(MailComposer, self).create(values)
+
+    @api.multi
+    def read(self, fields=None, load='_classic_read'):
+        """ Override to avoid an unnecessary access right checks for a transient;
+        see mail_message.py for more details. """
+        return BaseModel.read(self, fields=fields, load=load)
 
     @api.multi
     def _notify(self, **kwargs):
         """ Override specific notify method of mail.message, because we do
             not want that feature in the wizard. """
+        return
+
+    @api.multi
+    def _invalidate_documents(self):
+        """ Override to avoid document invalidation done by mail_message. Let
+        message invalidate documents when created at post. Composer should not
+        do it itself. """
         return
 
     @api.model
@@ -158,39 +152,37 @@ class MailComposer(models.TransientModel):
         wizard when sending an email related a previous email (parent_id) or
         a document (model, res_id). This is based on previously computed default
         values. """
-        result, subject = {}, False
-        if values.get('parent_id'):
+        result = dict((key, values[key]) for key in ['record_name', 'subject', 'model', 'res_id'] if values.get(key))
+        if values.get('parent_id') and values['composition_mode'] == 'comment':
             parent = self.env['mail.message'].browse(values.get('parent_id'))
-            result['record_name'] = parent.record_name,
-            subject = tools.ustr(parent.subject or parent.record_name or '')
-            if not values.get('model'):
+            if 'record_name' not in result:
+                result['record_name'] = parent.record_name
+            if 'subject' not in result:
+                result['subject'] = tools.ustr(parent.subject or parent.record_name or '')
+            if not result.get('model'):
                 result['model'] = parent.model
-            if not values.get('res_id'):
+            if not result.get('res_id'):
                 result['res_id'] = parent.res_id
-            partner_ids = values.get('partner_ids', list()) + [(4, id) for id in parent.partner_ids.ids]
-            if self._context.get('is_private') and parent.author_id:  # check message is private then add author also in partner list.
-                partner_ids += [(4, parent.author_id.id)]
-            result['partner_ids'] = partner_ids
-        elif values.get('model') and values.get('res_id'):
-            doc_name_get = self.env[values.get('model')].browse(values.get('res_id')).name_get()
-            result['record_name'] = doc_name_get and doc_name_get[0][1] or ''
-            subject = tools.ustr(result['record_name'])
+        if result.get('model') and result.get('res_id') and values['composition_mode'] == 'comment':
+            if 'record_name' not in result:
+                result['record_name'] = self.env[result['model']].browse(result['res_id']).display_name
+            if 'subject' not in result:
+                result['subject'] = tools.ustr(result['record_name'])
 
         re_prefix = _('Re:')
-        if subject and not (subject.startswith('Re:') or subject.startswith(re_prefix)):
-            subject = "%s %s" % (re_prefix, subject)
-        result['subject'] = subject
+        if result.get('subject') and not (result['subject'].startswith('Re:') or result['subject'].startswith(re_prefix)):
+            result['subject'] = "%s %s" % (re_prefix, result['subject'])
 
         return result
 
-    #------------------------------------------------------
+    # ------------------------------------------------------
     # Wizard validation and send
-    #------------------------------------------------------
-    # action buttons call with positionnal arguments only, so we need an intermediary function
-    # to ensure the context is passed correctly
+    # ------------------------------------------------------
+
     @api.multi
     def send_mail_action(self):
-        # TDE/ ???
+        """ Action button specific method wrapping send_mail because of context/
+        auto_commit clash due to positional arguments """
         return self.send_mail()
 
     @api.multi

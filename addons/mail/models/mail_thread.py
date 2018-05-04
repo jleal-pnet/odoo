@@ -2066,7 +2066,8 @@ class MailThread(models.AbstractModel):
         except ImportError:
             values['slug'] = lambda self: self.id
         if isinstance(views_or_xmlid, pycompat.string_types):
-            views = self.env.ref(views_or_xmlid, raise_if_not_found=False)
+            view_id = self.env['ir.model.data'].xmlid_to_res_id(views_or_xmlid)
+            views = self.env['ir.ui.view'].browse(view_id) if view_id else False
         else:
             views = views_or_xmlid
         if not views:
