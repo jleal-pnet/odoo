@@ -49,7 +49,7 @@ Single Page Application
 -----------------------
 
 In short, the *webClient*, instance of *WebClient* is the root component of the
-whole user interface.  Its responsability is to orchestrate all various
+whole user interface.  Its responsibility is to orchestrate all various
 subcomponents, and to provide services, such as rpcs, local storage and more.
 
 In runtime, the web client is a single page application. It does not need to
@@ -366,7 +366,7 @@ Best practices
 Class System
 ============
 
-Odoo was developped before ECMAScript 6 classes were available.  In Ecmascript 5,
+Odoo was developed before ECMAScript 6 classes were available.  In Ecmascript 5,
 the standard way to define a class is to define a function and to add methods
 on its prototype object.  This is fine, but it is slightly complex when we want
 to use inheritance, mixins.
@@ -428,6 +428,23 @@ parent method.
 
     var dog = new Dog();
     dog.move()
+
+
+Note on inheritance of events:
+When a base class defines events or custom events, the sub class must extend those instead of replacing them.
+
+.. code-block:: javascript
+
+    var Dog = Animal.extend({
+        events : _.extend({}, Animal.prototype.events, {
+            'keydown':'_onKeyDown',
+        }),
+        custom_events: _.extend({}, Animal.prototype.custom_events, {
+            'myDogCustomEvent': '_onMyDogCustomEvent',
+        }),
+
+        //[...]
+    });
 
 Mixins
 ------
@@ -637,12 +654,12 @@ Widget API
 .. attribute:: Widget.el
 
     raw DOM element set as root to the widget (only available after the start
-    lifecyle method)
+    lifecycle method)
 
 .. attribute:: Widget.$el
 
     jQuery wrapper around :attr:`~Widget.el`. (only available after the start
-    lifecyle method)
+    lifecycle method)
 
 .. attribute:: Widget.template
 
@@ -797,6 +814,83 @@ Widget Guidelines
 * All interactive components (components displaying information to the screen
   or intercepting DOM events) must inherit from :class:`~Widget`
   and correctly implement and use its API and life cycle.
+
+Make your widget keyboard accessible
+------------------------------------
+
+In order to make a widget usable with the keyboard you have to define a few functions and one event.
+
+.. function:: getFocusableElement
+
+    By default it returns `$()` If your widget contains a more than one focussable element or  the focussable element
+    is not the top level element, override this function to return the correct jquery elemenet given the state of your
+    widget.
+
+.. js:function:: isFocusable
+
+    By default it returns true if there is something returned by `getFocusableElement`.
+    Override this function if your widget has a state that is not focusable.
+
+In order to reply to certain key strokes use the event `navigation_move`
+
+The custom event `navigation_move` moves the focus in the given `direction`. `direction` designates the direction of the move.
+Possible values are `next` `previous` `up` `down` `cancel` `right` `left` `next_line`. Note that the default behavior is
+defined in `AbstractField` and handles all the common cases of arrow keys, TAB, ESC and ENTER.
+
+The DOM event `keydown` is used to catch keystrokes of the user.
+Here is an example of a keyboard accessible widget
+
+.. code-block:: javascript
+
+    var AbstractField = require('web.AbstractField');
+
+    var Counter = AbstractField.extend({
+        template: 'some.template',
+        events: _.extent({}, AbstractField.events, {
+            'click button': '_onClick',
+            'keydown':'_onKeyDown',
+        }),
+
+        init: function (parent, value) {
+            this._super(parent);
+            this.count = value;
+        },
+        getFocusableElement: function() {
+            return this.$('button');
+        },
+        _onClick: function () {
+            this._addOne();
+        },
+        /**
+        * adds one on key '+' and remove one on key '-'
+        */
+        _onKeyDown: function (jqueryKeyDownEvent) {
+            switch (jqueryKeyDownEvent.key) {
+                case '+':
+                    this._addOne();
+                    jqueryKeyDownEvent.stopPropagation(); // only prevent default and stop propagation on handled key stokes
+                    jqueryKeyDownEvent.preventDefault();
+                    break;
+                case '-':
+                    this._removeOne();
+                    jqueryKeyDownEvent.stopPropagation();
+                    jqueryKeyDownEvent.preventDefault();
+                    break;
+            }
+        },
+        _addOne: function() {
+            this.count++;
+            this.$('.val').text(this.count);
+        },
+        _removeOne: function() {
+            this.count--;
+            this.$('.val').text(this.count);
+        }
+    });
+
+
+In order to give the focus to the another widget of the page, trigger a navigation event like so
+
 
 
 .. _reference/javascript_reference/qweb:
