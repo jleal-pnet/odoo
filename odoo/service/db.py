@@ -71,6 +71,7 @@ def _initialize_db(id, db_name, demo, lang, user_password, login='admin', countr
             if country_code:
                 countries = env['res.country'].search([('code', 'ilike', country_code)])
                 if countries:
+                    countries[0].is_module_installed = True
                     env['res.company'].browse(1).country_id = countries[0]
 
             # update admin's password and lang and login
