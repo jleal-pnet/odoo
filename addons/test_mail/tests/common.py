@@ -54,7 +54,7 @@ class BaseFunctionalTest(common.SavepointCase):
                     }
             yield
         finally:
-            new_notifications = self.env['mail.notification'].sudo().search([
+            new_notifications = self.env['mail.notification'].with_context(active_test=False).sudo().search([
                 ('res_partner_id', 'in', partners.ids),
                 ('id', 'not in', init_notifs.ids)
             ])
@@ -63,7 +63,7 @@ class BaseFunctionalTest(common.SavepointCase):
             for partner_attribute in counters.keys():
                 counter, notif_type, notif_read = counters[partner_attribute]
                 partner = getattr(self, partner_attribute)
-                partner_notif = new_notifications.filtered(lambda n: n.res_partner_id == partner)
+                partner_notif = new_notifications.filtered(lambda n: n.res_partner_id == partner and (n.active == (notif_read in ['unread', ''] or n.is_email)))
 
                 self.assertEqual(len(partner_notif), counter)
 
@@ -71,13 +71,13 @@ class BaseFunctionalTest(common.SavepointCase):
                     expected = init[partner]['na_counter'] + counter if notif_read == 'unread' else init[partner]['na_counter']
                     real = self.env['mail.notification'].sudo().search_count([
                         ('res_partner_id', '=', partner.id),
-                        ('is_read', '=', False)
+                        ('active', '=', True)
                     ])
                     self.assertEqual(expected, real, 'Invalid number of notification for %s: %s instead of %s' %
                                                      (partner.name, real, expected))
                 if partner_notif:
                     self.assertTrue(all(n.is_email == (notif_type == 'email') for n in partner_notif))
-                    self.assertTrue(all(n.is_read != (notif_read == 'read') for n in partner_notif),
+                    self.assertTrue((all(n.active != notif_read == 'read') or all(n.active == (notif_read == 'unread' and n.is_email)) for n in partner_notif),
                                     'Invalid read status for %s' % partner.name)
 
             # for simplification, limitate to single message asserts
