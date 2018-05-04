@@ -1466,8 +1466,7 @@
                                 </div>
                                 <t t-if="request.env['ir.config_parameter'].sudo().get_param('auth_signup.invitation_scope', 'b2b') == 'b2c' and request.website.is_public_user()">
                                     <p class="alert alert-info mt-3" role="status">
-                                        <a role="button" t-att-href='order.partner_id.signup_prepare() and order.partner_id.signup_url' class='btn btn-primary'>Sign Up</a>
-                                         to follow your order.
+                                        <a role="button" t-att-href='order.partner_id.signup_prepare() and order.partner_id.with_context(without_base_url=True).signup_url' class='btn btn-primary'>Sign Up</a>
                                     </p>
                                 </t>
                                 <div class="oe_structure clearfix mt-3"/>

@@ -89,8 +89,10 @@ class ResPartner(models.Model):
 
             if fragment:
                 query['redirect'] = base + werkzeug.urls.url_encode(fragment)
-
-            res[partner.id] = werkzeug.urls.url_join(base_url, "/web/%s?%s" % (route, werkzeug.urls.url_encode(query)))
+            if self.env.context.get('without_base_url'):
+                res[partner.id] = "/web/%s?%s" % (route, werkzeug.urls.url_encode(query))
+            else:
+                res[partner.id] = werkzeug.urls.url_join(base_url, "/web/%s?%s" % (route, werkzeug.urls.url_encode(query)))
         return res
 
     @api.multi
