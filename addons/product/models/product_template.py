@@ -151,6 +151,12 @@ class ProductTemplate(models.Model):
              "resized as a 64x64px image, with aspect ratio preserved. "
              "Use this field anywhere a small image is required.")
 
+    @api.constrains('barcode', 'company_id')
+    def _check_unique_barcode_company_wise(self):
+        for variant in self.product_variant_ids:
+            if variant.barcode:
+                variant._check_unique_barcode_company_wise()
+
     @api.depends('product_variant_ids')
     def _compute_product_variant_id(self):
         for p in self:
