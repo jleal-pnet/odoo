@@ -124,7 +124,7 @@
                 </t>
                 <t t-foreach="pms" t-as="pm">
                     <div class="panel-body">
-                        <label>
+                        <label class="payment_token_name">
                             <input t-if="mode == 'payment'" type="radio" name="pm_id" t-att-value="pm.id" t-att-checked="checked_pm_id == pm.id"/>
                             <span class="payment_option_name" t-esc="pm.name"/>
                             <t t-if="pm.verified">

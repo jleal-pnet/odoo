@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="payment_acquirer_form_inherit_payment_payulatam" model="ir.ui.view">
+        <field name="name">payment.acquirer.form.inherit.payment.payulatam</field>
+        <field name="model">payment.acquirer</field>
+        <field name="inherit_id" ref="payment.acquirer_form"/>
+        <field name="arch" type="xml">
+            <xpath expr='//group[@name="acquirer"]' position='after'>
+                <group attrs="{'invisible': [('provider', '!=', 'payulatam')]}">
+                    <field name="payulatam_account_id"/>
+                    <field name="payulatam_merchant_id"/>
+                    <field name="payulatam_api_key"/>
+                    <field name="payulatam_api_login"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="payment_transaction_view_form_inherit_payment_payulatam" model="ir.ui.view">
+        <field name="name">payment.transaction.view.form.inherit.payment.payulatam</field>
+        <field name="model">payment.transaction</field>
+        <field name="inherit_id" ref="payment.transaction_form"/>
+        <field name="arch" type="xml">
+            <field name="date" position="after">
+                <field name="payulatam_reference_code"  attrs="{'invisible': [('provider', '!=', 'payulatam')]}"/>
+                <field name="payulatam_order_id"  attrs="{'invisible': [('provider', '!=', 'payulatam')]}"/>
+            </field>
+        </field>
+    </record>
+</odoo>
