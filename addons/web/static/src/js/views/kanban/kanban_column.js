@@ -82,8 +82,6 @@ var KanbanColumn = Widget.extend({
             this.tooltipInfo = _.map(options.group_by_tooltip, function (help, field) {
                 return (data.tooltipData && data.tooltipData[field] && "<div>" + help + "<br>" + data.tooltipData[field] + "</div>") || '';
             }).join('');
-        } else {
-            this.tooltipInfo = "";
         }
     },
     /**
@@ -100,7 +98,6 @@ var KanbanColumn = Widget.extend({
                 defs.push(def);
             }
         }
-        this.$header.find('.o_kanban_header_title').tooltip();
 
         if (!config.device.isMobile) {
             // deactivate sortable in mobile mode.  It does not work anyway,
@@ -152,9 +149,9 @@ var KanbanColumn = Widget.extend({
         this.$header.find('.o_column_title').text(title);
 
         this.$el.toggleClass('o_column_folded', this.folded && !config.device.isMobile);
-        var tooltip = this.data.count + _t(' records');
-        tooltip = '<p>' + tooltip + '</p>' + this.tooltipInfo;
-        this.$header.find('.o_kanban_header_title').tooltip({}).attr('data-original-title', tooltip);
+        if (this.tooltipInfo) {
+            this.$header.find('.o_kanban_header_title').tooltip({}).attr('data-original-title', this.tooltipInfo);
+        }
         if (!this.remaining) {
             this.$('.o_kanban_load_more').remove();
         } else {
