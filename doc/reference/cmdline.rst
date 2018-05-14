@@ -261,12 +261,6 @@ customize the amount of logging output
     <https://docs.python.org/2/library/logging.handlers.html#watchedfilehandler>`_
     and will automatically be reopened when replaced
 
-.. option:: --logrotate
-
-    enables `log rotation <https://docs.python.org/2/library/logging.handlers.html#timedrotatingfilehandler>`_
-    daily, keeping 30 backups. Log rotation frequency and number of backups is
-    not configurable.
-
 .. option:: --syslog
 
     logs to the system's event logger: `syslog on unices <https://docs.python.org/2/library/logging.handlers.html#sysloghandler>`_

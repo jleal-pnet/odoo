@@ -118,9 +118,7 @@ def init_logger():
             dirname = os.path.dirname(logf)
             if dirname and not os.path.isdir(dirname):
                 os.makedirs(dirname)
-            if tools.config['logrotate'] is not False:
-                handler = logging.handlers.TimedRotatingFileHandler(filename=logf, when='D', interval=1, backupCount=30)
-            elif os.name == 'posix':
+            if os.name == 'posix':
                 handler = logging.handlers.WatchedFileHandler(logf)
             else:
                 handler = logging.FileHandler(logf)
