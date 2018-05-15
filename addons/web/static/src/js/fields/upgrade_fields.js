@@ -188,7 +188,7 @@ var UpgradeRadio = FieldRadio.extend(AbstractFieldUpgrade, {
      * @private
      */
     _resetValue: function () {
-        this.$('input').first().prop("checked", true).click();
+        this.$('input').first().prop("checked", false).change();
     },
 });
 
