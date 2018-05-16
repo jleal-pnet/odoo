@@ -196,10 +196,10 @@
         <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
             <li t-if="page_name == 'lead' or lead">
                 <a t-if="lead" t-attf-href="/my/leads?{{ keep_query() }}">
-                    My Leads
+                    Leads
                 </a>
                 <t t-else="">
-                    My Leads
+                    Leads
                 </t>
             </li>
             <li t-if="lead">
@@ -207,10 +207,10 @@
             </li>
             <li t-if="page_name == 'opportunity' or opportunity">
                 <a t-if="opportunity" t-attf-href="/my/opportunities?{{ keep_query() }}">
-                    My Opportunities
+                    Opportunities
                 </a>
                 <t t-else="">
-                    My Opportunities
+                    Opportunities
                 </t>
             </li>
             <li t-if="opportunity">
@@ -223,11 +223,11 @@
         <xpath expr="//ul[hasclass('o_portal_docs')]" position="inside">
             <li t-if="lead_count" class="list-group-item">
                 <span class="badge" t-esc="lead_count"/>
-                <a href="/my/leads">My Leads</a>
+                <a href="/my/leads">Leads</a>
             </li>
             <li class="list-group-item">
                 <span class="badge" t-esc="opp_count"/>
-                <a href="/my/opportunities">My Opportunities</a>
+                <a href="/my/opportunities">Opportunities</a>
             </li>
         </xpath>
     </template>
@@ -235,7 +235,7 @@
     <template id="portal_my_leads" name="My Leads">
         <t t-call="portal.portal_layout">
             <h3>
-                My Leads
+                Leads
                 <t t-call="portal.portal_searchbar"/>
             </h3>
             <div t-if="not leads" class="alert alert-warning mt8" role="alert">
@@ -270,7 +270,7 @@
     <template id="portal_my_opportunities" name="My Opportunities">
         <t t-call="portal.portal_layout">
             <h3>
-                My Opportunities
+                Opportunities
                 <t t-call="portal.portal_searchbar"/>
                 <button t-if="request.env.user.partner_id.grade_id or request.env.user.commercial_partner_id.grade_id" name='new_opp' data-toggle="modal" data-target=".modal_new_opp" class="btn btn-default pull-right mr8"><i class="fa fa-plus fa-lg" /></button>
             </h3>

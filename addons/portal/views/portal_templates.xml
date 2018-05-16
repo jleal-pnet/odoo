@@ -72,7 +72,7 @@
                         <div class="col-sm-12">
                             <ol class="breadcrumb o_portal_submenu">
                                 <li><a href="/my/home"><i class="fa fa-home"/></a></li>
-                                <li t-if="page_name == 'my_details'">Your Details</li>
+                                <li t-if="page_name == 'my_details'">My Details</li>
                             </ol>
                         </div>
                     </div>
@@ -90,7 +90,7 @@
                                     <t t-call="portal.portal_contact"/>
                                 </div>
                                 <div class="o_portal_my_details">
-                                    <h3 class="page-header">Your Details <a href="/my/account" class="btn btn-default btn-xs">Change</a></h3>
+                                    <h3 class="page-header">My Details <a href="/my/account" class="btn btn-default btn-xs">Change</a></h3>
                                     <div t-field="user_id.partner_id" t-options='{"widget": "contact", "fields": ["email", "phone", "address", "name"]}'/>
                                 </div>
                                 <div class="o_my_archives" t-if="archive_groups">
@@ -123,7 +123,7 @@
             <t t-set="my_details" t-value="True"/>
             <div class="o_portal_my_home">
                 <div class="oe_structure"></div>
-                <h3 class="page-header">Your Documents</h3>
+                <h3 class="page-header">My Documents</h3>
                 <ul class="o_portal_docs list-group">
                 </ul>
             </div>
@@ -243,8 +243,8 @@
 
     <template id="portal_my_details">
         <t t-call="portal.portal_layout">
-            <t t-set="additional_title">Your Contact Details</t>
-            <h3>Your Details</h3>
+            <t t-set="additional_title">My Contact Details</t>
+            <h3>My Details</h3>
             <form action="/my/account" method="post">
                 <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                 <div class="row o_portal_details">
@@ -256,7 +256,7 @@
                               </div>
                             </div>
                             <div t-attf-class="form-group #{error.get('name') and 'has-error' or ''} col-lg-6">
-                                <label class="control-label" for="name">Your Name</label>
+                                <label class="control-label" for="name">Name</label>
                                 <input type="text" name="name" class="form-control" t-att-value="name or partner.name" />
                             </div>
                             <div t-attf-class="form-group #{error.get('email') and 'has-error' or ''} col-lg-6">
