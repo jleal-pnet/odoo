@@ -259,49 +259,51 @@ class Message(models.Model):
     # Message loading for web interface
     #------------------------------------------------------
 
-    @api.model
-    def _message_read_dict_postprocess(self, messages, message_tree):
-        """ Post-processing on values given by message_read. This method will
-            handle partners in batch to avoid doing numerous queries.
-
-            :param list messages: list of message, as get_dict result
-            :param dict message_tree: {[msg.id]: msg browse record as super user}
+    @api.multi
+    def _message_format_fetch_stuff(self):
+        """ UPDATE ME
         """
-        # 1. Aggregate partners (author_id and partner_ids), attachments and tracking values
-        partners = self.env['res.partner'].sudo()
-        attachments = self.env['ir.attachment']
-        message_ids = list(message_tree.keys())
-        for message in message_tree.values():
-            if message.author_id:
-                partners |= message.author_id
-            if message.subtype_id and message.partner_ids:  # take notified people of message with a subtype
-                partners |= message.partner_ids
-            elif not message.subtype_id and message.partner_ids:  # take specified people of message without a subtype (log)
-                partners |= message.partner_ids
-            if message.needaction_partner_ids:  # notified
-                partners |= message.needaction_partner_ids
-            if message.attachment_ids:
-                attachments |= message.attachment_ids
+        notifications = self.env['mail.notification'].sudo().search([
+            ('mail_message_id', 'in', self.ids)])
+
+        pids, attach_ids = [], []
+        for message in self:
+            pids += message.author_id.ids
+            attach_ids += message.attachment_ids.ids
+
+        for notif in notifications:
+            pids += notif.res_partner_id.ids
+
         # Read partners as SUPERUSER -> message being browsed as SUPERUSER it is already the case
-        partners_names = partners.name_get()
-        partner_tree = dict((partner[0], partner) for partner in partners_names)
+        partner_name_gets = self.env['res.partner'].sudo().browse(pids).name_get()
+        ptree = dict((partner[0], partner) for partner in partner_name_gets)
 
         # 2. Attachments as SUPERUSER, because could receive msg and attachments for doc uid cannot see
-        attachments_data = attachments.sudo().read(['id', 'datas_fname', 'name', 'mimetype'])
-        attachments_tree = dict((attachment['id'], {
+        attachments_data = self.env['ir.attachment'].sudo().browse(attach_ids).read(['id', 'datas_fname', 'name', 'mimetype'])
+        atree = dict((attachment['id'], {
             'id': attachment['id'],
             'filename': attachment['datas_fname'],
             'name': attachment['name'],
             'mimetype': attachment['mimetype'],
         }) for attachment in attachments_data)
 
-        # 3. Tracking values
-        tracking_values = self.env['mail.tracking.value'].sudo().search([('mail_message_id', 'in', message_ids)])
-        message_to_tracking = dict()
-        tracking_tree = dict.fromkeys(tracking_values.ids, False)
+        # Prepare data for notifications
+        n_tree, n_mids = dict(), dict()
+        for notif in notifications:
+            n_mids.setdefault(notif.mail_message_id.id, []).append(notif.id)
+            n_tree[notif.id] = {
+                'id': notif.id,
+                'partner_id': ptree[notif.res_partner_id.id],
+                'email_status': notif.email_status,
+            }
+
+        # Prepare tracking values data (sudo because only system admin have access to it)
+        tracking_values = self.env['mail.tracking.value'].sudo().search([('mail_message_id', 'in', self.ids)])
+        msg_track_ids = dict()
+        ttree = dict()
         for tracking in tracking_values:
-            message_to_tracking.setdefault(tracking.mail_message_id.id, list()).append(tracking.id)
-            tracking_tree[tracking.id] = {
+            msg_track_ids.setdefault(tracking.mail_message_id.id, []).append(tracking.id)
+            ttree[tracking.id] = {
                 'id': tracking.id,
                 'changed_field': tracking.field_desc,
                 'old_value': tracking.get_old_display_value()[0],
@@ -309,47 +311,23 @@ class Message(models.Model):
                 'field_type': tracking.field_type,
             }
 
-        # 4. Update message dictionaries
-        for message_dict in messages:
-            message_id = message_dict.get('id')
-            message = message_tree[message_id]
-            if message.author_id:
-                author = partner_tree[message.author_id.id]
-            else:
-                author = (0, message.email_from)
-            partner_ids = []
-            if message.subtype_id:
-                partner_ids = [partner_tree[partner.id] for partner in message.partner_ids
-                                if partner.id in partner_tree]
-            else:
-                partner_ids = [partner_tree[partner.id] for partner in message.partner_ids
-                                if partner.id in partner_tree]
-
-            customer_email_data = []
-            for notification in message.notification_ids.filtered(lambda notif: notif.res_partner_id.partner_share and notif.res_partner_id.active):
-                customer_email_data.append((partner_tree[notification.res_partner_id.id][0], partner_tree[notification.res_partner_id.id][1], notification.email_status))
-
-            attachment_ids = []
-            for attachment in message.attachment_ids:
-                if attachment.id in attachments_tree:
-                    attachment_ids.append(attachments_tree[attachment.id])
-            tracking_value_ids = []
-            for tracking_value_id in message_to_tracking.get(message_id, list()):
-                if tracking_value_id in tracking_tree:
-                    tracking_value_ids.append(tracking_tree[tracking_value_id])
-
-            message_dict.update({
-                'author_id': author,
-                'partner_ids': partner_ids,
-                'customer_email_status': (all(d[2] == 'sent' for d in customer_email_data) and 'sent') or
-                                        (any(d[2] == 'exception' for d in customer_email_data) and 'exception') or 
-                                        (any(d[2] == 'bounce' for d in customer_email_data) and 'bounce') or 'ready',
-                'customer_email_data': customer_email_data,
-                'attachment_ids': attachment_ids,
-                'tracking_value_ids': tracking_value_ids,
-            })
-
-        return True
+        # final data aggregation
+        result = {}
+        for message in self:
+            mid = message.id
+            notif_data = [n_tree[nid] for nid in n_mids.get(mid, []) if n_tree.get(nid)]
+            result[mid] = {
+                'author_id': ptree.get(message.author_id.id, (0, message.email_from)),
+                'partner_ids': [ptree[pid] for pid in message.partner_ids.ids if ptree.get(pid)],
+                'attachment_ids': [atree[aid] for aid in message.attachment_ids.ids if atree.get(aid)],
+                'tracking_value_ids': [ttree[tid] for tid in msg_track_ids.get(mid, []) if ttree.get(tid)],
+                'notification_data': notif_data,
+                'needaction_partner_ids': [n['partner_id'][0] for n in notif_data],
+                'notification_status': (all(d['email_status'] == 'sent' for d in notif_data) and 'sent') or
+                                       (any(d['email_status'] == 'exception' for d in notif_data) and 'exception') or 
+                                       (any(d['email_status'] == 'bounce' for d in notif_data) and 'bounce') or 'ready',
+            }
+        return result
 
     @api.model
     def message_fetch(self, domain, limit=20):
@@ -401,11 +379,11 @@ class Message(models.Model):
             'id', 'body', 'date', 'author_id', 'email_from',  # base message fields
             'message_type', 'subtype_id', 'subject',  # message specific
             'model', 'res_id', 'record_name',  # document related
-            'channel_ids', 'partner_ids',  # recipients
-            'starred_partner_ids',  # list of partner ids for whom the message is starred
+            'channel_ids',  # channels
         ])
-        message_tree = dict((m.id, m) for m in self.sudo())
-        self._message_read_dict_postprocess(message_values, message_tree)
+        values = self._message_format_fetch_stuff()
+        for val in message_values:
+            val.update(values[val['id']])
 
         # add subtype data (is_note flag, is_discussion flag , subtype_description). Do it as sudo
         # because portal / public may have to look for internal subtypes
@@ -417,7 +395,6 @@ class Message(models.Model):
         note_id = self.env['ir.model.data'].xmlid_to_res_id('mail.mt_note')
 
         for message in message_values:
-            message['needaction_partner_ids'] = self.env['mail.notification'].sudo().search([('mail_message_id', '=', message['id']), ('is_read', '=', False)]).mapped('res_partner_id').ids
             message['is_note'] = message['subtype_id'] and subtypes_dict[message['subtype_id'][0]]['id'] == note_id
             message['is_discussion'] = message['subtype_id'] and subtypes_dict[message['subtype_id'][0]]['id'] == com_id
             message['is_notification'] = message['is_note'] and not message['model'] and not message['res_id']
