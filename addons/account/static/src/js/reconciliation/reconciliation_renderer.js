@@ -112,6 +112,7 @@ var StatementRenderer = Widget.extend(FieldManagerMixin, {
             }));
             $done.find('.button_close_statement').click(this._onCloseBankStatement.bind(this));
             $done.find('.button_back_to_statement').click(this._onGoToBankStatement.bind(this));
+            $done.find('.button_back_to_payment').click(this._onGoToBankPayment.bind(this));
             this.$el.children().hide();
             // display rainbowman after full reconciliation
             if (session.show_effect) {
@@ -214,6 +215,14 @@ var StatementRenderer = Widget.extend(FieldManagerMixin, {
             view_type: 'list',
             view_mode: 'form',
         });
+    },
+     /**
+     * Open the form view for account.payment model
+     * @private
+     * @param {MouseEvent} event
+     */
+    _onGoToBankPayment: function (e) {
+        this.trigger_up('history_back');
     },
     /**
      * Load more statement lines for reconciliation

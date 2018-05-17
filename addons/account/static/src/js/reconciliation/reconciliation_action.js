@@ -349,6 +349,7 @@ var ManualAction = StatementAction.extend({
                 valuemax: self.widgets.length,
                 title: self.title,
                 time: Date.now()-self.time,
+                context: self.model.getContext(),
             });
             if(!_.any(result.updated, function (handle) {
                 return self.model.getLine(handle).mode !== 'inactive';
