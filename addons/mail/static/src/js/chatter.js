@@ -229,12 +229,13 @@ var Chatter = Widget.extend({
             if (!config.device.isMobile) {
                 self._composer.focus();
             }
-            self._composer.on('post_message', self, function (messageData) {
+            self._composer.on('post_message', self, function (ev) {
+                var messageData = ev.data.message;
                 self._discardOnReload(messageData).then(function () {
                     self.fields.thread.postMessage(messageData).then(function () {
                         self._closeComposer(true);
                         if (self._reloadAfterPost(messageData)) {
-                            self.trigger_up('reload');
+                            self.trigger('reload');
                         }
                     });
                 });
