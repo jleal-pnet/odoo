@@ -232,6 +232,11 @@ class MrpWorkorder(models.Model):
     def write(self, values):
         if ('date_planned_start' in values or 'date_planned_finished' in values) and any(workorder.state == 'done' for workorder in self):
             raise UserError(_('You can not change the finished work order.'))
+        if values.get('date_planned_finished') or values.get('date_planned_start'):
+            start_date = fields.Datetime.to_datetime(values['date_planned_start']) if values.get('date_planned_start') else self.date_planned_start
+            end_date = fields.Datetime.to_datetime(values['date_planned_finished']) if values.get('date_planned_finished') else self.date_planned_finished
+            if start_date > end_date:
+                raise UserError(_('The planned end date of the work order cannot be prior to the planned start date, please correct this to save the work order.'))
         return super(MrpWorkorder, self).write(values)
 
     def _generate_lot_ids(self):
