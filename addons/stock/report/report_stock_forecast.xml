@@ -48,9 +48,9 @@
                 <field name="date"/>
                 <group expand="1" string="Group By">
                     <filter string="Product" name="inventory_by_product" context="{'group_by': ['product_id']}"/>
-                    <filter string="Day" name="inventory_by_day" context="{'pivot_measures': ['quantity', 'cumulative_quantity'], 'pivot_column_groupby': ['date:day'], 'pivot_row_groupby': ['date:day','product_id','reference'], 'graph_measure': ['cumulative_quantity'], 'group_by': ['date:day','product_id'], 'graph_groupbys': ['date:day','product_id']}"/>
-                    <filter string="Week" name="inventory_by_week" context="{'pivot_measures': ['quantity', 'cumulative_quantity'], 'pivot_column_groupby': ['date:week'], 'pivot_row_groupby': ['date:week','product_id','reference'], 'graph_measure': ['cumulative_quantity'], 'group_by': ['date:week','product_id'], 'graph_groupbys': ['date:week','product_id']}"/>
-                    <filter string="Month" name="inventory_by_month" context="{'pivot_measures': ['quantity', 'cumulative_quantity'], 'pivot_column_groupby': ['date:month'], 'pivot_row_groupby': ['date:month','product_id','reference'], 'graph_measure': ['cumulative_quantity'], 'group_by': ['date:month','product_id'], 'graph_groupbys': ['date:month','product_id']}"/>
+                    <filter string="Day" name="inventory_by_day" context="{'pivot_measures': ['quantity', 'cumulative_quantity'], 'pivot_column_groupby': ['date:day'], 'pivot_row_groupby': ['product_id','reference'], 'graph_measure': ['cumulative_quantity'], 'group_by': ['date:day','product_id'], 'graph_groupbys': ['date:day','product_id']}"/>
+                    <filter string="Week" name="inventory_by_week" context="{'pivot_measures': ['quantity', 'cumulative_quantity'], 'pivot_column_groupby': ['date:week'], 'pivot_row_groupby': ['product_id','reference'], 'graph_measure': ['cumulative_quantity'], 'group_by': ['date:week','product_id'], 'graph_groupbys': ['date:week','product_id']}"/>
+                    <filter string="Month" name="inventory_by_month" context="{'pivot_measures': ['quantity', 'cumulative_quantity'], 'pivot_column_groupby': ['date:month'], 'pivot_row_groupby': ['product_id','reference'], 'graph_measure': ['cumulative_quantity'], 'group_by': ['date:month','product_id'], 'graph_groupbys': ['date:month','product_id']}"/>
                 </group>
             </search>
         </field>
