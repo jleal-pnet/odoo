@@ -2321,7 +2321,7 @@ QUnit.module('relational_fields', {
         $modal.find('thead input[type=checkbox]').click();
 
         $modal.find('.btn.btn-sm.btn-primary.o_select_button').click();
-        
+
         pager_limit = form.$('.o_field_many2many.o_field_widget.o_field_x2many.o_field_x2many_list .o_pager_limit');
         assert.equal(pager_limit.text(), '51',
             'We should have 51 records in the m2m field');
@@ -11664,7 +11664,7 @@ QUnit.module('relational_fields', {
         assert.strictEqual(assert.strictEqual(form.$el.find('.o_field_x2many_list_row_add>a')[0],
                             document.activeElement,
                             "after tab, the focus should be on the many2one on the add new line"));
-           
+
         form.destroy();
     });
 
@@ -11709,7 +11709,7 @@ QUnit.module('relational_fields', {
        assert.strictEqual(assert.strictEqual(form.$el.find('input[name="turtle_foo"]')[0],
                            document.activeElement,
                            "after tab, the focus should be on the many2one"));
-          
+
        form.destroy();
    });
 
@@ -11717,7 +11717,7 @@ QUnit.module('relational_fields', {
         assert.expect(3);
 
         this.data.partner.records[0].turtles = [];
-       
+
         var form = createView({
             View: FormView,
             model: 'partner',
@@ -11761,7 +11761,7 @@ QUnit.module('relational_fields', {
         assert.strictEqual(assert.strictEqual(form.$el.find('input[name="foo"]')[0],
                             document.activeElement,
                             "after tab, the focus should be on the many2one"));
-            
+
         form.destroy();
     });
 
@@ -11769,7 +11769,7 @@ QUnit.module('relational_fields', {
         assert.expect(4);
 
         this.data.partner.records[0].turtles = [];
-       
+
         var form = createView({
             View: FormView,
             model: 'partner',
@@ -11823,7 +11823,7 @@ QUnit.module('relational_fields', {
         assert.strictEqual($.find('input[name="turtle_foo"]')[0],
             document.activeElement,
             "after enter, the focus should be in the popup, in the first input field");
-        
+
         $('input[name="turtle_foo"]').trigger($.Event('keydown', {
             which: $.ui.keyCode.ESCAPE,
             keyCode: $.ui.keyCode.ESCAPE,
@@ -11832,9 +11832,49 @@ QUnit.module('relational_fields', {
         assert.strictEqual(form.$el.find('.o_field_x2many_list_row_add a')[0],
             document.activeElement,
             "after escape, the focus should be back on the add new line link");
-        
+
         form.destroy();
     });
+
+    QUnit.test('when Discarding a row of a many to one with ESC, the focus should be put on the add new line link', function (assert) {
+        assert.expect(1);
+
+       var form = createView({
+           View: FormView,
+           model: 'partner',
+           viewOptions: {
+               mode: 'edit',
+           },
+           data: this.data,
+           arch:'<form string="Partners">' +
+                   '<sheet>' +
+                       '<group>' +
+                           '<field name="qux"/>' +
+                       '</group>' +
+                       '<notebook>' +
+                           '<page string="Partner page">' +
+                               '<field name="turtles">' +
+                                   '<tree editable="bottom">' +
+                                       '<field name="turtle_foo"/>' +
+                                   '</tree>' +
+                               '</field>' +
+                           '</page>' +
+                       '</notebook>' +
+                   '</sheet>' +
+               '</form>',
+           res_id: 1,
+       });
+
+        form.$el.find('.o_field_x2many_list_row_add>a')[0].click();
+        $(document.activeElement).trigger($.Event('keydown', {
+            which: $.ui.keyCode.ESCAPE,
+            keyCode: $.ui.keyCode.ESCAPE,
+        }));
+        assert.strictEqual(form.$el.find('.o_field_x2many_list_row_add>a')[0],
+                        document.activeElement,
+                        "after escape, the focus should be on the many2one on the add new line");
+        form.destroy();
+   });
 
 });
 });

@@ -815,12 +815,7 @@ var FieldX2Many = AbstractField.extend({
         if (!this.activeActions.create || this.isReadonly || !this.$el.is(":visible")) {
             return false;
         }
-        if (this.view.type === 'kanban') {
-            this.$buttons.find(".o-kanban-button-new").focus();
-        }
-        if (this.view.arch.tag === 'tree') {
-            this.renderer.$('.o_field_x2many_list_row_add a').focus();
-        }
+        this._focusAddControl();
         return true;
     },
 
@@ -841,6 +836,19 @@ var FieldX2Many = AbstractField.extend({
                 column_invisible: domains,
              }).column_invisible;
         });
+    },
+    /**
+     * set the focus on the add link or add button
+     *
+     * @private
+     */
+    _focusAddControl: function() {
+        if (this.view.type === 'kanban') {
+            this.$buttons.find(".o-kanban-button-new").focus();
+        }
+        if (this.view.arch.tag === 'tree') {
+            this.renderer.$('.o_field_x2many_list_row_add a').focus();
+        }
     },
     /**
      * Instanciates or updates the adequate renderer.
@@ -1047,9 +1055,13 @@ var FieldX2Many = AbstractField.extend({
      * @param {OdooEvent} ev
      */
     _onDiscardChanges: function (ev) {
+        var self = this;
         if (ev.target !== this) {
             ev.stopPropagation();
-            this.trigger_up('discard_changes', _.extend({}, ev.data, {fieldName: this.name}));
+            this.trigger_up('discard_changes', _.extend({}, ev.data, {
+                fieldName: this.name,
+                onSuccess: self._focusAddControl.bind(self)
+            }));
         }
     },
     /**

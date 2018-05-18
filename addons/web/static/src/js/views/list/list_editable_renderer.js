@@ -747,9 +747,12 @@ ListRenderer.include({
                 e.preventDefault();
                 this._onAddRecord(e);
                 break;
+            case $.ui.keyCode.UP:
+                e.stopPropagation();
+                this._selectCell(this.state.data.length-1, 1);
         }
     },
-    /** 
+    /**
      * It will returns the first visible widget that is editable
      *
      * @private
@@ -759,9 +762,9 @@ ListRenderer.include({
         var record = this.state.data[this.currentRow];
         var recordWidgets = this.allFieldWidgets[record.id];
         var firstWidget = _.find(recordWidgets, function (widget) {
-            var isFirst = widget.$el.is(':visible') && 
+            var isFirst = widget.$el.is(':visible') &&
                                 (widget.$el.has('input').length > 0 ||
-                                widget.tagName== 'input') && 
+                                widget.tagName== 'input') &&
                             !widget.$el.hasClass('o_readonly_modifier');
             return isFirst;
         });
@@ -821,20 +824,12 @@ ListRenderer.include({
                 }
                 break;
             case 'next':
-                // When navigating with the keyboard, we want to get out of the list editable if the
-                // first field is left empty.
-                var column = this.columns[this.currentFieldIndex];
-                var firstWidget = this._getFirstWidget();
-                if (column.attrs.name === firstWidget.name && !firstWidget.$input.val()) {
-                    this.trigger_up('activate_next_widget');
+                if (this.currentFieldIndex + 1 < this.columns.length) {
+                    this._selectCell(this.currentRow, this.currentFieldIndex + 1, {wrap: false})
+                        .fail(this._moveToNextLine.bind(this));
                 } else {
-                    if (this.currentFieldIndex + 1 < this.columns.length) {
-                        this._selectCell(this.currentRow, this.currentFieldIndex + 1, {wrap: false})
-                            .fail(this._moveToNextLine.bind(this));
-                    } else {
-                        this._moveToNextLine();
-                    }
-                 }
+                    this._moveToNextLine();
+                }
                 break;
             case 'next_line':
                 this._moveToNextLine();
