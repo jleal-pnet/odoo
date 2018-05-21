@@ -240,8 +240,7 @@ class account_journal(models.Model):
             cur = self.env['res.currency'].browse(result.get('currency'))
             company = self.env['res.company'].browse(result.get('company_id')) or self.env.user.company_id
             rslt_count += 1
-            type_factor = result.get('type') in ('in_refund', 'out_refund') and -1 or 1
-            rslt_sum += type_factor * cur._convert(
+            rslt_sum += cur._convert(
                 result.get('amount_total'), target_currency, company, result.get('date_invoice') or fields.Date.today())
         return (rslt_count, rslt_sum)
 
