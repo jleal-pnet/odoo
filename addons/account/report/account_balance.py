@@ -60,11 +60,10 @@ class ReportTrialBalance(models.AbstractModel):
 
     @api.model
     def _get_report_values(self, docids, data=None):
-        if not data.get('form') or not self.env.context.get('active_model'):
+        if not data.get('form'):
             raise UserError(_("Form content is missing, this report cannot be printed."))
-
-        self.model = self.env.context.get('active_model')
-        docs = self.env[self.model].browse(self.env.context.get('active_ids', []))
+        self.model = data['form'].get('active_model')
+        docs = self.env[self.model].browse(data['form'].get('id'))
         display_account = data['form'].get('display_account')
         accounts = docs if self.model == 'account.account' else self.env['account.account'].search([])
         account_res = self.with_context(data['form'].get('used_context'))._get_accounts(accounts, display_account)

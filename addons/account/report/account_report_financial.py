@@ -145,11 +145,11 @@ class ReportFinancial(models.AbstractModel):
 
     @api.model
     def _get_report_values(self, docids, data=None):
-        if not data.get('form') or not self.env.context.get('active_model') or not self.env.context.get('active_id'):
+        if not data.get('form'):
             raise UserError(_("Form content is missing, this report cannot be printed."))
 
-        self.model = self.env.context.get('active_model')
-        docs = self.env[self.model].browse(self.env.context.get('active_id'))
+        self.model = data['form'].get('active_model')
+        docs = self.env[self.model].browse(data['form'].get('id'))
         report_lines = self.get_account_lines(data.get('form'))
         return {
             'doc_ids': self.ids,
