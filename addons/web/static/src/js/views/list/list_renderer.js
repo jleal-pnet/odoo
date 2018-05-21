@@ -628,7 +628,20 @@ var ListRenderer = BasicRenderer.extend({
      * @private
      */
     _renderAllSelectorBar: function () {
-        this.$el.prepend(qweb.render('ListView.SelectAll', {hasAllSelector: this.allSelected, state: this.state}));
+        var data = {
+            selectedRecords: this.$('td.o_list_record_selector').length,
+            totalRecords: this.state.count,
+            hasAllSelector: this.allSelected,
+        }
+        if (this.state.groupedBy.length) {
+            this.trigger_up('get_expanded_groups', {
+                callback: function (groups) {
+                    // total number of records in expanded group domain
+                    data['totalRecords'] = _.reduce(groups, function (initial, group) {return initial + group.count;}, 0);
+                },
+            });
+        }
+        this.$el.prepend(qweb.render('ListView.SelectAll', {data: data}));
     },
     /**
      * A 'selector' is the small checkbox on the left of a record in a list
@@ -745,10 +758,10 @@ var ListRenderer = BasicRenderer.extend({
         this.selection = _.map($selectedRows, function (row) {
             return $(row).data('id');
         });
-        var isAllSelected = this.selection.length === this.state.data.length
-                                && this.state.count > this.selection.length;
-        // TO-DO check for groupBy
-        if (this.hasSelectionBar && isAllSelected) {
+        var isAllSelected = this.selection.length === this.$('td.o_list_record_selector').length;
+        // check any records are in other page or not.
+        var hasOtherRecords = this.state.groupedBy.length ? this.pagers.length > 0 : this.state.count > this.selection.length;
+        if (this.hasSelectionBar && isAllSelected && hasOtherRecords) {
             this.$el.find('.o_list_view_select_all').remove();
             this._renderAllSelectorBar();
         }

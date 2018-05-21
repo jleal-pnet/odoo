@@ -12,6 +12,7 @@ var BasicController = require('web.BasicController');
 var DataExport = require('web.DataExport');
 var Dialog = require('web.Dialog');
 var pyUtils = require('web.py_utils');
+var Domain = require('web.Domain');
 var Sidebar = require('web.Sidebar');
 
 var _t = core._t;
@@ -27,6 +28,7 @@ var ListController = BasicController.extend({
         selection_changed: '_onSelectionChanged',
         toggle_column_order: '_onToggleColumnOrder',
         toggle_group: '_onToggleGroup',
+        get_expanded_groups: '_onGetExpandedGroups',
     }),
     /**
      * @constructor
@@ -256,6 +258,10 @@ var ListController = BasicController.extend({
             var record = this.model.get(this.handle);
             options['active_domain'] = record.getDomain();
             options['active_model'] = record.model;
+            if (record.groupedBy.length) {
+                var openedGroups = this._getOpenedLeafGroups(record.data);
+                options['active_domain'] = this._prepareGroupsDomain(openedGroups);
+            }
         }
         return this.model
             .toggleActive(ids, !archive, this.handle, options)
@@ -325,16 +331,59 @@ var ListController = BasicController.extend({
         });
     },
     /**
+     * This method responsible to find the groups that contain only records as a child.
+     *
+     * @private
+     * @param {Array} [groups] - list of groups
+     * @returns {Array}
+     */
+    _getOpenedLeafGroups: function (groups) {
+        var self = this;
+        var validGroups = [];
+        _.each(_.filter(groups, function(group) {return group.isOpen;}), function (group) {
+            if (group.groupedBy.length) {
+                validGroups = validGroups.concat(self._getOpenedLeafGroups(group.data));
+            } else {
+                validGroups.push(group);
+            }
+        });
+        return validGroups;
+    },
+    /**
      * @override
      * @private
      */
     _getSidebarEnv: function () {
         var env = this._super.apply(this, arguments);
         var record = this.model.get(this.handle);
+        var domain = record.getDomain();
+        if (record.groupedBy.length && this.allSelected) {
+            var groups = this._getOpenedLeafGroups(record.data);
+            domain = this._prepareGroupsDomain(groups);
+        }
         return _.extend(env, {
-            domain: record.getDomain(),
+            domain: domain,
             all_selected: this.allSelected || false
         });
+    },
+    /**
+     * Prepare domain by or between groups domain.
+     * (e.g. if the current groups is [A, B],
+     * using this method we will have domain like ["|", A.domain, B.domain])
+     *
+     * @private
+     * @param {Array} groupByDomains - list of groups
+     * @returns {Array}
+     */
+    _prepareGroupsDomain: function (groupByDomains) {
+        var domain = [];
+        _.each(groupByDomains , function (group , index) {
+            if (index !== groupByDomains.length -1 ) {
+                domain.unshift('|');
+            }
+            domain = domain.concat(Domain.prototype.normalizeArray(group.domain))
+        });
+        return domain;
     },
     /**
      * Allows to change the mode of a single row.
@@ -386,6 +435,14 @@ var ListController = BasicController.extend({
     // Handlers
     //--------------------------------------------------------------------------
 
+    /**
+     *
+     * @private
+     * @param {OdooEvent} event
+     */
+    _onGetExpandedGroups: function (event) {
+        event.data.callback(this._getOpenedLeafGroups(this.renderer.state.data));
+    },
     /**
      * Add a record to the list
      *
@@ -443,6 +500,10 @@ var ListController = BasicController.extend({
             var record = this.model.get(this.handle);
             options['active_domain'] = record.getDomain();
             options['active_model'] = record.model;
+            if (record.groupedBy.length) {
+                var openedGroups = this._getOpenedLeafGroups(record.data);
+                options['active_domain'] = this._prepareGroupsDomain(openedGroups);
+            }
         }
         this._deleteRecords(this.selectedRecords, options);
     },
