@@ -5054,6 +5054,10 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                 # simply skip invalid field names
                 pass
 
+        # corner case: use all fields from the view
+        if not names:
+            names = nametree
+
         class Nil(collections.Mapping):
             """ Dummy empty dictionary to diff on new records. """
             __slots__ = []
@@ -5068,79 +5072,18 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             def __eq__(self, other):
                 return self is other
 
-        def prefetch(record_values, tree=nametree):
-            if not record_values:
-                return
-            model = next(iter(record_values)).browse()
-
-            # read the stored fields of record
-            stored = []
-            for name in tree:
-                field = model._fields[name].base_field
-                if field.store:
-                    stored.append(name)
-                elif field.type in ('many2one', 'one2many', 'many2many'):
-                    for record in record_values:
-                        record._cache[name] = (NewId(),)
-                else:
-                    for record in record_values:
-                        record._cache[name] = Nil()
-            records = model.concat(*record_values).filtered('id')
-            if records:
-                records.read(stored, load='_classic_write')
-
-            # put values in cache, and process recursively
-            to_prefetch = defaultdict(dict)
-            for record, values in record_values.items():
-                for name, value in values.items():
-                    field = record._fields.get(name)
-                    if not field:
-                        continue
-                    subnames = tree.get(name, {})
-                    if subnames:
-                        comodel = model[name]
-                        line_ids = []
-                        for command in (value or []):
-                            if command[0] == 0:
-                                line = comodel.new(ref=command[1])
-                                line_ids.append(line.id)
-                                to_prefetch[name][line] = command[2]
-                            elif command[0] == 1:
-                                line = comodel.browse(command[1])
-                                line_ids.append(line.id)
-                                to_prefetch[name][line] = command[2]
-                            elif command[0] == 4:
-                                line = comodel.browse(command[1])
-                                line_ids.append(line.id)
-                                to_prefetch[name][line] = {}
-                            elif command[0] == 6:
-                                lines = comodel.browse(command[2])
-                                line_ids = lines.ids
-                                for line in lines:
-                                    to_prefetch[name][line] = {}
-                        record._cache[name] = tuple(line_ids)
-                        for invf in model._field_inverses[field]:
-                            invf._update(record[name], record)
-                    else:
-                        record._cache[name] = field.convert_to_cache(value, record)
-                        for invf in model._field_inverses[field]:
-                            invf._update(record[name], record)
-                for name, subnames in tree.items():
-                    if subnames and name not in values:
-                        for line in record[name]:
-                            to_prefetch[name][line] = {}
-
-            # recursively prefetch subrecords
-            for name, record_values in to_prefetch.items():
-                prefetch(record_values, tree.get(name, {}))
-
         def snapshot(record, tree=nametree, nillable=False):
             """ Return a dict with the values of record, following nametree. """
             vals = {}
             for name, subnames in tree.items():
                 if nillable and name not in record._cache:
-                    vals[name] = Nil()
-                elif subnames:
+                    if depends_on_modified(record, name):
+                        vals[name] = Nil()
+                        continue
+                    # if the field is stored, use its value from database
+                    if record.id and record._fields[name].base_field.store:
+                        record.read([name], load='_classic_write')
+                if subnames:
                     # use an OrderedDict to keep lines in order
                     vals[name] = OrderedDict(
                         (line.id, snapshot(line, subnames, nillable))
@@ -5150,16 +5093,27 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                     vals[name] = record[name]
             return vals
 
+        def depends_on_modified(rec, name):
+            """ Return whether the field ``name`` of record ``rec`` depends on
+                any of the modified fields of ``record``.
+            """
+            for dotnames in rec._fields[name].depends:
+                recs = rec
+                for fname in dotnames.split('.'):
+                    if record._name == recs._name and record in recs and fname in names:
+                        return True
+                    recs = recs.mapped(fname)
+            return False
+
         # create a new record with values, and attach ``self`` to it
         with env.do_in_onchange():
-            record = self.new()
-            prefetch({record: values})
+            record = self.new(values)
             old_vals = snapshot(record, nillable=True)
             # attach ``self`` with a different context (for cache consistency)
             record._origin = self.with_context(__onchange=True)
 
         # determine which field(s) should be triggered an onchange
-        todo = list(names) or list(old_vals)
+        todo = list(names)
         done = set()
 
         # dummy assignment: trigger invalidations on the record
