@@ -5077,17 +5077,46 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             vals = {}
             for name, subnames in tree.items():
                 if nillable and name not in record._cache:
-                    # we have no value; use the pseudo-value Nil()
+                    # we have no value; use something different from everything
                     vals[name] = Nil()
                 elif subnames:
                     # use an OrderedDict to keep lines in order
                     vals[name] = OrderedDict(
-                        (line.id, snapshot(line, subnames, nillable))
+                        (line, snapshot(line, subnames, nillable))
                         for line in record[name]
                     )
                 else:
                     vals[name] = record[name]
             return vals
+
+        def diff(record, old_vals, new_vals, tree=nametree):
+            """ Return the values that differ between snapshots. """
+            result = {}
+            for name, subnames in tree.items():
+                old_val = old_vals[name]
+                new_val = new_vals[name]
+                if old_val == new_val:
+                    continue
+                field = record._fields[name]
+                if not subnames:
+                    result[name] = field.convert_to_onchange(new_val, record, subnames)
+                    continue
+                # x2many fields: serialize value as commands
+                result[name] = commands = [(5,)]
+                for line, line_vals in new_val.items():
+                    if not line.id:
+                        # (0, virtual_id, vals)
+                        line_diff = diff(line, Nil(), line_vals, subnames)
+                        commands.append((0, line.id.ref or 0, line_diff))
+                    else:
+                        # (4, id) or (1, id, vals)
+                        line_vals0 = old_val.get(line) or snapshot(line, subnames)
+                        line_diff = diff(line, line_vals0, line_vals, subnames)
+                        if line_diff:
+                            commands.append((1, line.id, line_diff))
+                        else:
+                            commands.append((4, line.id))
+            return result
 
         def fill_missing(records, tree=nametree):
             """ Fill in missing values in cache, except non-stored fields that
@@ -5172,44 +5201,12 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                     if old_vals[name] != new_vals[name]:
                         todo.append(name)
 
-        def diff(record, old_vals, new_vals, nametree):
-            """ Return the values that have changed for ``record`` by comparing
-                ``old_vals`` with ``new_vals``.
-            """
-            result = {}
-            for name, subnames in nametree.items():
-                old_val = old_vals[name]
-                new_val = new_vals[name]
-                if old_val == new_val:
-                    continue
-                field = record._fields[name]
-                if not subnames:
-                    result[name] = field.convert_to_onchange(new_val, record, subnames)
-                    continue
-                # x2many fields: send commands
-                result[name] = commands = [(5,)]
-                for line_id, line_vals in new_val.items():
-                    line = record[name].browse([line_id])
-                    if not line_id:
-                        # (0, virtual_id, vals)
-                        line_diff = diff(line, Nil(), line_vals, subnames)
-                        commands.append((0, line_id.ref or 0, line_diff))
-                    else:
-                        # (4, id) or (1, id, vals)
-                        line_vals0 = old_val.get(line_id) or snapshot(line, subnames)
-                        line_diff = diff(line, line_vals0, line_vals, subnames)
-                        if line_diff:
-                            commands.append((1, line_id, line_diff))
-                        else:
-                            commands.append((4, line_id))
-            return result
-
         # collect values that have changed
         with env.do_in_onchange():
             new_vals = snapshot(record)
 
         self.invalidate_cache()
-        result['value'] = diff(record, old_vals, new_vals, nametree)
+        result['value'] = diff(record, old_vals, new_vals)
 
         return result
 
