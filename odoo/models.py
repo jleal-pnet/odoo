@@ -5077,13 +5077,9 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             vals = {}
             for name, subnames in tree.items():
                 if nillable and name not in record._cache:
-                    if depends_on_modified(record, name):
-                        vals[name] = Nil()
-                        continue
-                    # if the field is stored, use its value from database
-                    if record.id and record._fields[name].base_field.store:
-                        record.read([name], load='_classic_write')
-                if subnames:
+                    # we have no value; use the pseudo-value Nil()
+                    vals[name] = Nil()
+                elif subnames:
                     # use an OrderedDict to keep lines in order
                     vals[name] = OrderedDict(
                         (line.id, snapshot(line, subnames, nillable))
@@ -5092,6 +5088,29 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                 else:
                     vals[name] = record[name]
             return vals
+
+        def fill_missing(records, tree=nametree):
+            """ Fill in missing values in cache, except non-stored fields that
+                depend on the modified fields of the  main record.
+            """
+            for name, subnames in tree.items():
+                stored = records._fields[name].base_field.store
+                ids_to_read = []
+                ids_to_null = []
+                for record in records:
+                    if name not in record._cache:
+                        if not stored and depends_on_modified(record, name):
+                            continue
+                        if stored and record.id:
+                            ids_to_read.append(record.id)
+                        else:
+                            ids_to_null.append(record.id)
+                if ids_to_read:
+                    records.browse(ids_to_read).read([name])
+                if ids_to_null:
+                    records.browse(ids_to_null).mapped(name)
+                if subnames:
+                    fill_missing(records.mapped(name), subnames)
 
         def depends_on_modified(rec, name):
             """ Return whether the field ``name`` of record ``rec`` depends on
@@ -5108,9 +5127,12 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
         # create a new record with values, and attach ``self`` to it
         with env.do_in_onchange():
             record = self.new(values)
-            old_vals = snapshot(record, nillable=True)
             # attach ``self`` with a different context (for cache consistency)
             record._origin = self.with_context(__onchange=True)
+
+            # determine initial values (fill in cache to avoid false changes)
+            fill_missing(record)
+            old_vals = snapshot(record, nillable=True)
 
         # determine which field(s) should be triggered an onchange
         todo = list(names)
@@ -5147,7 +5169,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                 # determine which fields have been modified
                 new_vals = snapshot(record)
                 for name in new_vals:
-                    if new_vals[name] != old_vals[name]:
+                    if old_vals[name] != new_vals[name]:
                         todo.append(name)
 
         def diff(record, old_vals, new_vals, nametree):
