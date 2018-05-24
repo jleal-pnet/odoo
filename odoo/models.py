@@ -5142,7 +5142,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                     # x2many fields: recursively process subrecords
                     Line = rec.env[field.comodel_name]
                     line_ids = OrderedSet()
-                    for command in val:
+                    for command in (val or []):
                         if command[0] == 0:
                             line = Line.new(ref=command[1])
                             line_ids.add(line.id)
