@@ -5118,49 +5118,73 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                             commands.append((4, line.id))
             return result
 
-        def fill_missing(records, tree=nametree):
-            """ Fill in missing values in cache, except non-stored fields that
-                depend on the modified fields of the  main record.
-            """
-            for name, subnames in tree.items():
-                stored = records._fields[name].base_field.store
-                ids_to_read = []
-                ids_to_null = []
-                for record in records:
-                    if name not in record._cache:
-                        if not stored and depends_on_modified(record, name):
-                            continue
-                        if stored and record.id:
-                            ids_to_read.append(record.id)
-                        else:
-                            ids_to_null.append(record.id)
-                if ids_to_read:
-                    records.browse(ids_to_read).read([name])
-                if ids_to_null:
-                    records.browse(ids_to_null).mapped(name)
-                if subnames:
-                    fill_missing(records.mapped(name), subnames)
+        def prepare(record, values):
+            """ Prepare the cache of ``record`` with the given ``values``. """
 
-        def depends_on_modified(rec, name):
-            """ Return whether the field ``name`` of record ``rec`` depends on
-                any of the modified fields of ``record``.
-            """
-            for dotnames in rec._fields[name].depends:
-                recs = rec
-                for fname in dotnames.split('.'):
-                    if record._name == recs._name and record in recs and fname in names:
-                        return True
-                    recs = recs.mapped(fname)
-            return False
+            # the records to prefetch for each field
+            field_recs = defaultdict(list)
+
+            # the value to put in cache for each field and each record
+            field_rec_val = defaultdict(dict)
+
+            def process(rec, vals, tree):
+                # populate field_recs and field_rec_val
+                for name, subnames in tree.items():
+                    field = rec._fields[name]
+                    field_recs[field].append(rec)
+                    if name not in vals:
+                        continue
+                    if not subnames:
+                        field_rec_val[field][rec] = field.convert_to_cache(vals[name], rec)
+                        continue
+                    # x2many fields: recursively process subrecords
+                    Line = rec.env[field.comodel_name]
+                    line_ids = OrderedSet()
+                    for command in vals[name]:
+                        if command[0] == 0:
+                            line = Line.new(ref=command[1])
+                            line_ids.add(line.id)
+                            process(line, command[2], subnames)
+                        elif command[0] == 1:
+                            line = Line.browse(command[1])
+                            line_ids.add(line.id)
+                            process(line, command[2], subnames)
+                        elif command[0] in (2, 3):
+                            line_ids.discard(command[1])
+                        elif command[0] == 4:
+                            line = Line.browse(command[1])
+                            line_ids.add(line.id)
+                            process(line, {}, subnames)
+                        elif command[0] == 5:
+                            line_ids.clear()
+                        elif command[0] == 6:
+                            lines = Line.browse(command[2])
+                            line_ids = OrderedSet(lines._ids)
+                            process(lines, {}, subnames)
+                    field_rec_val[field][rec] = tuple(line_ids)
+
+            process(record, values, nametree)
+
+            # read each field in its original state
+            for field in sorted(field_recs, key=self.pool.field_sequence):
+                recs_list = field_recs[field]
+                recs_list[0].union(*recs_list).mapped(field.name)
+
+            # assign the values of each field in cache
+            for field in sorted(field_rec_val, key=self.pool.field_sequence):
+                for rec, val in field_rec_val[field].items():
+                    rec._cache[field.name] = val
+                    for invf in self._field_inverses[field]:
+                        invf._update(rec[field.name], rec)
 
         # create a new record with values, and attach ``self`` to it
         with env.do_in_onchange():
-            record = self.new(values)
+            record = self.new()
             # attach ``self`` with a different context (for cache consistency)
             record._origin = self.with_context(__onchange=True)
 
-            # determine initial values (fill in cache to avoid false changes)
-            fill_missing(record)
+            # determine initial values
+            prepare(record, values)
             old_vals = snapshot(record, nillable=True)
 
         # determine which field(s) should be triggered an onchange
