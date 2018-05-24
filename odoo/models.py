@@ -5127,19 +5127,22 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             field_rec_val = defaultdict(dict)
 
             def process(rec, vals, tree):
-                # populate field_recs and field_rec_val
+                # populate field_recs
                 for name, subnames in tree.items():
                     field = rec._fields[name]
                     field_recs[field].append(rec)
-                    if name not in vals:
-                        continue
+
+                # populate field_rec_val
+                for name, val in vals.items():
+                    field = rec._fields[name]
+                    subnames = tree.get(name)
                     if not subnames:
-                        field_rec_val[field][rec] = field.convert_to_cache(vals[name], rec)
+                        field_rec_val[field][rec] = field.convert_to_cache(val, rec)
                         continue
                     # x2many fields: recursively process subrecords
                     Line = rec.env[field.comodel_name]
                     line_ids = OrderedSet()
-                    for command in vals[name]:
+                    for command in val:
                         if command[0] == 0:
                             line = Line.new(ref=command[1])
                             line_ids.add(line.id)
