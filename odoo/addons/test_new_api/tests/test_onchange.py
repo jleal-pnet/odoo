@@ -466,7 +466,6 @@ class TestOnChange(common.TransactionCase):
             'categories': [(4, cat.id) for cat in discussion.categories],
             'messages': [(4, msg.id) for msg in discussion.messages],
             'participants': [(4, usr.id) for usr in discussion.participants],
-            'message_changes': 0,
             'important_messages': [(4, msg.id) for msg in discussion.important_messages],
             'important_emails': [(4, eml.id) for eml in discussion.important_emails],
         }
