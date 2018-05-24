@@ -5072,17 +5072,16 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             def __eq__(self, other):
                 return self is other
 
-        def snapshot(record, tree=nametree, nillable=False):
+        def snapshot(record, tree=nametree, check=False):
             """ Return a dict with the values of record, following nametree. """
             vals = {}
             for name, subnames in tree.items():
-                if nillable and name not in record._cache:
-                    # we have no value; use something different from everything
-                    vals[name] = Nil()
-                elif subnames:
+                if check:
+                    assert name in record._cache, "%s.%s missing from cache" % (record, name)
+                if subnames:
                     # use an OrderedDict to keep lines in order
                     vals[name] = OrderedDict(
-                        (line, snapshot(line, subnames, nillable))
+                        (line, snapshot(line, subnames, check))
                         for line in record[name]
                     )
                 else:
@@ -5185,7 +5184,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
 
             # determine initial values
             prepare(record, values)
-            old_vals = snapshot(record, nillable=True)
+            old_vals = snapshot(record, check=True)
 
         # determine which field(s) should be triggered an onchange
         todo = list(names)
