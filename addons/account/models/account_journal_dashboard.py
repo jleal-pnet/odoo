@@ -147,8 +147,8 @@ class account_journal(models.Model):
         currency = self.currency_id or self.company_id.currency_id
         number_to_reconcile = last_balance = account_sum = 0
         title = ''
-        number_draft = number_waiting = number_late = 0
-        sum_draft = sum_waiting = sum_late = 0.0
+        number_draft = number_waiting = 0
+        sum_draft = sum_waiting = 0.0
         if self.type in ['bank', 'cash']:
             last_bank_stmt = self.env['account.bank.statement'].search([('journal_id', 'in', self.ids)], order="date desc, id desc", limit=1)
             last_balance = last_bank_stmt and last_bank_stmt[0].balance_end or 0
@@ -185,13 +185,10 @@ class account_journal(models.Model):
             self.env.cr.execute(query, query_args)
             query_results_drafts = self.env.cr.dictfetchall()
 
-            today = datetime.today()
-            query = """SELECT amount_total, currency_id AS currency, type, date_invoice, company_id FROM account_invoice WHERE journal_id = %s AND date <= %s AND state = 'open';"""
-            self.env.cr.execute(query, (self.id, today))
-            late_query_results = self.env.cr.dictfetchall()
-            (number_waiting, sum_waiting) = self._count_results_and_sum_amounts(query_results_to_pay, currency)
-            (number_draft, sum_draft) = self._count_results_and_sum_amounts(query_results_drafts, currency)
-            (number_late, sum_late) = self._count_results_and_sum_amounts(late_query_results, currency)
+            if query_results_to_pay:
+                (number_waiting, sum_waiting) = self._count_results_and_sum_amounts(query_results_to_pay, currency)
+            if query_results_drafts:
+                (number_draft, sum_draft) = self._count_results_and_sum_amounts(query_results_drafts, currency)
 
         difference = currency.round(last_balance-account_sum) + 0.0
         return {
@@ -201,10 +198,8 @@ class account_journal(models.Model):
             'difference': formatLang(self.env, difference, currency_obj=currency) if difference else False,
             'number_draft': number_draft,
             'number_waiting': number_waiting,
-            'number_late': number_late,
             'sum_draft': formatLang(self.env, currency.round(sum_draft) + 0.0, currency_obj=currency),
             'sum_waiting': formatLang(self.env, currency.round(sum_waiting) + 0.0, currency_obj=currency),
-            'sum_late': formatLang(self.env, currency.round(sum_late) + 0.0, currency_obj=currency),
             'currency_id': currency.id,
             'bank_statements_source': self.bank_statements_source,
             'title': title,
