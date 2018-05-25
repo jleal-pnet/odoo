@@ -56,7 +56,7 @@ class Currency(models.Model):
                                   LIMIT 1) AS rate
                    FROM res_currency c
                    WHERE c.id IN %s"""
-        self._cr.execute(query, (date, company_id, tuple(self.ids)))
+        self._cr.execute(query, (date, company_id, tuple(self.ids or [0])))
         currency_rates = dict(self._cr.fetchall())
         for currency in self:
             currency.rate = currency_rates.get(currency.id) or 1.0

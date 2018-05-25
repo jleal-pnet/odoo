@@ -547,7 +547,7 @@ class Task(models.Model):
     @api.multi
     def _compute_subtask_count(self):
         for task in self:
-            task.subtask_count = self.search_count([('id', 'child_of', task.id), ('id', '!=', task.id)])
+            task.subtask_count = self.search_count([('id', 'child_of', task.ids), ('id', '!=', task.id or 0)])
 
     @api.constrains('parent_id')
     def _check_parent_id(self):

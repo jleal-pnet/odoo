@@ -284,7 +284,7 @@ class Product(models.Model):
             [('product_id', 'in', self.ids)],
             ['product_id', 'product_min_qty', 'product_max_qty'],
             ['product_id'])
-        res = {i: {} for i in self.ids}
+        res = {i: {} for i in self._ids}
         for data in read_group_res:
             res[data['product_id'][0]]['nbr_reordering_rules'] = int(data['product_id_count'])
             res[data['product_id'][0]]['reordering_min_qty'] = data['product_min_qty']
@@ -487,7 +487,7 @@ class ProductTemplate(models.Model):
         return [('product_variant_ids', 'in', product_variant_ids.ids)]
 
     def _compute_nbr_reordering_rules(self):
-        res = {k: {'nbr_reordering_rules': 0, 'reordering_min_qty': 0, 'reordering_max_qty': 0} for k in self.ids}
+        res = {k: {'nbr_reordering_rules': 0, 'reordering_min_qty': 0, 'reordering_max_qty': 0} for k in self._ids}
         product_data = self.env['stock.warehouse.orderpoint'].read_group([('product_id.product_tmpl_id', 'in', self.ids)], ['product_id', 'product_min_qty', 'product_max_qty'], ['product_id'])
         for data in product_data:
             product = self.env['product.product'].browse([data['product_id'][0]])

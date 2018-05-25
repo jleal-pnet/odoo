@@ -14,8 +14,8 @@ class res_partner(models.Model):
         PurchaseOrder = self.env['purchase.order']
         Invoice = self.env['account.invoice']
         for partner in self:
-            partner.purchase_order_count = PurchaseOrder.search_count([('partner_id', 'child_of', partner.id)])
-            partner.supplier_invoice_count = Invoice.search_count([('partner_id', 'child_of', partner.id), ('type', '=', 'in_invoice')])
+            partner.purchase_order_count = PurchaseOrder.search_count([('partner_id', 'child_of', partner.ids)])
+            partner.supplier_invoice_count = Invoice.search_count([('partner_id', 'child_of', partner.ids), ('type', '=', 'in_invoice')])
 
     @api.model
     def _commercial_fields(self):

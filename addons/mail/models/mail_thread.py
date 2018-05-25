@@ -202,7 +202,7 @@ class MailThread(models.AbstractModel):
                              RIGHT JOIN mail_message_res_partner_needaction_rel rel
                              ON rel.mail_message_id = msg.id AND rel.res_partner_id = %s AND (rel.is_read = false OR rel.is_read IS NULL)
                              WHERE msg.model = %s AND msg.res_id in %s""",
-                         (self.env.user.partner_id.id, self._name, tuple(self.ids),))
+                         (self.env.user.partner_id.id, self._name, tuple(self.ids or [0]),))
         for result in self._cr.fetchall():
             res[result[0]] += 1
 
