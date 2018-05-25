@@ -204,6 +204,8 @@ class ResPartner(models.Model):
 
     @api.multi
     def _credit_debit_get(self):
+        if not self.ids:
+            return
         tables, where_clause, where_params = self.env['account.move.line']._query_get()
         where_params = [tuple(self.ids)] + where_params
         if where_clause:
