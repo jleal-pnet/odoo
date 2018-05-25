@@ -5076,9 +5076,10 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             """ Return a dict with the values of record, following nametree. """
             vals = {}
             for name, subnames in tree.items():
-                if check:
-                    assert name in record._cache, "%s.%s missing from cache" % (record, name)
-                if subnames:
+                if check and name not in record._cache:
+                    # we have no value for this field
+                    vals[name] = Nil()
+                elif subnames:
                     # use an OrderedDict to keep lines in order
                     vals[name] = OrderedDict(
                         (line, snapshot(line, subnames, check))
