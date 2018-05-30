@@ -22,73 +22,109 @@ class AccountingTestCase(HttpCase):
             _logger.warn('Test skipped because there is no chart of account defined ...')
             self.skipTest("No Chart of account found")
 
-    def check_complete_move(self, move, theorical_lines, fields_name=None):
-        ''' Compare the account.move lines with theorical_lines represented
-        as a list of lines containing values sorted using fields_name.
+    def check_complete_records(self, records, theorical_dicts):
+        ''' Compare records with theorical list of dictionaries representing the expected results.
+        The dictionary uses field names as keys. Field names could be either applied on the record itself
+        (e.g. 'debit') or a composite path to another records (e.g. 'move_id.line_ids.debit').
+        Comparison for many2one field could be either an id [resp. a list of ids] or a dict [resp. a list of dict].
 
-        :param move:                An account.move record.
-        :param theorical_lines:     A list of lines. Each line is itself a list of values.
-                                    N.B: relational fields are represented using their ids.
-        :param fields_name:         An optional list of field's names to perform the comparison.
-                                    By default, this param is considered as ['name', 'debit', 'credit'].
-        :return:                    True if success. Otherwise, a ValidationError is raised.
+        :param records:             The records to compare.
+        :param theorical_dicts:     The expected results as a list of dicts.
+        :return:                    True if all is equivalent, False otherwise.
         '''
-        def _get_theorical_line(aml, theorical_lines, fields_list):
-            # Search for a line matching the aml parameter.
-            aml_currency = aml.currency_id or aml.company_currency_id
-            for line in theorical_lines:
-                field_index = 0
-                match = True
-                for f in fields_list:
-                    line_value = line[field_index]
-                    aml_value = getattr(aml, f.name)
+        if len(records) != len(theorical_dicts):
+            raise ValidationError('Too many records to compare: %d != %d.' % (len(records), len(theorical_dicts)))
+        if not theorical_dicts:
+            return True
 
-                    if f.ttype == 'float':
-                        if not float_is_zero(aml_value - line_value):
+        # Prefetch fields.
+        keys = list(theorical_dicts[0].keys())
+        fields_names = [k for k in keys if '.' not in k]
+        fields = self.env['ir.model.fields'].search([('name', 'in', fields_names), ('model', '=', records._name)])
+        fields_map = dict(((f.name, f.model), f) for f in fields)
+
+        def _get_field_value(record, key):
+            # Retrieve the field and the end-path records.
+            if '.' in key:
+                # Manage composite fields.
+                split = key.split('.')
+                relational_key = '.'.join(split[:-1])
+                field_name = split[len(split) - 1]
+                end_records = record.mapped(relational_key)
+            else:
+                # Case of basic field.
+                field_name = key
+                end_records = record
+            # Retrieve the ir.ui.fields record.
+            if (field_name, end_records._name) in fields_map:
+                field = fields_map[(field_name, end_records._name)]
+            else:
+                field = fields_map[(field_name, end_records._name)] =\
+                    self.env['ir.model.fields'].search([('name', '=', field_name), ('model', '=', end_records._name)])
+            return field, end_records
+
+        def _get_matching_record(record, theorical_dicts):
+            # Search for a theorical dict having same values as the record.
+            for candidate in theorical_dicts:
+                match = True
+                for field_name in keys:
+                    field, field_records = _get_field_value(record, field_name)
+
+                    value = field_records.mapped(field.name)
+                    candidate_value = candidate[field_name]
+
+                    # Deal with x2many fields by comparing ids or calling check_complete_records recursively.
+                    if field.ttype in ('one2many', 'many2many'):
+                        if candidate_value and isinstance(candidate_value, list) and isinstance(candidate_value[0], dict):
+                            if not self.check_complete_records(value, candidate_value):
+                                match = False
+                                break
+                        elif not sorted(value.ids) == sorted(candidate_value or []):
                             match = False
                             break
-                    elif f.ttype == 'monetary':
-                        if aml_currency.compare_amounts(aml_value, line_value):
+                        continue
+
+                    # Deal with many2one field.
+                    if field.ttype == 'many2one':
+                        if isinstance(candidate_value, dict):
+                            if not self.check_complete_records(value, [candidate_value]):
+                                match = False
+                                break
+                        elif (candidate_value or value) and value.id != candidate_value:
                             match = False
                             break
-                    elif f.ttype in ('one2many', 'many2many'):
-                        if not sorted(aml_value.ids) == sorted(line_value or []):
+                        continue
+
+                    value = value[0] if value else None
+                    if field.ttype == 'float':
+                        if not float_is_zero(value - candidate_value):
                             match = False
                             break
-                    elif f.ttype == 'many2one':
-                        if (line_value or aml_value) and aml_value.id != line_value:
+                    elif field.ttype == 'monetary':
+                        currency_field = record._fields[field_name]
+                        currency_field_name = currency_field._related_currency_field
+                        currency = getattr(record, currency_field_name)
+                        if currency.compare_amounts(value, candidate_value) if currency else value != candidate_value:
                             match = False
                             break
-                    elif (line_value or aml_value) and line_value != aml_value:
+                    elif (candidate_value or value) and value != candidate_value:
                         match = False
                         break
 
-                    field_index += 1
                 if match:
-                    return line
+                    return candidate
             return None
 
-        if not fields_name:
-            # Handle the old behavior by using arbitrary these 3 fields by default.
-            fields_name = ['name', 'debit', 'credit']
+        for record in records:
+            matching_record = _get_matching_record(record, theorical_dicts)
 
-        if len(move.line_ids) != len(theorical_lines):
-            raise ValidationError('Too many lines to compare: %d != %d.' % (len(move.line_ids), len(theorical_lines)))
-
-        fields = self.env['ir.model.fields'].search([('name', 'in', fields_name), ('model', '=', 'account.move.line')])
-        fields_map = dict((f.name, f) for f in fields)
-        fields_list = [fields_map[f] for f in fields_name]
-
-        for aml in move.line_ids:
-            line = _get_theorical_line(aml, theorical_lines, fields_list)
-
-            if line:
-                theorical_lines.remove(line)
+            if matching_record:
+                theorical_dicts.remove(matching_record)
             else:
-                raise ValidationError('Unexpected journal item. %s' % str([getattr(aml, f) for f in fields_name]))
+                return False
 
-        if theorical_lines:
-            raise ValidationError('Remaining theorical line (not found). %s)' % str(theorical_lines))
+        if theorical_dicts:
+            return False
         return True
 
     def ensure_account_property(self, property_name):

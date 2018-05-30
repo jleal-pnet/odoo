@@ -82,39 +82,6 @@ class TestPayment(AccountingTestCase):
         bank_stmt_line.process_reconciliation(payment_aml_rec=liquidity_aml)
         return bank_stmt
 
-    def check_journal_items(self, aml_recs, aml_dicts):
-        def compare_rec_dict(aml_rec, aml_dict):
-            return aml_rec.account_id.id == aml_dict['account_id'] \
-                and round(aml_rec.debit, 2) == aml_dict['debit'] \
-                and round(aml_rec.credit, 2) == aml_dict['credit'] \
-                and round(aml_rec.amount_currency, 2) == aml_dict['amount_currency'] \
-                and aml_rec.currency_id.id == aml_dict['currency_id']
-
-        for aml_dict in aml_dicts:
-            # There is no unique key to identify journal items (an account_payment may create several lines
-            # in the same account), so to check the expected entries are created, we check there is a line
-            # matching for each dict of expected values
-            aml_rec = aml_recs.filtered(lambda r: compare_rec_dict(r, aml_dict))
-            self.assertEqual(len(aml_rec), 1, "Expected a move line with values : %s" % str(aml_dict))
-            if aml_dict.get('currency_diff'):
-                if aml_rec.credit:
-                    currency_diff_move = aml_rec.matched_debit_ids[0].full_reconcile_id.exchange_move_id
-                else:
-                    currency_diff_move = aml_rec.matched_credit_ids[0].full_reconcile_id.exchange_move_id
-                for currency_diff_line in currency_diff_move.line_ids:
-                    if aml_dict.get('currency_diff') > 0:
-                        if currency_diff_line.account_id.id == aml_rec.account_id.id:
-                            self.assertAlmostEquals(currency_diff_line.debit, aml_dict.get('currency_diff'))
-                        else:
-                            self.assertAlmostEquals(currency_diff_line.credit, aml_dict.get('currency_diff'))
-                            self.assertIn(currency_diff_line.account_id.id, [self.diff_expense_account.id, self.diff_income_account.id])
-                    else:
-                        if currency_diff_line.account_id.id == aml_rec.account_id.id:
-                            self.assertAlmostEquals(currency_diff_line.credit, abs(aml_dict.get('currency_diff')))
-                        else:
-                            self.assertAlmostEquals(currency_diff_line.debit, abs(aml_dict.get('currency_diff')))
-                            self.assertIn(currency_diff_line.account_id.id, [self.diff_expense_account.id, self.diff_income_account.id])
-
     def test_full_payment_process(self):
         """ Create a payment for two invoices, post it and reconcile it with a bank statement """
         inv_1 = self.create_invoice(amount=100, currency_id=self.currency_eur_id, partner=self.partner_agrolait.id)
@@ -135,10 +102,10 @@ class TestPayment(AccountingTestCase):
         self.assertEqual(inv_1.state, 'paid')
         self.assertEqual(inv_2.state, 'paid')
 
-        self.check_journal_items(payment.move_line_ids, [
+        self.assertTrue(self.check_complete_records(payment.move_line_ids, [
             {'account_id': self.account_eur.id, 'debit': 300.0, 'credit': 0.0, 'amount_currency': 0, 'currency_id': False},
             {'account_id': inv_1.account_id.id, 'debit': 0.0, 'credit': 300.0, 'amount_currency': 00, 'currency_id': False},
-        ])
+        ]))
         self.assertTrue(payment.move_line_ids.filtered(lambda l: l.account_id == inv_1.account_id)[0].full_reconcile_id)
 
         liquidity_aml = payment.move_line_ids.filtered(lambda r: r.account_id == self.account_eur)
@@ -161,12 +128,12 @@ class TestPayment(AccountingTestCase):
             'payment_method_id': self.payment_method_manual_out.id,
         })
         payment.post()
-        self.check_journal_items(payment.move_line_ids, [
+        self.assertTrue(self.check_complete_records(payment.move_line_ids, [
             {'account_id': self.transfer_account.id, 'debit': 32.70, 'credit': 0.0, 'amount_currency': 50, 'currency_id': self.currency_usd_id},
             {'account_id': self.transfer_account.id, 'debit': 0.0, 'credit': 32.70, 'amount_currency': -50, 'currency_id': self.currency_usd_id},
             {'account_id': self.account_eur.id, 'debit': 32.70, 'credit': 0.0, 'amount_currency': 0, 'currency_id': False},
             {'account_id': self.account_usd.id, 'debit': 0.0, 'credit': 32.70, 'amount_currency': -50, 'currency_id': self.currency_usd_id},
-        ])
+        ]))
 
     def test_payment_chf_journal_usd(self):
         payment = self.payment_model.create({
@@ -181,10 +148,10 @@ class TestPayment(AccountingTestCase):
         })
         payment.post()
 
-        self.check_journal_items(payment.move_line_ids, [
+        self.assertTrue(self.check_complete_records(payment.move_line_ids, [
             {'account_id': self.account_usd.id, 'debit': 0.0, 'credit': 38.21, 'amount_currency': -58.42, 'currency_id': self.currency_usd_id},
             {'account_id': self.partner_china_exp.property_account_payable_id.id, 'debit': 38.21, 'credit': 0.0, 'amount_currency': 50, 'currency_id': self.currency_chf_id},
-        ])
+        ]))
 
     def test_multiple_payments_00(self):
         """ Create test to pay several vendor bills/invoices at once """
@@ -228,23 +195,23 @@ class TestPayment(AccountingTestCase):
         self.assertIsNotNone(inv_3_pay)
         self.assertIsNotNone(inv_4_pay)
 
-        self.check_journal_items(inv_1_2_pay.move_line_ids, [
+        self.assertTrue(self.check_complete_records(inv_1_2_pay.move_line_ids, [
             {'account_id': self.account_eur.id, 'debit': 600.0, 'credit': 0.0, 'amount_currency': 0.0, 'currency_id': False},
             {'account_id': inv_1.account_id.id, 'debit': 0.0, 'credit': 600.0, 'amount_currency': 0.0, 'currency_id': False},
-        ])
+        ]))
         self.assertEqual(inv_1.state, 'paid')
         self.assertEqual(inv_2.state, 'paid')
 
-        self.check_journal_items(inv_3_pay.move_line_ids, [
+        self.assertTrue(self.check_complete_records(inv_3_pay.move_line_ids, [
             {'account_id': self.account_eur.id, 'debit': 200.0, 'credit': 0.0, 'amount_currency': 0.0, 'currency_id': False},
             {'account_id': inv_1.account_id.id, 'debit': 0.0, 'credit': 200.0, 'amount_currency': 0.0, 'currency_id': False},
-        ])
+        ]))
         self.assertEqual(inv_3.state, 'paid')
 
-        self.check_journal_items(inv_4_pay.move_line_ids, [
+        self.assertTrue(self.check_complete_records(inv_4_pay.move_line_ids, [
             {'account_id': self.account_eur.id, 'debit': 0.0, 'credit': 50.0, 'amount_currency': 0.0, 'currency_id': False},
             {'account_id': inv_1.account_id.id, 'debit': 50.0, 'credit': 0.0, 'amount_currency': 0.0, 'currency_id': False},
-        ])
+        ]))
         self.assertEqual(inv_4.state, 'paid')
 
     def test_multiple_payments_01(self):
@@ -267,10 +234,10 @@ class TestPayment(AccountingTestCase):
 
         self.assertEqual(payment_id.state, 'posted')
 
-        self.check_journal_items(payment_id.move_line_ids, [
+        self.assertTrue(self.check_complete_records(payment_id.move_line_ids, [
             {'account_id': self.account_eur.id, 'debit': 450.0, 'credit': 0.0, 'amount_currency': 0.0, 'currency_id': False},
             {'account_id': inv_1.account_id.id, 'debit': 0.0, 'credit': 450.0, 'amount_currency': 0.0, 'currency_id': False},
-        ])
+        ]))
 
     def test_partial_payment(self):
         """ Create test to pay invoices (cust. inv + vendor bill) with partial payment """
@@ -355,15 +322,15 @@ class TestPayment(AccountingTestCase):
         self.assertTrue(inv_1_pay)
         self.assertTrue(inv_2_pay)
 
-        self.check_journal_items(inv_1_pay.move_line_ids, [
+        self.assertTrue(self.check_complete_records(inv_1_pay.move_line_ids, [
             {'account_id': self.account_eur.id, 'debit': 250.0, 'credit': 0.0, 'amount_currency': 0.0, 'currency_id': False},
             {'account_id': inv_1.account_id.id, 'debit': 0.0, 'credit': 250.0, 'amount_currency': 0.0, 'currency_id': False},
-        ])
+        ]))
 
-        self.check_journal_items(inv_2_pay.move_line_ids, [
+        self.assertTrue(self.check_complete_records(inv_2_pay.move_line_ids, [
             {'account_id': self.account_eur.id, 'debit': 300.0, 'credit': 0.0, 'amount_currency': 0.0, 'currency_id': False},
             {'account_id': inv_3.account_id.id, 'debit': 0.0, 'credit': 300.0, 'amount_currency': 0.0, 'currency_id': False},
-        ])
+        ]))
 
     def test_payment_and_writeoff_in_other_currency_1(self):
         # Use case:
@@ -385,11 +352,11 @@ class TestPayment(AccountingTestCase):
             'invoice_ids': [(4, invoice.id, None)]
             })
         payment.post()
-        self.check_journal_items(payment.move_line_ids, [
+        self.assertTrue(self.check_complete_records(payment.move_line_ids, [
             {'account_id': self.account_eur.id, 'debit': 16.35, 'credit': 0.0, 'amount_currency': 25.0, 'currency_id': self.currency_usd_id},
             {'account_id': self.account_payable.id, 'debit': 8.65, 'credit': 0.0, 'amount_currency': 13.22, 'currency_id': self.currency_usd_id},
             {'account_id': self.account_receivable.id, 'debit': 0.0, 'credit': 25.0, 'amount_currency': -38.22, 'currency_id': self.currency_usd_id},
-        ])
+        ]))
         self.assertTrue(payment.move_line_ids.filtered(lambda l: l.account_id == invoice.account_id)[0].full_reconcile_id)
         self.assertEqual(invoice.state, 'paid')
 
@@ -412,11 +379,11 @@ class TestPayment(AccountingTestCase):
             'invoice_ids': [(4, invoice.id, None)]
             })
         payment.post()
-        self.check_journal_items(payment.move_line_ids, [
+        self.assertTrue(self.check_complete_records(payment.move_line_ids, [
             {'account_id': self.account_eur.id, 'debit': 0.0, 'credit': 16.35, 'amount_currency': -25.0, 'currency_id': self.currency_usd_id},
             {'account_id': self.account_payable.id, 'debit': 0.0, 'credit': 8.65, 'amount_currency': -13.22, 'currency_id': self.currency_usd_id},
             {'account_id': self.account_receivable.id, 'debit': 25.0, 'credit': 0.0, 'amount_currency': 38.22, 'currency_id': self.currency_usd_id},
-        ])
+        ]))
         self.assertTrue(payment.move_line_ids.filtered(lambda l: l.account_id == invoice.account_id)[0].full_reconcile_id)
         self.assertEqual(invoice.state, 'paid')
 
@@ -437,10 +404,10 @@ class TestPayment(AccountingTestCase):
             'name': time.strftime('%Y') + '-07-15'})
 
         invoice = self.create_invoice(amount=5325.6, type='in_invoice', currency_id=self.currency_usd_id, partner=self.partner_agrolait.id)
-        self.check_journal_items(invoice.move_id.line_ids, [
+        self.assertTrue(self.check_complete_records(invoice.move_id.line_ids, [
             {'account_id': self.account_revenue.id, 'debit': 5950.39, 'credit': 0.0, 'amount_currency': 5325.6, 'currency_id': self.currency_usd_id},
             {'account_id': self.account_receivable.id, 'debit': 0.0, 'credit': 5950.39, 'amount_currency': -5325.6, 'currency_id': self.currency_usd_id},
-        ])
+        ]))
         # register payment on invoice
         payment = self.payment_model.create({'payment_type': 'outbound',
             'payment_method_id': self.env.ref('account.account_payment_method_manual_in').id,
@@ -455,11 +422,15 @@ class TestPayment(AccountingTestCase):
             'invoice_ids': [(4, invoice.id, None)]
             })
         payment.post()
-        self.check_journal_items(payment.move_line_ids, [
-            {'account_id': self.account_eur.id, 'debit': 0, 'credit': 6051.14, 'amount_currency': -5325.0, 'currency_id': self.currency_usd_id},
-            {'account_id': self.account_revenue.id, 'debit': 0.0, 'credit': 0.68, 'amount_currency': -0.6, 'currency_id': self.currency_usd_id},
-            {'account_id': self.account_receivable.id, 'debit': 6051.82, 'credit': 0.0, 'amount_currency': 5325.6, 'currency_id': self.currency_usd_id, 'currency_diff': -101.43},
-        ])
+        self.assertTrue(self.check_complete_records(payment.move_line_ids, [
+            {'debit': 0.0,      'credit': 6051.14,  'amount_currency': -5325.0,     'currency_id': self.currency_usd_id},
+            {'debit': 0.0,      'credit': 0.68,     'amount_currency': -0.6,        'currency_id': self.currency_usd_id},
+            {'debit': 6051.82,  'credit': 0.0,      'amount_currency': 5325.6,      'currency_id': self.currency_usd_id,
+             'full_reconcile_id.exchange_move_id.line_ids': [
+                 {'debit': 101.43,  'credit': 0.0,      'account_id': self.diff_expense_account.id},
+                 {'debit': 0.0,     'credit': 101.43,   'account_id': self.account_receivable.id},
+             ]},
+        ]))
 
         #check the invoice status
         self.assertEqual(invoice.state, 'paid')
@@ -483,10 +454,10 @@ class TestPayment(AccountingTestCase):
             'name': time.strftime('%Y') + '-06-26'})
 
         invoice = self.create_invoice(amount=247590.4, type='out_invoice', currency_id=self.currency_eur_id, partner=self.partner_agrolait.id)
-        self.check_journal_items(invoice.move_id.line_ids, [
+        self.assertTrue(self.check_complete_records(invoice.move_id.line_ids, [
             {'account_id': self.account_receivable.id, 'debit': 247590.4, 'credit': 0.0, 'amount_currency': 0.0, 'currency_id': False},
             {'account_id': self.account_revenue.id, 'debit': 0.0, 'credit': 247590.4, 'amount_currency': 0.0, 'currency_id': False},
-        ])
+        ]))
         # register payment on invoice
         payment = self.payment_model.create({'payment_type': 'inbound',
             'payment_method_id': self.env.ref('account.account_payment_method_manual_in').id,
@@ -502,11 +473,11 @@ class TestPayment(AccountingTestCase):
             'name': 'test_payment_and_writeoff_in_other_currency_3',
             })
         payment.post()
-        self.check_journal_items(payment.move_line_ids, [
+        self.assertTrue(self.check_complete_records(payment.move_line_ids, [
             {'account_id': self.account_eur.id, 'debit': 253116.0, 'credit': 0.0, 'amount_currency': 267.0, 'currency_id': self.currency_usd_id},
             {'account_id': self.account_revenue.id, 'debit': 0.0, 'credit': 5526.84, 'amount_currency': -5.83, 'currency_id': self.currency_usd_id},
             {'account_id': self.account_receivable.id, 'debit': 0.0, 'credit': 247589.16, 'amount_currency': -261.17, 'currency_id': self.currency_usd_id},
-        ])
+        ]))
 
         # Check the invoice status and the full reconciliation: the difference on the receivable account
         # should have been completed by an exchange rate difference entry

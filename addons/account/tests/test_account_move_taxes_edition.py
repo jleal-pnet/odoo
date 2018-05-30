@@ -56,11 +56,11 @@ class TestAccountMoveTaxesEdition(AccountingTestCase):
 
         move = move_form.save()
 
-        self.check_complete_move(move, [
-            ['debit_line_1',    1000,   0,      [self.percent_tax.id],  None],
-            ['tax_line',        100,    0,      None,                   self.percent_tax.id],
-            ['credit_line_1',   0,      1100,   None,                   None],
-        ], fields_name=['name', 'debit', 'credit', 'tax_ids', 'tax_line_id'])
+        self.assertTrue(self.check_complete_records(move.line_ids, [
+            {'name': 'debit_line_1',    'debit': 1000,  'credit': 0,    'tax_ids': [self.percent_tax.id],   'tax_line_id': None},
+            {'name': 'tax_line',        'debit': 100,   'credit': 0,    'tax_ids': None,                    'tax_line_id': self.percent_tax.id},
+            {'name': 'credit_line_1',   'debit': 0,     'credit': 1100, 'tax_ids': None,                    'tax_line_id': None},
+        ]))
 
     def test_onchange_taxes_2(self):
         '''
@@ -107,11 +107,11 @@ class TestAccountMoveTaxesEdition(AccountingTestCase):
 
         move = move_form.save()
 
-        self.check_complete_move(move, [
-            ['debit_line_1',    2000,   0,      [self.percent_tax.id],  None],
-            ['tax_line',        200,    0,      None,                   self.percent_tax.id],
-            ['credit_line_1',   0,      2200,   None,                   None],
-        ], fields_name=['name', 'debit', 'credit', 'tax_ids', 'tax_line_id'])
+        self.assertTrue(self.check_complete_records(move.line_ids, [
+            {'name': 'debit_line_1',    'debit': 2000,  'credit': 0,    'tax_ids': [self.percent_tax.id],   'tax_line_id': None},
+            {'name': 'tax_line',        'debit': 200,   'credit': 0,    'tax_ids': None,                    'tax_line_id': self.percent_tax.id},
+            {'name': 'credit_line_1',   'debit': 0,     'credit': 2200, 'tax_ids': None,                    'tax_line_id': None},
+        ]))
 
     def test_onchange_taxes_3(self):
         '''
@@ -183,10 +183,10 @@ class TestAccountMoveTaxesEdition(AccountingTestCase):
 
         move = move_form.save()
 
-        self.check_complete_move(move, [
-            ['debit_line_1',    1000,   0,      [self.percent_tax.id],  None],
-            ['tax_line',        300,    0,      None,                   self.percent_tax.id],
-            ['credit_line_1',   0,      1105,   None,                   None],
-            ['debit_line_2',    2000,   0,      [self.percent_tax.id],  None],
-            ['credit_line_2',   0,      2195,   None,                   None],
-        ], fields_name=['name', 'debit', 'credit', 'tax_ids', 'tax_line_id'])
+        self.assertTrue(self.check_complete_records(move.line_ids, [
+            {'name': 'debit_line_1',    'debit': 1000,  'credit': 0,    'tax_ids': [self.percent_tax.id],   'tax_line_id': None},
+            {'name': 'tax_line',        'debit': 300,   'credit': 0,    'tax_ids': None,                    'tax_line_id': self.percent_tax.id},
+            {'name': 'credit_line_1',   'debit': 0,     'credit': 1105, 'tax_ids': None,                    'tax_line_id': None},
+            {'name': 'debit_line_2',    'debit': 2000,  'credit': 0,    'tax_ids': [self.percent_tax.id],   'tax_line_id': None},
+            {'name': 'credit_line_2',   'debit': 0,     'credit': 2195, 'tax_ids': None,                    'tax_line_id': None},
+        ]))
