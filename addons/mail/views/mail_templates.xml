@@ -73,6 +73,7 @@
                 <script type="text/javascript" src="/mail/static/src/js/views/activity/activity_renderer.js"></script>
                 <!-- Others -->
                 <script type="text/javascript" src="/mail/static/src/js/emojis.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/attachment_box.js"></script>
 
                 <link rel="stylesheet" type="text/scss" href="/mail/static/src/scss/announcement.scss"/>
                 <link rel="stylesheet" type="text/scss" href="/mail/static/src/scss/discuss.scss"/>
@@ -86,6 +87,7 @@
                 <link rel="stylesheet" type="text/scss" href="/mail/static/src/scss/mail_activity.scss"/>
                 <link rel="stylesheet" type="text/scss" href="/mail/static/src/scss/activity_view.scss"/>
                 <link rel="stylesheet" type="text/scss" href="/mail/static/src/scss/kanban_view.scss"/>
+                <link rel="stylesheet" type="text/scss" href="/mail/static/src/scss/attachment_box.scss"/>
             </xpath>
         </template>
 
