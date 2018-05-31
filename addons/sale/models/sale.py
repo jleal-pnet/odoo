@@ -7,7 +7,7 @@ from itertools import groupby
 from datetime import datetime, timedelta
 from werkzeug.urls import url_encode
 
-from odoo import api, fields, models, _
+from odoo import api, fields, models, _, SUPERUSER_ID
 from odoo.exceptions import UserError, AccessError
 from odoo.osv import expression
 from odoo.tools import float_is_zero, float_compare, DEFAULT_SERVER_DATETIME_FORMAT
@@ -336,14 +336,13 @@ class SaleOrder(models.Model):
 
     @api.model
     def _name_search(self, name, args=None, operator='ilike', limit=100, name_get_uid=None):
+        name_get_uid = name_get_uid or SUPERUSER_ID
         if self._context.get('sale_show_partner_name'):
             if operator in ('ilike', 'like', '=', '=like', '=ilike'):
-                domain = expression.AND([
+                args = expression.AND([
                     args or [],
                     ['|', ('name', operator, name), ('partner_id.name', operator, name)]
                 ])
-                order_ids = self._search(domain, limit=limit, access_rights_uid=name_get_uid)
-                return self.browse(order_ids).name_get()
         return super(SaleOrder, self)._name_search(name, args=args, operator=operator, limit=limit, name_get_uid=name_get_uid)
 
     @api.model_cr_context
