@@ -3,6 +3,7 @@ odoo.define('mail.Chatter', function (require) {
 
 var Activity = require('mail.Activity');
 var ChatterComposer = require('mail.ChatterComposer');
+var AttachmentBox = require('mail.AttachmentBox');
 var Followers = require('mail.Followers');
 var ThreadField = require('mail.ThreadField');
 var utils = require('mail.utils');
@@ -29,6 +30,7 @@ var Chatter = Widget.extend({
     events: {
         'click .o_chatter_button_new_message': '_onOpenComposerMessage',
         'click .o_chatter_button_log_note': '_onOpenComposerNote',
+        'click .o_chatter_button_attachment': '_onAttachment',
         'click .o_chatter_button_schedule_activity': '_onScheduleActivity',
     },
     supportedFieldTypes: ['one2many'],
@@ -61,6 +63,10 @@ var Chatter = Widget.extend({
         if (mailFields.mail_followers) {
             this.fields.followers = new Followers(this, mailFields.mail_followers, record, options);
         }
+
+        this.fields.attachments = new AttachmentBox(this, "chatter_attachment_ids", record, options);
+        this.attachOpened = false;
+
         if (mailFields.mail_thread) {
             this.fields.thread = new ThreadField(this, mailFields.mail_thread, record, options);
             var nodeOptions = this.record.fieldsInfo.form[mailFields.mail_thread].options;
@@ -79,6 +85,7 @@ var Chatter = Widget.extend({
             new_message_btn: !!this.fields.thread,
             log_note_btn: this.hasLogButton,
             schedule_activity_btn: !!this.fields.activity,
+            attachment_btn: !!this.fields.attachments,
             isMobile: config.device.isMobile,
         }));
 
@@ -101,10 +108,13 @@ var Chatter = Widget.extend({
      */
     update: function (record, fieldNames) {
         var self = this;
+        this.current_record = record;
 
         // close the composer if we switch to another record as it is record dependent
         if (this.record.res_id !== record.res_id) {
             this._closeComposer(true);
+            this._closeAttachments(true);
+            this.attachOpened = false;
         }
 
         // update the state
@@ -215,6 +225,40 @@ var Chatter = Widget.extend({
             self.$('.o_chatter_button_log_note').toggleClass('o_active', self.composer.options.is_log);
         });
     },
+
+    _closeAttachments: function (force) {
+
+        if (this.fields.attachments || force){
+            this.$('.o_chatter_button_attachment').removeClass('o_active_attach');
+            if(this.fields.attachments)
+                this.fields.attachments.do_hide();
+        }
+
+    },
+    _openAttachments: function (options) {
+
+        var self = this;
+        if(this.old_record != this.current_record){
+            this.fields.attachments.update(this.current_record);
+        }
+
+        this.fields.attachments.do_show();
+
+        function activateAttachments() {
+            self.$el.addClass('o_chatter_composer_active');
+            self.$('.o_chatter_button_attachment').toggleClass('o_active_attach', options.is_attach);
+        }
+
+        if(this.composer){
+            this.fields.attachments.insertAfter(this.$('.o_chat_composer  ')).then(activateAttachments());
+        }
+        else{
+            this.fields.attachments.insertAfter(this.$('.o_chatter_topbar')).then(activateAttachments());
+        }
+        this.old_record = this.current_record;
+
+    },
+
     /**
      * @private
      * @param {Deferred} def
@@ -383,6 +427,15 @@ var Chatter = Widget.extend({
      */
     _onScheduleActivity: function () {
         this.fields.activity.scheduleActivity(false);
+    },
+    _onAttachment: function() {
+        if (this.attachOpened){
+            this._closeAttachments(true);
+        }
+        else {
+            this._openAttachments({is_attach: true});
+        }
+        this.attachOpened = !this.attachOpened
     },
 });
 
