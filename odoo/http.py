@@ -1285,6 +1285,14 @@ class DisableCacheMiddleware(object):
             start_response(status, new_headers)
         return self.app(environ, start_wrapped)
 
+
+class PerfRequest(werkzeug.wrappers.Request):
+    def __init__(self, *args):
+        self.query_count = 0
+        self.query_time = 0
+        super(PerfRequest, self).__init__(*args)
+
+
 class Root(object):
     """Root WSGI application for the OpenERP Web Client.
     """
@@ -1431,7 +1439,7 @@ class Root(object):
         Performs the actual WSGI dispatching for the application.
         """
         try:
-            httprequest = werkzeug.wrappers.Request(environ)
+            httprequest = PerfRequest(environ)  # werkzeug.wrappers.Request
             httprequest.app = self
             httprequest.parameter_storage_class = werkzeug.datastructures.ImmutableOrderedMultiDict
             threading.current_thread().url = httprequest.url
@@ -1486,6 +1494,7 @@ class Root(object):
         if not db:
             return self.nodb_routing_map
         return request.registry['ir.http'].routing_map()
+
 
 def db_list(force=False, httprequest=None):
     dbs = odoo.service.db.list_dbs(force)

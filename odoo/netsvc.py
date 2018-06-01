@@ -68,7 +68,7 @@ LEVEL_COLOR_MAPPING = {
     logging.ERROR: (RED, DEFAULT),
     logging.CRITICAL: (WHITE, RED),
 }
-
+#?
 class DBFormatter(logging.Formatter):
     def format(self, record):
         record.pid = os.getpid()

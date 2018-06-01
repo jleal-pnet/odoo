@@ -53,6 +53,23 @@ except ImportError:
 
 SLEEP_INTERVAL = 60     # 1 min
 
+
+class PerfWSGIRequestHandler(werkzeug.serving.WSGIRequestHandler):
+    def __init__(self, *args, **kwargs):
+        self.perf_t0 = time.time()  # or somewhere else
+        super(PerfWSGIRequestHandler, self). __init__(*args, **kwargs)
+
+    def log(self, type, message, *args):
+        # here we can override the  log method to add custom fields in the
+        # werkzeug log line
+        request = self.environ.get("werkzeug.request")
+        query_count = request.query_count if request else 0
+        query_time = request.query_time if request else 0
+        remaining_time = time.time() - self.perf_t0 - query_time
+        args = list(args) + [query_count, query_time, remaining_time]
+        message += ' %d %.3f %.3f'
+        super(PerfWSGIRequestHandler, self).log(type, message, *args)
+
 def memory_info(process):
     """ psutil < 2.0 does not have memory_info, >= 3.0 does not have
     get_memory_info """
@@ -75,7 +92,7 @@ class BaseWSGIServerNoBind(LoggingBaseWSGIServerMixIn, werkzeug.serving.BaseWSGI
     use this class, sets the socket and calls the process_request() manually
     """
     def __init__(self, app):
-        werkzeug.serving.BaseWSGIServer.__init__(self, "127.0.0.1", 0, app)
+        werkzeug.serving.BaseWSGIServer.__init__(self, "127.0.0.1", 0, app, handler=RequestHandler)
         # Directly close the socket. It will be replaced by WorkerHTTP when processing requests
         if self.socket:
             self.socket.close()
@@ -85,7 +102,7 @@ class BaseWSGIServerNoBind(LoggingBaseWSGIServerMixIn, werkzeug.serving.BaseWSGI
         pass
 
 
-class RequestHandler(werkzeug.serving.WSGIRequestHandler):
+class RequestHandler(PerfWSGIRequestHandler):
     def setup(self):
         # flag the current thread as handling a http request
         super(RequestHandler, self).setup()

@@ -225,10 +225,9 @@ class Cursor(object):
             raise ValueError("SQL query parameters should be a tuple, list or dict; got %r" % (params,))
 
         if self.sql_log:
-            now = time.time()
             encoding = psycopg2.extensions.encodings[self.connection.encoding]
             _logger.debug("query: %s", self._obj.mogrify(query, params).decode(encoding, 'replace'))
-
+        now = time.time()
         try:
             params = params or None
             res = self._obj.execute(query, params)
@@ -239,10 +238,16 @@ class Cursor(object):
 
         # simple query count is always computed
         self.sql_log_count += 1
+        odoo.perf_query_count += 1
+        delay = (time.time() - now)
+        from .http import request
+        if request:
+            request.httprequest.query_count += 1
+            request.httprequest.query_time += delay
 
         # advanced stats only if sql_log is enabled
         if self.sql_log:
-            delay = (time.time() - now) * 1E6
+            delay *= 1E6
 
             res_from = re_from.match(query.lower())
             if res_from:
