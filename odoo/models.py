@@ -1602,6 +1602,44 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             return False
 
     @api.model
+    def complete_field(self, field, key, field_domain=None, parent_domain=None, operator='ilike', limit=8):
+        """ Completes the m2o field ``field`` to match the provided value ``key``.
+        Only returns record references linked from a record of the current model.
+
+        :param str field: field to complete
+        :param str key: ilike value for the field to complete
+        :param field_domain: filter to apply on acceptable ``field`` records
+        :param parent_domain: filter to apply on current model records
+        :param str operator: matching operator between ``field`` and ``key``, defaults to ``ilike``
+        :param int limit: number of results to return, defaults to 9
+        :returns: name_get like results, list of (id, name)
+        """
+        field_info = self._fields[field]
+        field_type = field_info and type(field_info).__name__
+        if field_type != 'Many2one':
+            raise ValueError("Completed field must be a Many2one, got %s" % field_type)
+
+        domain = [(field, operator, key)]
+        if field_domain:
+            for section in field_domain:
+                if isinstance(section, str):
+                    domain.append(section)
+                else:
+                    # prefix each field of the section with the name of the
+                    # field: (foo, =, 3) => ($field.foo, =, 3) this way field's
+                    # own values can be filtered from parent
+                    f, o, v = section
+                    domain.append(("%s.%s" % (field, f), o, v))
+
+        # apply parent object action domain.
+        if (parent_domain):
+            domain.extend(parent_domain)
+
+        records = self.search_read(domain, [field])
+        # return ordered unique results
+        return list(itertools.islice(OrderedDict(item for item in (record[field] for record in records if record[field])).items(), None, limit))
+
+    @api.model
     def name_search(self, name='', args=None, operator='ilike', limit=100):
         """ name_search(name='', args=None, operator='ilike', limit=100) -> records
 
