@@ -293,7 +293,7 @@ return AbstractRenderer.extend({
         if (this.state.groupedBy.length > 1) {
             data = [];
             var data_dict = {};
-            var tick = 0;
+            var tick = -1;
             var tickLabels = [];
             var serie, tickLabel;
             var identity = function (p) {return p;};
@@ -301,9 +301,8 @@ return AbstractRenderer.extend({
             for (var i = 0; i < this.state.data.length; i++) {
                 if (this.state.data[i].labels[0] !== tickLabel) {
                     tickLabel = this.state.data[i].labels[0];
-                    tickValues.push(tick);
+                    tickValues.push(++tick);
                     tickLabels.push(tickLabel);
-                    tick++;
                 }
                 serie = this.state.data[i].labels[1];
                 if (!data_dict[serie]) {
