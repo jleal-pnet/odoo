@@ -66,7 +66,7 @@ Tour.register('bank_statement_reconciliation', {
         },
         {
             content: "select a line with with a higher amount",
-            trigger: '.o_reconciliation_line:last .match .cell_right:contains($ 4,610.00)'
+            trigger: '.o_reconciliation_line:last .match .cell_right:contains($4,610.00)'
         },
         {
             content: "click on partial reconcile",
