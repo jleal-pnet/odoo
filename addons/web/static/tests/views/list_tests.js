@@ -74,6 +74,7 @@ QUnit.module('Views', {
                         type: "selection",
                         selection: [['after', 'A'], ['before', 'B']],
                     },
+                    is_space: {string: "Allow space between amount and currency symbol", type: "boolean", searchable: true},
                 },
                 records: [
                     {id: 1, display_name: "USD", symbol: '$', position: 'before'},
@@ -1671,6 +1672,7 @@ QUnit.module('Views', {
     QUnit.test('monetary fields are properly rendered', function (assert) {
         assert.expect(3);
 
+        this.data.res_currency.records[0].is_space = true;
         var currencies = {};
         _.each(this.data.res_currency.records, function (currency) {
             currencies[currency.id] = currency;
@@ -1692,9 +1694,9 @@ QUnit.module('Views', {
         assert.strictEqual(list.$('tbody tr:first td').length, 3,
             "currency_id column should not be in the table");
         assert.strictEqual(list.$('tbody tr:first td:nth(2)').text().replace(/\s/g, ' '),
-            '1200.00 €', "currency_id column should not be in the table");
+            '1200.00€', "currency symbol for euro should come after value without space");
         assert.strictEqual(list.$('tbody tr:nth(1) td:nth(2)').text().replace(/\s/g, ' '),
-            '$ 500.00', "currency_id column should not be in the table");
+            '$ 500.00', "currency symbol for dollar should come before with space");
 
         list.destroy();
     });
