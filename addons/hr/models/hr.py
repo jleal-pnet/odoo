@@ -203,7 +203,7 @@ class Employee(models.Model):
     def _check_parent_id(self):
         for employee in self:
             if not employee._check_recursion():
-                raise ValidationError(_('Error! You cannot create recursive hierarchy of Employee(s).'))
+                raise ValidationError(_('You cannot create a recursive hierarchy.'))
 
     @api.onchange('job_id')
     def _onchange_job_id(self):
@@ -228,6 +228,11 @@ class Employee(models.Model):
     def _onchange_user(self):
         if self.user_id:
             self.update(self._sync_user(self.user_id))
+
+    @api.onchange('user_id', 'resource_calendar_id')
+    def _onchange_timezone(self):
+        if self.user_id or self.resource_calendar_id:
+            self.tz = self.user_id.tz or self.resource_calendar_id.tz
 
     def _sync_user(self, user):
         return dict(
@@ -299,7 +304,7 @@ class Department(models.Model):
     @api.constrains('parent_id')
     def _check_parent_id(self):
         if not self._check_recursion():
-            raise ValidationError(_('Error! You cannot create recursive departments.'))
+            raise ValidationError(_('You cannot create recursive departments.'))
 
     @api.model
     def create(self, vals):

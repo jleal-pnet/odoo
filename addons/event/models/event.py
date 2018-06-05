@@ -220,6 +220,11 @@ class EventEvent(models.Model):
         else:
             self.date_end_located = False
 
+    @api.onchange('is_online')
+    def _onchange_is_online(self):
+        if self.is_online:
+            self.address_id = False
+
     @api.onchange('event_type_id')
     def _onchange_type(self):
         if self.event_type_id:
@@ -261,7 +266,7 @@ class EventEvent(models.Model):
     @api.constrains('date_begin', 'date_end')
     def _check_closing_date(self):
         if self.date_end < self.date_begin:
-            raise ValidationError(_('Closing Date cannot be set before Beginning Date.'))
+            raise ValidationError(_('The closing date cannot be earlier than the beginning date.'))
 
     @api.multi
     @api.depends('name', 'date_begin', 'date_end')

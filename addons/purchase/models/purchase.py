@@ -287,6 +287,7 @@ class PurchaseOrder(models.Model):
 
     @api.multi
     def print_quotation(self):
+        self.write({'state': "sent"})
         return self.env.ref('purchase.report_purchase_quotation').report_action(self)
 
     @api.multi
@@ -322,7 +323,7 @@ class PurchaseOrder(models.Model):
         for order in self:
             for inv in order.invoice_ids:
                 if inv and inv.state not in ('cancel', 'draft'):
-                    raise UserError(_("Unable to cancel this purchase order. You must first cancel related vendor bills."))
+                    raise UserError(_("Unable to cancel this purchase order. You must first cancel the related vendor bills."))
         self.write({'state': 'cancel'})
 
     @api.multi

@@ -12,6 +12,7 @@ var ListController = require('web.ListController');
 var StandaloneFieldManagerMixin = require('web.StandaloneFieldManagerMixin');
 var RamStorage = require('web.RamStorage');
 var ReportService = require('web.ReportService');
+var SessionStorageService = require('web.SessionStorageService');
 var testUtils = require('web.test_utils');
 var Widget = require('web.Widget');
 var createActionManager = testUtils.createActionManager;
@@ -1558,6 +1559,66 @@ QUnit.module('ActionManager', {
         actionManager.destroy();
     });
 
+    QUnit.test('open a record while reloading the list view', function (assert) {
+        assert.expect(12);
+
+        var def;
+        var actionManager = createActionManager({
+            actions: this.actions,
+            archs: this.archs,
+            data: this.data,
+            mockRPC: function (route) {
+                var result = this._super.apply(this, arguments);
+                if (route === '/web/dataset/search_read') {
+                    return $.when(def).then(_.constant(result));
+                }
+                return result;
+            },
+        });
+
+        actionManager.doAction(3);
+
+        assert.strictEqual(actionManager.$('.o_list_view').length, 1,
+            "should display the list view");
+        assert.strictEqual(actionManager.$('.o_list_view .o_data_row').length, 5,
+            "list view should contain 5 records");
+        assert.strictEqual($('.o_control_panel .o_list_buttons').length, 1,
+            "list view buttons should be displayed in control panel");
+
+        // reload (the search_read RPC will be blocked)
+        def = $.Deferred();
+        $('.o_control_panel .o_cp_switch_list').click(); // click on the switch button
+
+        assert.strictEqual(actionManager.$('.o_list_view .o_data_row').length, 5,
+            "list view should still contain 5 records");
+        assert.strictEqual($('.o_control_panel .o_list_buttons').length, 1,
+            "list view buttons should still be displayed in control panel");
+
+        // open a record in form view
+        actionManager.$('.o_list_view .o_data_row:first').click();
+
+        assert.strictEqual(actionManager.$('.o_form_view').length, 1,
+            "should display the form view");
+        assert.strictEqual($('.o_control_panel .o_list_buttons').length, 0,
+            "list view buttons should no longer be displayed in control panel");
+        assert.strictEqual($('.o_control_panel .o_form_buttons_view').length, 1,
+            "form view buttons should be displayed instead");
+
+        // unblock the search_read RPC
+        def.resolve();
+
+        assert.strictEqual(actionManager.$('.o_form_view').length, 1,
+            "should display the form view");
+        assert.strictEqual(actionManager.$('.o_list_view').length, 0,
+            "should not display the list view");
+        assert.strictEqual($('.o_control_panel .o_list_buttons').length, 0,
+            "list view buttons should still not be displayed in control panel");
+        assert.strictEqual($('.o_control_panel .o_form_buttons_view').length, 1,
+            "form view buttons should still be displayed instead");
+
+        actionManager.destroy();
+    });
+
     QUnit.module('Client Actions');
 
     QUnit.test('can execute client actions from tag name', function (assert) {
@@ -2856,6 +2917,68 @@ QUnit.module('ActionManager', {
         actionManager.doAction(3, {keepSearchView: true});
         assert.strictEqual($('.o_control_panel .o_facet_values').text().trim(), 'Bar',
             "the filter on Bar should still be in the search view");
+
+        actionManager.destroy();
+    });
+
+    QUnit.test("current act_window action is stored in session_storage", function (assert) {
+        assert.expect(1);
+
+        var expectedAction = _.extend({}, _.findWhere(this.actions, {id: 3}), {
+            context: {},
+        });
+        var actionManager = createActionManager({
+            actions: this.actions,
+            archs: this.archs,
+            data: this.data,
+            services: [SessionStorageService.extend({
+                setItem: function (key, value) {
+                    assert.strictEqual(value, JSON.stringify(expectedAction),
+                        "should store the executed action in the sessionStorage");
+                },
+            })],
+        });
+
+        actionManager.doAction(3);
+
+        actionManager.destroy();
+    });
+
+    QUnit.test("store evaluated context of current action in session_storage", function (assert) {
+        // this test ensures that we don't store stringified instances of
+        // CompoundContext in the session_storage, as they would be meaningless
+        // once restored
+        assert.expect(1);
+
+        var expectedAction = _.extend({}, _.findWhere(this.actions, {id: 4}), {
+            context: {
+                active_model: 'partner',
+                active_id: 1,
+                active_ids: [1],
+            },
+        });
+        var checkSessionStorage = false;
+        var actionManager = createActionManager({
+            actions: this.actions,
+            archs: this.archs,
+            data: this.data,
+            services: [SessionStorageService.extend({
+                setItem: function (key, value) {
+                    if (checkSessionStorage) {
+                        assert.strictEqual(value, JSON.stringify(expectedAction),
+                            "should correctly store the executed action in the sessionStorage");
+                    }
+                },
+            })],
+        });
+
+        // execute an action and open a record in form view
+        actionManager.doAction(3);
+        actionManager.$('.o_list_view .o_data_row:first').click();
+
+        // click on 'Execute action' button (it executes an action with a CompoundContext as context)
+        checkSessionStorage = true;
+        actionManager.$('.o_form_view button:contains(Execute action)').click();
 
         actionManager.destroy();
     });

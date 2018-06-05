@@ -89,7 +89,7 @@ class MailActivity(models.Model):
     summary = fields.Char('Summary')
     note = fields.Html('Note')
     feedback = fields.Html('Feedback')
-    date_deadline = fields.Date('Due Date', index=True, required=True, default=fields.Date.today)
+    date_deadline = fields.Date('Due Date', index=True, required=True, default=fields.Date.context_today)
     automated = fields.Boolean(
         'Automated activity', readonly=True,
         help='Indicates this activity has been created automatically and not by any user.')
@@ -147,14 +147,10 @@ class MailActivity(models.Model):
             self.summary = self.activity_type_id.summary
             self.date_deadline = (datetime.now() + timedelta(days=self.activity_type_id.days))
 
-    @api.onchange('previous_activity_type_id')
-    def _onchange_previous_activity_type_id(self):
-        if self.previous_activity_type_id.next_type_ids:
-            self.recommended_activity_type_id = self.previous_activity_type_id.next_type_ids[0]
-
     @api.onchange('recommended_activity_type_id')
     def _onchange_recommended_activity_type_id(self):
-        self.activity_type_id = self.recommended_activity_type_id
+        if self.recommended_activity_type_id:
+            self.activity_type_id = self.recommended_activity_type_id
 
     @api.multi
     def _check_access(self, operation):

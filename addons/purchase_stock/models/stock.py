@@ -47,7 +47,7 @@ class StockMove(models.Model):
                 price_unit *= line.product_uom.factor / line.product_id.uom_id.factor
             if order.currency_id != order.company_id.currency_id:
                 price_unit = order.currency_id._convert(
-                    price_unit, order.company_id.currency_id, order.company_id, order.date_order or fields.Date.today(), round=False)
+                    price_unit, order.company_id.currency_id, order.company_id, self.date, round=False)
             return price_unit
         return super(StockMove, self)._get_price_unit()
 
@@ -119,7 +119,7 @@ class StockWarehouse(models.Model):
             buy_route_id = self.env['stock.location.route'].search([('name', 'like', _('Buy'))])
             buy_route_id = buy_route_id[0].id if buy_route_id else False
         if not buy_route_id:
-            raise UserError(_("Can't find any generic Buy route."))
+            raise UserError(_("Can't find any Buy route. Please create a route with the 'Buy' action for your receipts operation types."))
 
         return {
             'name': self._format_routename(_(' Buy')),

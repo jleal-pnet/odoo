@@ -165,6 +165,7 @@ def add_text_inside(node, text):
 def remove_element(node):
     """ Remove ``node`` but not its tail, from its XML tree. """
     add_text_before(node, node.tail)
+    node.tail = None
     node.getparent().remove(node)
 
 xpath_utils = etree.FunctionNamespace(None)
@@ -255,12 +256,10 @@ actual arch.
     def _inverse_arch(self):
         for view in self:
             data = dict(arch_db=view.arch)
-            if 'install_mode_data' in self._context:
-                imd = self._context['install_mode_data']
-
+            if 'install_filename' in self._context:
                 # we store the relative path to the resource instead of the absolute path, if found
                 # (it will be missing e.g. when importing data-only modules using base_import_module)
-                path_info = get_resource_from_path(imd['xml_file'])
+                path_info = get_resource_from_path(self._context['install_filename'])
                 if path_info:
                     data['arch_fs'] = '/'.join(path_info[0:2])
             view.write(data)
@@ -401,7 +400,7 @@ actual arch.
     def write(self, vals):
         # If view is modified we remove the arch_fs information thus activating the arch_db
         # version. An `init` of the view will restore the arch_fs for the --dev mode
-        if ('arch' in vals or 'arch_base' in vals) and 'install_mode_data' not in self._context:
+        if ('arch' in vals or 'arch_base' in vals) and 'install_filename' not in self._context:
             vals['arch_fs'] = False
 
         # drop the corresponding view customizations (used for dashboards for example), otherwise
@@ -471,7 +470,7 @@ actual arch.
             # cannot currently use relationships that are
             # not required. The root cause is the INNER JOIN
             # used to implement it.
-            modules = tuple(self.pool._init_modules) + (self._context.get('install_mode_data', {}).get('module'),)
+            modules = tuple(self.pool._init_modules) + (self._context.get('install_module'),)
             views = self.search(conditions + [('model_ids.module', 'in', modules)])
             views_cond = [('id', 'in', list(self._context.get('check_view_ids') or (0,)) + views.ids)]
             views = self.search(conditions + views_cond, order=INHERIT_ORDER)
@@ -568,6 +567,22 @@ actual arch.
         # changes to apply to some parent architecture).
         specs = [specs_tree]
 
+        def extract(spec):
+            """
+            Utility function that locates a node given a specification, remove
+            it from the source and returns it.
+            """
+            if len(spec):
+                self.raise_view_error(_("Invalid specification for moved nodes: '%s'") %
+                                      etree.tostring(spec), inherit_id)
+            to_extract = self.locate_node(source, spec)
+            if to_extract is not None:
+                remove_element(to_extract)
+                return to_extract
+            else:
+                self.raise_view_error(_("Element '%s' cannot be located in parent view") %
+                                      etree.tostring(spec), inherit_id)
+
         while len(specs):
             spec = specs.pop(0)
             if isinstance(spec, SKIPPED_ELEMENT_TYPES):
@@ -586,6 +601,8 @@ actual arch.
                         source = copy.deepcopy(spec[0])
                     else:
                         for child in spec:
+                            if child.get('position') == 'move':
+                                child = extract(child)
                             node.addprevious(child)
                         node.getparent().remove(node)
                 elif pos == 'attributes':
@@ -614,6 +631,8 @@ actual arch.
                 elif pos == 'inside':
                     add_text_inside(node, spec.text)
                     for child in spec:
+                        if child.get('position') == 'move':
+                            child = extract(child)
                         node.append(child)
                 elif pos == 'after':
                     # add a sentinel element right after node, insert content of
@@ -622,11 +641,15 @@ actual arch.
                     node.addnext(sentinel)
                     add_text_before(sentinel, spec.text)
                     for child in spec:
+                        if child.get('position') == 'move':
+                            child = extract(child)
                         sentinel.addprevious(child)
                     remove_element(sentinel)
                 elif pos == 'before':
                     add_text_before(node, spec.text)
                     for child in spec:
+                        if child.get('position') == 'move':
+                            child = extract(child)
                         node.addprevious(child)
                 else:
                     self.raise_view_error(_("Invalid position attribute: '%s'") % pos, inherit_id)

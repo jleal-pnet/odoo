@@ -309,8 +309,8 @@ class MonetaryConverter(models.AbstractModel):
         fmt = "%.{0}f".format(display_currency.decimal_places)
 
         if options.get('from_currency'):
-            date = self.env.context.get('date') or fields.Date.today()
-            company = self.env.context.get('company_id', self.env.user.company_id)
+            date = options.get('date') or fields.Date.today()
+            company = options.get('company_id') or self.env.user.company_id
             value = options['from_currency']._convert(value, display_currency, company, date)
 
         lang = self.user_lang()
@@ -332,6 +332,10 @@ class MonetaryConverter(models.AbstractModel):
         field = record._fields[field_name]
         if not options.get('display_currency') and field.type == 'monetary' and field.currency_field:
             options['display_currency'] = record[field.currency_field]
+        if 'date' not in options:
+            options['date'] = record._context.get('date')
+        if 'company_id' not in options:
+            options['company_id'] = record._context.get('company_id')
 
         return super(MonetaryConverter, self).record_to_html(record, field_name, options)
 
@@ -357,8 +361,9 @@ class FloatTimeConverter(models.AbstractModel):
 
     @api.model
     def value_to_html(self, value, options):
-        hours, minutes = divmod(value * 60, 60)
-        return '%02d:%02d' % (hours, minutes)
+        factor = -1 if value < 0 else 1
+        hours, minutes = divmod(abs(value) * 60, 60)
+        return '%02d:%02d' % (hours * factor, minutes)
 
 
 class DurationConverter(models.AbstractModel):

@@ -38,7 +38,8 @@ class MrpProductProduce(models.TransientModel):
             if 'produce_line_ids' in fields:
                 lines = []
                 for move in production.move_raw_ids.filtered(lambda x: (x.product_id.tracking != 'none') and x.state not in ('done', 'cancel') and x.bom_line_id):
-                    qty_to_consume = todo_quantity / move.bom_line_id.bom_id.product_qty * move.bom_line_id.product_qty
+                    qty_to_consume = float_round(todo_quantity / move.bom_line_id.bom_id.product_qty * move.bom_line_id.product_qty,
+                                                 precision_rounding=move.product_uom.rounding, rounding_method="UP")
                     for move_line in move.move_line_ids:
                         if float_compare(qty_to_consume, 0.0, precision_rounding=move.product_uom.rounding) <= 0:
                             break
@@ -91,7 +92,7 @@ class MrpProductProduce(models.TransientModel):
         # Nothing to do for lots since values are created using default data (stock.move.lots)
         quantity = self.product_qty
         if float_compare(quantity, 0, precision_rounding=self.product_uom_id.rounding) <= 0:
-            raise UserError(_("The production order for '%s' has no quantity specified") % self.product_id.display_name)
+            raise UserError(_("The production order for '%s' has no quantity specified.") % self.product_id.display_name)
         for move in self.production_id.move_raw_ids:
             # TODO currently not possible to guess if the user updated quantity by hand or automatically by the produce wizard.
             if move.product_id.tracking == 'none' and move.state not in ('done', 'cancel') and move.unit_factor:
@@ -122,7 +123,7 @@ class MrpProductProduce(models.TransientModel):
         produce_move = self.production_id.move_finished_ids.filtered(lambda x: x.product_id == self.product_id and x.state not in ('done', 'cancel'))
         if produce_move and produce_move.product_id.tracking != 'none':
             if not self.lot_id:
-                raise UserError(_('You need to provide a lot for the finished product'))
+                raise UserError(_('You need to provide a lot for the finished product.'))
             existing_move_line = produce_move.move_line_ids.filtered(lambda x: x.lot_id == self.lot_id)
             if existing_move_line:
                 if self.product_id.tracking == 'serial':
@@ -176,9 +177,9 @@ class MrpProductProduceLine(models.TransientModel):
     product_produce_id = fields.Many2one('mrp.product.produce')
     product_id = fields.Many2one('product.product', 'Product')
     lot_id = fields.Many2one('stock.production.lot', 'Lot')
-    qty_to_consume = fields.Float('To Consume')
+    qty_to_consume = fields.Float('To Consume', digits=dp.get_precision('Product Unit of Measure'))
     product_uom_id = fields.Many2one('uom.uom', 'Unit of Measure')
-    qty_done = fields.Float('Done')
+    qty_done = fields.Float('Done', digits=dp.get_precision('Product Unit of Measure'))
     move_id = fields.Many2one('stock.move')
 
     @api.onchange('lot_id')

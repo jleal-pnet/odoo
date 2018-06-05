@@ -1099,7 +1099,7 @@
                 </t>
                 <input type='submit'/>
             </form>
-            <a t-if="not actual_partner or (ship.id in actual_partner.ids + actual_partner.child_ids.ids)" class='btn btn-link pull-right fa fa-edit js_edit_address no-decoration' title="Edit this address"></a>
+            <a t-if="not actual_partner or (ship.id in actual_partner.ids + actual_partner.child_ids.ids)" class='btn btn-link pull-right js_edit_address no-decoration' title="Edit this address"><i class='fa fa-edit'/></a>
             <div t-att-class="'panel panel-default %s' % (selected and 'border_primary' or 'js_change_shipping')">
                 <div class='panel-body' style='min-height: 130px;'>
                     <t t-esc="contact" t-options="dict(widget='contact', fields=['name', 'address'], no_marker=True)"/>
@@ -1152,7 +1152,7 @@
                                 <t t-if="error" t-foreach="error.get('error_message', [])" t-as="err">
                                     <h4 class="text-danger" t-esc="err" />
                                 </t>
-                                <form name="/shop/checkout" method="post" class="checkout_autoformat">
+                                <form action="/shop/address" method="post" class="checkout_autoformat">
                                     <div t-attf-class="form-group #{error.get('name') and 'has-error' or ''} col-md-12 div_name">
                                         <label class="control-label" for="name">Name</label>
                                         <input type="text" name="name" class="form-control" t-att-value="'name' in checkout and checkout['name']" />
@@ -1591,15 +1591,11 @@
         </div>
     </template>
 
-    <template id="website.layout_footer_copyright" inherit_id="website.layout" name="Footer Copyright">
-        <xpath expr="//footer" position="inside">
-            <div class="container mt16 mb8">
-                <div class="pull-right" t-ignore="true" t-if="not editable">
-                                                      Powered by <a target="_blank" class="label label-danger" href="http://www.odoo.com/page/website-builder">Odoo</a>,
-                                                      the #1 <a target="_blank" href="http://www.odoo.com/page/e-commerce">Open Source eCommerce</a>.
-                                                    </div>
-                <div class="pull-left text-muted">
-                                                      Copyright &amp;copy; <span t-field="res_company.name">Company name</span></div>
+    <template id="website_sale.brand_promotion" inherit_id="website.brand_promotion">
+        <xpath expr="//div[hasclass('o_brand_promotion')]" position="replace">
+            <div class="o_brand_promotion">
+                Powered by <a target="_blank" class="label label-danger" href="http://www.odoo.com/page/website-builder">Odoo</a>,
+                the #1 <a target="_blank" href="http://www.odoo.com/page/e-commerce">Open Source eCommerce</a>.
             </div>
         </xpath>
     </template>

@@ -763,7 +763,7 @@ class MassMailing(models.Model):
             if not res_ids:
                 res_ids = mailing.get_remaining_recipients()
             if not res_ids:
-                raise UserError(_('Please select recipients.'))
+                raise UserError(_('There is no recipients selected.'))
 
             # Convert links in absolute URLs before the application of the shortener
             mailing.body_html = self.env['mail.thread']._replace_local_links(mailing.body_html)
@@ -780,6 +780,7 @@ class MassMailing(models.Model):
                 'mass_mailing_id': mailing.id,
                 'mailing_list_ids': [(4, l.id) for l in mailing.contact_list_ids],
                 'no_auto_thread': mailing.reply_to_mode != 'thread',
+                'template_id': None,
                 'mail_server_id': mailing.mail_server_id.id,
             }
             if mailing.reply_to_mode == 'email':

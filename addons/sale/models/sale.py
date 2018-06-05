@@ -186,7 +186,7 @@ class SaleOrder(models.Model):
     def unlink(self):
         for order in self:
             if order.state not in ('draft', 'cancel'):
-                raise UserError(_('You can not delete a sent quotation or a sales order! Try to cancel it before.'))
+                raise UserError(_('You can not delete a sent quotation or a confirmed sales order. You must first cancel it.'))
         return super(SaleOrder, self).unlink()
 
     @api.multi
@@ -427,6 +427,9 @@ class SaleOrder(models.Model):
         precision = self.env['decimal.precision'].precision_get('Product Unit of Measure')
         invoices = {}
         references = {}
+        invoices_origin = {}
+        invoices_name = {}
+
         for order in self:
             group_key = order.id if grouped else (order.partner_invoice_id.id, order.currency_id.id)
             for line in order.order_line.sorted(key=lambda l: l.qty_to_invoice < 0):
@@ -437,13 +440,14 @@ class SaleOrder(models.Model):
                     invoice = inv_obj.create(inv_data)
                     references[invoice] = order
                     invoices[group_key] = invoice
+                    invoices_origin[group_key] = [invoice.origin]
+                    invoices_name[group_key] = [invoice.name]
                 elif group_key in invoices:
-                    vals = {}
-                    if order.name not in invoices[group_key].origin.split(', '):
-                        vals['origin'] = invoices[group_key].origin + ', ' + order.name
-                    if order.client_order_ref and order.client_order_ref not in invoices[group_key].name.split(', ') and order.client_order_ref != invoices[group_key].name:
-                        vals['name'] = invoices[group_key].name + ', ' + order.client_order_ref
-                    invoices[group_key].write(vals)
+                    if order.name not in invoices_origin[group_key]:
+                        invoices_origin[group_key].append(order.name)
+                    if order.client_order_ref and order.client_order_ref not in invoices_name[group_key]:
+                        invoices_name[group_key].append(order.client_order_ref)
+
                 if line.qty_to_invoice > 0:
                     line.invoice_line_create(invoices[group_key].id, line.qty_to_invoice)
                 elif line.qty_to_invoice < 0 and final:
@@ -453,12 +457,16 @@ class SaleOrder(models.Model):
                 if order not in references[invoices[group_key]]:
                     references[invoices[group_key]] |= order
 
+        for group_key in invoices:
+            invoices[group_key].write({'name': ', '.join(invoices_name[group_key]),
+                                       'origin': ', '.join(invoices_origin[group_key])})
+
         if not invoices:
-            raise UserError(_('There is no invoiceable line.'))
+            raise UserError(_('There is no invoiceable line. If a product has a Delivered quantities invoicing policy, please make sure that a quantity has been delivered.'))
 
         for invoice in invoices.values():
             if not invoice.invoice_line_ids:
-                raise UserError(_('There is no invoiceable line.'))
+                raise UserError(_('There is no invoiceable line. If a product has a Delivered quantities invoicing policy, please make sure that a quantity has been delivered.'))
             # If invoice is negative, do a refund invoice instead
             if invoice.amount_untaxed < 0:
                 invoice.type = 'out_refund'

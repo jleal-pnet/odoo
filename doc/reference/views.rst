@@ -954,7 +954,9 @@ calendar view are:
 ``readonly_form_view_id``
     view to open in readonly mode
 ``form_view_id``
-    view to open when the user create or edit an event
+    view to open when the user create or edit an event. Note that if this attribute
+    is not set, the calendar view will fall back to the id of the form view in the
+    current action, if any.
 ``event_open_popup``
     If the option 'event_open_popup' is set to true, then the calendar view will
     open events (or records) in a FormViewDialog. Otherwise, it will open events
@@ -1285,6 +1287,47 @@ There are 5 possible type of tags in a dashboard view:
         The number of columns spanned by this tag (only makes sense inside a
         group). By default, 1.
 
+Cohort
+=========
+
+The cohort view is used to display and understand the way some data changes over
+a period of time.  For example, imagine that for a given business, clients can
+subscribe to some service.  The cohort view can then display the total number
+of subscriptions each month, and study the rate at which client leave the service
+(churn).
+
+.. warning::
+
+   The Cohort view is only available in Odoo Enterprise.
+
+For example, here is a very simple cohort view:
+
+.. code-block:: xml
+
+    <cohort string="Subscripdtion" date_start="date_start" date_stop="date" interval="month"/>
+
+The root element of the Cohort view is <cohort>, it accepts the following
+attributes:
+
+
+- ``string`` (mandatory)
+    A title, which should describe the view
+
+- ``date_start`` (mandatory)
+    A valid date or datetime field. This field is understood by the view as the
+    beginning date of a record
+
+- ``date_stop`` (mandatory)
+    A valid date or datetime field. This field is understood by the view as the
+    end date of a record.  This is the field that will determine the churn.
+
+- ``interval`` (optional)
+    A string to describe a time interval. It should be 'day', 'week', 'month''
+    (default) or 'year'.
+
+- ``measure`` (optional)
+    A field that can be aggregated.  This field will be used to compute the values
+    for each cell.  If not set, the cohort view will count the number of occurences.
 
 Search
 ======

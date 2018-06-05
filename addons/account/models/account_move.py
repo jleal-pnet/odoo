@@ -55,7 +55,8 @@ class AccountMove(models.Model):
                     total_amount += amount
                     for partial_line in (line.matched_debit_ids + line.matched_credit_ids):
                         total_reconciled += partial_line.amount
-            if float_is_zero(total_amount, precision_rounding=move.currency_id.rounding):
+            precision_currency = move.currency_id or move.company_id.currency_id
+            if float_is_zero(total_amount, precision_rounding=precision_currency.rounding):
                 move.matched_percentage = 1.0
             else:
                 move.matched_percentage = total_reconciled / total_amount
@@ -102,8 +103,7 @@ class AccountMove(models.Model):
     partner_id = fields.Many2one('res.partner', compute='_compute_partner_id', string="Partner", store=True, readonly=True)
     amount = fields.Monetary(compute='_amount_compute', store=True)
     narration = fields.Text(string='Internal Note')
-    company_id = fields.Many2one('res.company', related='journal_id.company_id', string='Company', store=True, readonly=True,
-        default=lambda self: self.env.user.company_id)
+    company_id = fields.Many2one('res.company', related='journal_id.company_id', string='Company', store=True, readonly=True)
     matched_percentage = fields.Float('Percentage Matched', compute='_compute_matched_percentage', digits=0, store=True, readonly=True, help="Technical field used in cash basis method")
     # Dummy Account field to search on account.move by account_id
     dummy_account_id = fields.Many2one('account.account', related='line_ids.account_id', string='Account', store=False, readonly=True)
@@ -664,7 +664,7 @@ class AccountMoveLine(models.Model):
     def _check_currency_and_amount(self):
         for line in self:
             if (line.amount_currency and not line.currency_id):
-                raise ValidationError(_("You cannot create journal items with a secondary currency without filling both 'currency' and 'amount currency' field."))
+                raise ValidationError(_("You cannot create journal items with a secondary currency without filling both 'currency' and 'amount currency' fields."))
 
     @api.multi
     @api.constrains('amount_currency', 'debit', 'credit')
@@ -883,15 +883,13 @@ class AccountMoveLine(models.Model):
             if (line.account_id.internal_type in ('receivable', 'payable')):
                 partners.add(line.partner_id.id)
             if line.reconciled:
-                raise UserError(_('You are trying to reconcile some entries that are already reconciled!'))
+                raise UserError(_('You are trying to reconcile some entries that are already reconciled.'))
         if len(company_ids) > 1:
-            raise UserError(_('To reconcile the entries company should be the same for all entries!'))
+            raise UserError(_('To reconcile the entries company should be the same for all entries.'))
         if len(set(all_accounts)) > 1:
-            raise UserError(_('Entries are not of the same account!'))
+            raise UserError(_('Entries are not from the same account.'))
         if not (all_accounts[0].reconcile or all_accounts[0].internal_type == 'liquidity'):
             raise UserError(_('Account %s (%s) does not allow reconciliation. First change the configuration of this account to allow it.') % (all_accounts[0].name, all_accounts[0].code))
-        if len(partners) > 1:
-            raise UserError(_('The partner has to be the same on all lines for receivable and payable accounts!'))
 
         #reconcile everything that can be
         remaining_moves = self.auto_reconcile_lines()
@@ -1017,8 +1015,9 @@ class AccountMoveLine(models.Model):
             rec_move_ids += account_move_line.matched_credit_ids
         if self.env.context.get('invoice_id'):
             current_invoice = self.env['account.invoice'].browse(self.env.context['invoice_id'])
+            aml_to_keep = current_invoice.move_id.line_ids | current_invoice.move_id.line_ids.mapped('full_reconcile_id.exchange_move_id.line_ids')
             rec_move_ids = rec_move_ids.filtered(
-                lambda r: (r.debit_move_id + r.credit_move_id) & current_invoice.move_id.line_ids
+                lambda r: (r.debit_move_id + r.credit_move_id) & aml_to_keep
             )
         return rec_move_ids.unlink()
 
@@ -1035,7 +1034,7 @@ class AccountMoveLine(models.Model):
         move = self.env['account.move'].browse(vals['move_id'])
         account = self.env['account.account'].browse(vals['account_id'])
         if account.deprecated:
-            raise UserError(_('The account %s (%s) is deprecated !') %(account.name, account.code))
+            raise UserError(_('The account %s (%s) is deprecated.') %(account.name, account.code))
         journal = vals.get('journal_id') and self.env['account.journal'].browse(vals['journal_id']) or move.journal_id
         vals['date_maturity'] = vals.get('date_maturity') or vals.get('date') or move.date
         ok = not (journal.type_control_ids or journal.account_control_ids)
@@ -1095,7 +1094,7 @@ class AccountMoveLine(models.Model):
     @api.multi
     def write(self, vals):
         if ('account_id' in vals) and self.env['account.account'].browse(vals['account_id']).deprecated:
-            raise UserError(_('You cannot use deprecated account.'))
+            raise UserError(_('You cannot use a deprecated account.'))
         if any(key in vals for key in ('account_id', 'journal_id', 'date', 'move_id', 'debit', 'credit')):
             self._update_check()
         if not self._context.get('allow_amount_currency') and any(key in vals for key in ('amount_currency', 'currency_id')):
@@ -1243,7 +1242,7 @@ class AccountMoveLine(models.Model):
             'move_id': self.id,
             'user_id': self.invoice_id.user_id.id or self._uid,
             'partner_id': self.partner_id.id,
-            'company_id': self.env.user.company_id.id,
+            'company_id': self.analytic_account_id.company_id.id or self.env.user.company_id.id,
         }
 
     def _prepare_analytic_distribution_line(self, distribution):
@@ -1266,7 +1265,7 @@ class AccountMoveLine(models.Model):
             'ref': self.ref,
             'move_id': self.id,
             'user_id': self.invoice_id.user_id.id or self._uid,
-            'company_id': self.env.user.company_id.id
+            'company_id': distribution.account_id.company_id.id or self.env.user.company_id.id,
         }
 
     @api.model

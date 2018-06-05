@@ -81,7 +81,7 @@ class PartnerCategory(models.Model):
     @api.constrains('parent_id')
     def _check_parent_id(self):
         if not self._check_recursion():
-            raise ValidationError(_('Error ! You can not create recursive tags.'))
+            raise ValidationError(_('You can not create recursive tags.'))
 
     @api.multi
     def name_get(self):
@@ -179,7 +179,8 @@ class Partner(models.Model):
          ('invoice', 'Invoice address'),
          ('delivery', 'Shipping address'),
          ('other', 'Other address'),
-         ("private", "Private Address")], string='Address Type',
+         ("private", "Private Address"),
+        ], string='Address Type',
         default='contact',
         help="Used to select automatically the right address according to the context in sales and purchases documents.")
     street = fields.Char()
