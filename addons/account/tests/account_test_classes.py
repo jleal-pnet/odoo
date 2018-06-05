@@ -34,95 +34,29 @@ class AccountingTestCase(HttpCase):
         '''
         if len(records) != len(theorical_dicts):
             raise ValidationError('Too many records to compare: %d != %d.' % (len(records), len(theorical_dicts)))
-        if not theorical_dicts:
-            return True
 
-        # Prefetch fields.
-        keys = list(theorical_dicts[0].keys())
-        fields_names = [k for k in keys if '.' not in k]
-        fields = self.env['ir.model.fields'].search([('name', 'in', fields_names), ('model', '=', records._name)])
-        fields_map = dict(((f.name, f.model), f) for f in fields)
-
-        def _get_field_value(record, key):
-            # Retrieve the field and the end-path records.
-            if '.' in key:
-                # Manage composite fields.
-                split = key.split('.')
-                relational_key = '.'.join(split[:-1])
-                field_name = split[len(split) - 1]
-                end_records = record.mapped(relational_key)
-            else:
-                # Case of basic field.
-                field_name = key
-                end_records = record
-            # Retrieve the ir.ui.fields record.
-            if (field_name, end_records._name) in fields_map:
-                field = fields_map[(field_name, end_records._name)]
-            else:
-                field = fields_map[(field_name, end_records._name)] =\
-                    self.env['ir.model.fields'].search([('name', '=', field_name), ('model', '=', end_records._name)])
-            return field, end_records
-
-        def _get_matching_record(record, theorical_dicts):
+        def _get_matching_record(record_values, theorical_dicts):
             # Search for a theorical dict having same values as the record.
+            index = 0
             for candidate in theorical_dicts:
-                match = True
-                for field_name in keys:
-                    field, field_records = _get_field_value(record, field_name)
+                if candidate == record_values:
+                    return index
+                index += 1
+            return False
 
-                    value = field_records.mapped(field.name)
-                    candidate_value = candidate[field_name]
+        keys = list(theorical_dicts[0].keys())
+        for record_values in records.read(keys, load=False):
+            # remove 'id' field which is automatically added by read()
+            del(record_values['id'])
 
-                    # Deal with x2many fields by comparing ids or calling check_complete_records recursively.
-                    if field.ttype in ('one2many', 'many2many'):
-                        if candidate_value and isinstance(candidate_value, list) and isinstance(candidate_value[0], dict):
-                            if not self.check_complete_records(value, candidate_value):
-                                match = False
-                                break
-                        elif not sorted(value.ids) == sorted(candidate_value or []):
-                            match = False
-                            break
-                        continue
-
-                    # Deal with many2one field.
-                    if field.ttype == 'many2one':
-                        if isinstance(candidate_value, dict):
-                            if not self.check_complete_records(value, [candidate_value]):
-                                match = False
-                                break
-                        elif (candidate_value or value) and value.id != candidate_value:
-                            match = False
-                            break
-                        continue
-
-                    value = value[0] if value else None
-                    if field.ttype == 'float':
-                        if not float_is_zero(value - candidate_value):
-                            match = False
-                            break
-                    elif field.ttype == 'monetary':
-                        currency_field = record._fields[field_name]
-                        currency_field_name = currency_field._related_currency_field
-                        currency = getattr(record, currency_field_name)
-                        if currency.compare_amounts(value, candidate_value) if currency else value != candidate_value:
-                            match = False
-                            break
-                    elif (candidate_value or value) and value != candidate_value:
-                        match = False
-                        break
-
-                if match:
-                    return candidate
-            return None
-
-        for record in records:
-            matching_record = _get_matching_record(record, theorical_dicts)
-
-            if matching_record:
-                theorical_dicts.remove(matching_record)
+            # search for matching values in theorical_dicts
+            matching_index = _get_matching_record(record_values, theorical_dicts)
+            if matching_index:
+                theorical_dicts.remove(matching_index)
             else:
                 return False
 
+        # theorical_dicts should be empty, otherwise there are missing lines in checked records
         if theorical_dicts:
             return False
         return True
