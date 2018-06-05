@@ -113,33 +113,28 @@ class TestCurrencyExport(TestExport):
         }
         return converter.record_to_html(obj, 'value', options)
 
-    def test_currency_post(self):
+    def get_currency_format(self, obj, currency):
+        lang = self.env['res.lang'].search([('code', '=', self.env.user.lang)])
+        currency_format = u''
+        if lang.position == 'before':
+            if lang.is_space:
+                currency_format = u'{symbol}\N{NO-BREAK SPACE}'u'<span class="oe_currency_value">0.12</span>'.format(obj=obj, symbol=currency.symbol)
+            else:
+                currency_format = u'{symbol}'u'<span class="oe_currency_value">0.12</span>'.format(obj=obj, symbol=currency.symbol)
+        else:
+            if lang.is_space:
+                currency_format = u'<span class="oe_currency_value">0.12</span>'u'\N{NO-BREAK SPACE}{symbol}'.format(obj=obj, symbol=currency.symbol)
+            else:
+                currency_format = u'<span class="oe_currency_value">0.12</span>'u'{symbol}'.format(obj=obj, symbol=currency.symbol)
+        return currency_format
+
+    def test_currency_position(self):
         currency = self.create(self.Currency, name="Test", symbol=u"test")
-        obj = self.create(self.Model, value=-0.12)
-
-        converted = self.convert(obj, dest=currency)
-
-        self.assertEqual(
-            converted, u'<span class="oe_currency_value">\u20110.12</span>'
-                       u'\N{NO-BREAK SPACE}{symbol}'.format(
-                obj=obj,
-                symbol=currency.symbol
-            ),)
-
-    def test_currency_pre(self):
-        currency = self.create(
-            self.Currency, name="Test", symbol=u"test", position='before')
         obj = self.create(self.Model, value=0.12)
 
         converted = self.convert(obj, dest=currency)
 
-        self.assertEqual(
-            converted,
-                      u'{symbol}\N{NO-BREAK SPACE}'
-                      u'<span class="oe_currency_value">0.12</span>'.format(
-                obj=obj,
-                symbol=currency.symbol
-            ),)
+        self.assertEqual(converted, self.get_currency_format(obj, currency),)
 
     def test_currency_precision(self):
         """ Precision should be the currency's, not the float field's
@@ -149,13 +144,7 @@ class TestCurrencyExport(TestExport):
 
         converted = self.convert(obj, dest=currency)
 
-        self.assertEqual(
-            converted,
-                      u'<span class="oe_currency_value">0.12</span>'
-                      u'\N{NO-BREAK SPACE}{symbol}'.format(
-                obj=obj,
-                symbol=currency.symbol
-            ),)
+        self.assertEqual(converted, self.get_currency_format(obj, currency),)
 
 
 class TestTextExport(TestBasicExport):
