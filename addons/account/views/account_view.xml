@@ -5,6 +5,20 @@
 
         <!-- Accounts -->
 
+        <record id="action_invoice_portal_domain" model="ir.actions.server">
+            <field name="name">Invoice portal Domain</field>
+            <field name="type">ir.actions.server</field>
+            <field name="model_id" ref="account.model_account_invoice"/>
+            <field name="state">code</field>
+            <field name="code">
+action = [
+    ('type', 'in', ['out_invoice', 'out_refund']),
+    ('message_partner_ids', 'child_of', [env.user.partner_id.commercial_partner_id.id]),
+    ('state', 'in', ['open', 'paid', 'cancel'])
+]
+            </field>
+        </record>
+
         <record id="view_account_form" model="ir.ui.view">
             <field name="name">account.account.form</field>
             <field name="model">account.account</field>

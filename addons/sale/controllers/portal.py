@@ -77,10 +77,7 @@ class CustomerPortal(CustomerPortal):
         partner = request.env.user.partner_id
         SaleOrder = request.env['sale.order']
 
-        domain = [
-            ('message_partner_ids', 'child_of', [partner.commercial_partner_id.id]),
-            ('state', 'in', ['sent', 'cancel'])
-        ]
+        domain = request.env.ref('sale.action_sale_portal_domain').with_context(state=['sent', 'cancel']).run()
 
         searchbar_sortings = {
             'date': {'label': _('Order Date'), 'order': 'date_order desc'},
@@ -129,10 +126,7 @@ class CustomerPortal(CustomerPortal):
         partner = request.env.user.partner_id
         SaleOrder = request.env['sale.order']
 
-        domain = [
-            ('message_partner_ids', 'child_of', [partner.commercial_partner_id.id]),
-            ('state', 'in', ['sale', 'done'])
-        ]
+        domain = request.env.ref('sale.action_sale_portal_domain').with_context(state=['sale', 'done']).run()
 
         searchbar_sortings = {
             'date': {'label': _('Order Date'), 'order': 'date_order desc'},

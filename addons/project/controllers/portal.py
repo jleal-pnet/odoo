@@ -28,7 +28,7 @@ class CustomerPortal(CustomerPortal):
     def portal_my_projects(self, page=1, date_begin=None, date_end=None, sortby=None, **kw):
         values = self._prepare_portal_layout_values()
         Project = request.env['project.project']
-        domain = [('privacy_visibility', '=', 'portal')]
+        domain = request.env.ref('project.action_project_portal_domain').run()
 
         searchbar_sortings = {
             'date': {'label': _('Newest'), 'order': 'create_date desc'},
@@ -104,7 +104,7 @@ class CustomerPortal(CustomerPortal):
         # extends filterby criteria with project (criteria name is the project id)
         # Note: portal users can't view projects they don't follow
         projects = request.env['project.project'].sudo().search([('privacy_visibility', '=', 'portal')])
-        domain = [('project_id', 'in', projects.ids)]
+        domain = request.env.ref('project.action_project_tasks_portal_domain').with_context(projects_ids=projects.ids).run()
         for proj in projects:
             searchbar_filters.update({
                 str(proj.id): {'label': proj.name, 'domain': [('project_id', '=', proj.id)]}

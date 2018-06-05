@@ -364,6 +364,30 @@
             <field name="code">action = model.activate_sample_project()</field>
         </record>
 
+        <record id="action_project_portal_domain" model="ir.actions.server">
+            <field name="name">Project Domain</field>
+            <field name="type">ir.actions.server</field>
+            <field name="model_id" ref="project.model_project_project" />
+            <field name="state">code</field>
+            <field name="code">
+action = [
+    ('privacy_visibility', '=', 'portal')
+]
+            </field>
+        </record>
+
+        <record id="action_project_tasks_portal_domain" model="ir.actions.server">
+            <field name="name">Project Tasks Domain</field>
+            <field name="type">ir.actions.server</field>
+            <field name="model_id" ref="project.model_project_project" />
+            <field name="state">code</field>
+            <field name="code">
+action = [
+    ('project_id', 'in', env.context.get('projects_ids'))
+]
+            </field>
+        </record>
+
         <record id="open_view_project_all" model="ir.actions.act_window">
             <field name="name">Projects</field>
             <field name="res_model">project.project</field>

@@ -9,15 +9,9 @@ from odoo.tools import consteq
 
 
 class PortalAccount(CustomerPortal):
-    
+
     def _get_account_invoice_domain(self):
-        partner = request.env.user.partner_id
-        domain = [
-            ('type', 'in', ['out_invoice', 'out_refund']),
-            ('message_partner_ids', 'child_of', [partner.commercial_partner_id.id]),
-            ('state', 'in', ['open', 'paid', 'cancel'])
-        ]
-        return domain
+        return request.env.ref('account.action_invoice_portal_domain').run()
 
     def _prepare_portal_layout_values(self):
         values = super(PortalAccount, self)._prepare_portal_layout_values()
