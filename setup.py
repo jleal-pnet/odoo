@@ -100,7 +100,7 @@ def py2exe_options():
                         'requests',
                         'select',
                         'smtplib',
-                        'suds',
+                        'zeep',
                         'uuid',
                         'vatnumber',
                         'vobject',
@@ -161,7 +161,7 @@ setup(
         'qrcode',
         'reportlab',  # windows binary pypi.python.org/pypi/reportlab
         'requests',
-        'suds-jurko',
+        'zeep',
         'vatnumber',
         'vobject',
         'werkzeug',
