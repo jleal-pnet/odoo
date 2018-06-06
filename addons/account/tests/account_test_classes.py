@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import logging
+
 _logger = logging.getLogger(__name__)
 
 from odoo.tests.common import HttpCase, tagged
 from odoo.exceptions import ValidationError
-from odoo.tools import float_is_zero
 
 
 class AccountingTestCase(HttpCase):
@@ -51,14 +51,14 @@ class AccountingTestCase(HttpCase):
 
             # search for matching values in theorical_dicts
             matching_index = _get_matching_record(record_values, theorical_dicts)
-            if matching_index:
-                theorical_dicts.remove(matching_index)
+            if matching_index is not False:
+                del theorical_dicts[matching_index]
             else:
-                return False
+                raise ValidationError('Unexpected record found: %s.' % str(record_values))
 
         # theorical_dicts should be empty, otherwise there are missing lines in checked records
         if theorical_dicts:
-            return False
+            raise ValidationError('Remaining theorical line (not found): %s)' % str(theorical_dicts))
         return True
 
     def ensure_account_property(self, property_name):

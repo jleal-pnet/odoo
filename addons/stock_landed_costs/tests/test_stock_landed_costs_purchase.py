@@ -223,7 +223,7 @@ class TestLandedCosts(TestStockLandedCostsCommon):
                 {'name': 'equal split - Refrigerator: 2.0 already out',         'debit': 1.0,   'credit': 0.0},
                 {'name': 'equal split - Refrigerator: 2.0 already out',         'debit': 0.0,   'credit': 1.0},
             ]
-        self.assertTrue(self.check_complete_records(stock_negative_landed_cost.account_move_id.line_ids, move_lines))
+        self.check_complete_records(stock_negative_landed_cost.account_move_id.line_ids, move_lines)
 
     def _process_incoming_shipment(self):
         """ Two product incoming shipment. """
