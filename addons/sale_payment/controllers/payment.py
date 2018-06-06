@@ -90,7 +90,7 @@ class PaymentPortal(http.Controller):
             'callback_method': callback_method,
         }
 
-        order_sudo._create_payment_transaction(vals)
+        order_sudo._create_payment_transaction(vals, **kwargs)
 
         params['success'] = 'pay_sale'
 

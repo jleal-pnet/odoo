@@ -81,7 +81,7 @@ class PaymentPortal(http.Controller):
             'callback_method': callback_method,
         }
 
-        invoice_sudo._create_payment_transaction(vals)
+        invoice_sudo._create_payment_transaction(vals, **kwargs)
 
         params['success'] = 'pay_invoice'
         return request.redirect(_build_url_w_params(success_url, params))

@@ -49,7 +49,7 @@ class AccountPayment(models.Model):
         }
 
     @api.multi
-    def _create_payment_transaction(self, vals=None):
+    def _create_payment_transaction(self, vals=None, **kwargs):
         for pay in self:
             if pay.payment_transaction_id:
                 raise ValidationError(_('A payment transaction already exists.'))

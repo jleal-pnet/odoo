@@ -222,6 +222,6 @@ class sale_quote(http.Controller):
             'type': 'server2server',
         }
 
-        order._create_payment_transaction(vals)
+        order._create_payment_transaction(vals, **kwargs)
 
         return request.redirect('/quote/%s/%s' % (order_id, order.access_token))

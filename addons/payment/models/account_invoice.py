@@ -24,7 +24,7 @@ class AccountInvoice(models.Model):
         return self.transaction_ids.get_last_transaction()
 
     @api.multi
-    def _create_payment_transaction(self, vals):
+    def _create_payment_transaction(self, vals, **kwargs):
         '''Similar to self.env['payment.transaction'].create(vals) but the values are filled with the
         current invoices fields (e.g. the partner or the currency).
         :param vals: The values to create a new payment.transaction.
@@ -85,7 +85,7 @@ class AccountInvoice(models.Model):
 
         # Process directly if payment_token
         if transaction.payment_token_id:
-            transaction.s2s_do_transaction()
+            transaction.s2s_do_transaction(**kwargs)
 
         return transaction
 

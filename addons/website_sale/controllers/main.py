@@ -892,7 +892,7 @@ class WebsiteSale(http.Controller):
         # Create transaction
         vals = {'payment_token_id': pm_id}
 
-        order._create_payment_transaction(vals)
+        order._create_payment_transaction(vals, **kwargs)
         return request.redirect('/shop/payment/validate')
 
     @http.route('/shop/payment/get_status/<int:sale_order_id>', type='json', auth="public", website=True)
