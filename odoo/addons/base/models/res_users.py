@@ -358,6 +358,12 @@ class Users(models.Model):
                 self = self.sudo()
 
         res = super(Users, self).write(values)
+
+        # if not any of the field of model is stored field, then it update write_date
+        if not any(self._fields[name].store for name in values):
+            # perform a dummy write to force the update of write_date
+            for user in self:
+                user.update({'active': user.active})
         if 'company_id' in values:
             for user in self:
                 # if partner is global we keep it that way
