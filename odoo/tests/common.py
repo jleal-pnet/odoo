@@ -224,6 +224,70 @@ class BaseCase(TreeCase, MetaCase('DummyCase', (object,), {})):
         else:
             yield
 
+    def assertRecordsetEquals(self, records, theorical_dicts):
+        ''' Compare records with theorical list of dictionaries representing the expected results.
+        The order of candidates doesn't matter.
+        Comparison between falsy values is supported: False match with None.
+        Comparison between monetary field is also treated according the currency's decimal places.
+
+        :param records:             The records to compare.
+        :param theorical_dicts:     The expected results as a list of dicts.
+        :return:                    True if all is equivalent, False otherwise.
+        '''
+        if len(records) != len(theorical_dicts):
+            self.fail('Too many records to compare: %d != %d.' % (len(records), len(theorical_dicts)))
+
+        keys = list(theorical_dicts[0].keys())
+        monetary_fields = records.env['ir.model.fields'].search([
+            ('model', '=', records._name), ('name', 'in', keys), ('ttype', '=', 'monetary')
+        ])
+        monetary_field_names = monetary_fields.mapped('name')
+
+        def _get_matching_candidate_index(record, record_values, theorical_dicts):
+            # Search for a theorical dict having same values as the record.
+            index = 0
+            for candidate in theorical_dicts:
+                match = True
+                for field_name in keys:
+                    record_value = record_values[field_name]
+                    candidate_value = candidate[field_name]
+                    if field_name in monetary_field_names:
+                        # Compare monetary field.
+                        currency_field = record._fields[field_name]
+                        currency_field_name = currency_field._related_currency_field
+                        currency = getattr(record, currency_field_name)
+                        if currency.compare_amounts(candidate_value, record_value)\
+                                if currency else candidate_value != record_value:
+                            match = False
+                            break
+                    elif (candidate_value or record_value) and record_value != candidate_value:
+                        # Compare others fields if not both interpreted as null value.
+                        match = False
+                        break
+                if match:
+                    return index
+                index += 1
+            return False
+
+        # Perform a read to compare relational fields more easily.
+        records_values = records.read(keys, load=False)
+        index = 0
+        for record in records:
+            record_values = records_values[index]
+
+            # Search for matching values in theorical_dicts.
+            matching_index = _get_matching_candidate_index(record, record_values, theorical_dicts)
+            if matching_index is not False:
+                del theorical_dicts[matching_index]
+            else:
+                self.fail('Unexpected record found: %s.' % str(getattr(record, k) for k in keys))
+            index += 1
+
+        # Theorical_dicts should be empty, otherwise there are missing lines in checked records.
+        if theorical_dicts:
+            self.fail('Remaining theorical line (not found): %s)' % str(theorical_dicts))
+        return True
+
     def shortDescription(self):
         doc = self._testMethodDoc
         return doc and ' '.join(l.strip() for l in doc.splitlines() if not l.isspace()) or None
