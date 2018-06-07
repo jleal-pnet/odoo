@@ -56,7 +56,7 @@ class TestAccountMoveTaxesEdition(AccountingTestCase):
 
         move = move_form.save()
 
-        self.assertRecordsetEquals(move.line_ids, [
+        self.assertRecordsEqual(move.line_ids, [
             {'name': 'debit_line_1',    'debit': 1000.0,    'credit': 0.0,      'tax_ids': [self.percent_tax.id],   'tax_line_id': False},
             {'name': 'tax_line',        'debit': 100.0,     'credit': 0.0,      'tax_ids': [],                      'tax_line_id': self.percent_tax.id},
             {'name': 'credit_line_1',   'debit': 0.0,       'credit': 1100.0,   'tax_ids': [],                      'tax_line_id': False},
@@ -107,7 +107,7 @@ class TestAccountMoveTaxesEdition(AccountingTestCase):
 
         move = move_form.save()
 
-        self.assertRecordsetEquals(move.line_ids, [
+        self.assertRecordsEqual(move.line_ids, [
             {'name': 'debit_line_1',    'debit': 2000.0,    'credit': 0.0,      'tax_ids': [self.percent_tax.id],   'tax_line_id': False},
             {'name': 'tax_line',        'debit': 200.0,     'credit': 0.0,      'tax_ids': [],                      'tax_line_id': self.percent_tax.id},
             {'name': 'credit_line_1',   'debit': 0.0,       'credit': 2200.0,   'tax_ids': [],                      'tax_line_id': False},
@@ -183,7 +183,7 @@ class TestAccountMoveTaxesEdition(AccountingTestCase):
 
         move = move_form.save()
 
-        self.assertRecordsetEquals(move.line_ids, [
+        self.assertRecordsEqual(move.line_ids, [
             {'name': 'debit_line_1',    'debit': 1000.0,    'credit': 0.0,      'tax_ids': [self.percent_tax.id],   'tax_line_id': False},
             {'name': 'tax_line',        'debit': 300.0,     'credit': 0.0,      'tax_ids': [],                      'tax_line_id': self.percent_tax.id},
             {'name': 'credit_line_1',   'debit': 0.0,       'credit': 1105.0,   'tax_ids': [],                      'tax_line_id': False},
