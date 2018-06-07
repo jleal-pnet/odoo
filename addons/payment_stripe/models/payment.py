@@ -1,13 +1,14 @@
 # coding: utf-8
 
+import json
 import logging
 import requests
 import pprint
 
+from werkzeug import urls
+
 from odoo import api, fields, models, _
 from odoo.addons.payment.models.payment_acquirer import ValidationError
-from odoo.exceptions import UserError
-from odoo.tools.safe_eval import safe_eval
 from odoo.tools.float_utils import float_round
 
 _logger = logging.getLogger(__name__)
@@ -35,32 +36,35 @@ class PaymentAcquirerStripe(models.Model):
         help="A relative or absolute URL pointing to a square image of your "
              "brand or product. As defined in your Stripe profile. See: "
              "https://stripe.com/docs/checkout")
+    payment_method_ids = fields.Many2many('stripe.payment.method', string="Payment Method")
 
     @api.multi
     def stripe_form_generate_values(self, tx_values):
         self.ensure_one()
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
         stripe_tx_values = dict(tx_values)
         temp_stripe_tx_values = {
-            'company': self.company_id.name,
             'amount': tx_values['amount'],  # Mandatory
             'currency': tx_values['currency'].name,  # Mandatory anyway
-            'currency_id': tx_values['currency'].id,  # same here
-            'address_line1': tx_values.get('partner_address'),  # Any info of the partner is not mandatory
-            'address_city': tx_values.get('partner_city'),
-            'address_country': tx_values.get('partner_country') and tx_values.get('partner_country').name or '',
             'email': tx_values.get('partner_email'),
-            'address_zip': tx_values.get('partner_zip'),
+            'city': tx_values.get('partner_city'),
+            'country': tx_values.get('partner_country').code,
             'name': tx_values.get('partner_name'),
-            'phone': tx_values.get('partner_phone'),
+            'reference': tx_values.get('reference'),
+            'return_url': tx_values.get('return_url'),
+            'redirect_url': urls.url_join(base_url, '/payment/stripe/return?acquirer_id=' + str(self.id)),
+            'city': tx_values.get('partner_city'),
+            'line1': tx_values.get('partner_address'),
+            'postal_code': tx_values.get('partner_zip'),
+            'state': tx_values.get('partner_state').code
         }
-
         temp_stripe_tx_values['returndata'] = stripe_tx_values.pop('return_url', '')
         stripe_tx_values.update(temp_stripe_tx_values)
         return stripe_tx_values
 
     @api.model
     def _get_stripe_api_url(self):
-        return 'api.stripe.com/v1'
+        return 'https://api.stripe.com/v1'
 
     @api.model
     def stripe_s2s_form_process(self, data):
@@ -100,12 +104,113 @@ class PaymentAcquirerStripe(models.Model):
         res['tokenize'].append('stripe')
         return res
 
+    def get_stripe_url(self):
+        return self._get_stripe_api_url()
+
 
 class PaymentTransactionStripe(models.Model):
     _inherit = 'payment.transaction'
 
+    stripe_payment_type = fields.Char(string='Stripe Payment Type', groups='base.group_user')
+
+    def get_stripe_resp(self, data, req_type):
+        headers = {'AUTHORIZATION': 'Bearer %s' % self.acquirer_id.stripe_secret_key}
+        url = "%s/%s" % (self.acquirer_id.get_stripe_url(), req_type)
+        resp = requests.post(url, data=data, headers=headers)
+        return json.loads(resp.text)
+
+    def _do_generic_stripe_payment(self, **kwargs):
+        self = self.search([('reference', '=', kwargs.get('metadata', {}).get('reference'))])
+        charge_data = {
+            'amount': kwargs.get('amount'),
+            'currency': kwargs.get('currency'),
+            'source': kwargs.get('id'),
+        }
+        charge_resp = self.get_stripe_resp(charge_data, 'charges')
+        _logger.info('Stripe: take charge %s %s' % (charge_resp.get('source', {}).get('type'), pprint.pformat(charge_resp.get('source'))))
+        return charge_resp.get('source')
+
+    def get_stripe_source_data(self, **kwargs):
+        return {
+            "type": kwargs.get('type'),
+            'amount': kwargs.get('amount'),
+            'currency': kwargs.get('currency'),
+            'metadata[return_url]': kwargs.get('metadata[return_url]'),
+            'metadata[reference]':  kwargs.get('metadata[reference]'),
+            'owner[name]': kwargs.get('owner[name]'),
+            'owner[address][city]': kwargs.get('owner[address][city]'),
+            'owner[address][line1]': kwargs.get('owner[address][line1]'),
+            'owner[address][state]': kwargs.get('owner[address][state]'),
+            'owner[address][country]': kwargs.get('owner[address][country]'),
+            'owner[address][postal_code]': kwargs.get('owner[address][postal_code]'),
+        }
+
+    def _do_card_stripe_payment(self, **kwargs):
+        source_data = self.get_stripe_source_data(**kwargs)
+        source_data.update({
+            'card[number]': kwargs.get('card[number]'),
+            'card[exp_month]': kwargs.get('card[exp_month]'),
+            'card[exp_year]': kwargs.get('card[exp_year]'),
+            'card[cvc]': kwargs.get('card[cvc]'),
+        })
+        source_resp = self.get_stripe_resp(source_data, 'sources')
+        if not source_resp.get('id'):
+            raise ValidationError(_('Stripe: cannot create token card %s' % pprint.pformat(source_resp)))
+        _logger.info('Stripe: create token card %s' % pprint.pformat(source_resp))
+        charge_data = {
+            'amount': kwargs.get('amount'),
+            'currency': kwargs.get('currency'),
+            'source': source_resp.get('id'),
+        }
+        charge_resp = self.get_stripe_resp(charge_data, 'charges')
+        if not charge_resp.get('id'):
+            raise ValidationError(_('Stripe: cannot take charge card %s' % pprint.pformat(charge_resp)))
+        _logger.info('Stripe: take charge card  %s' % pprint.pformat(charge_resp))
+        self.form_feedback(charge_resp.get('source'), 'stripe')
+        return_url = charge_resp.get('source').get('metadata', {}).get('return_url') or "/"
+        return return_url
+
+    def _do_sepa_debit_stripe_payment(self, **kwargs):
+        source_data = self.get_stripe_source_data(**kwargs)
+        source_data.update({
+            "sepa_debit[iban]": kwargs.get('sepa_debit[iban]'),
+        })
+        source_resp = self.get_stripe_resp(source_data, 'sources')
+        if not source_resp.get('id'):
+            raise ValidationError(_('Stripe: cannot create source sepa debit %s' % pprint.pformat(source_resp)))
+        _logger.info('Stripe: create source sepa debit %s' % pprint.pformat(source_resp))
+        cust_data = {
+            'email': self.env.user.partner_id.email,
+            'source': source_resp.get('id')
+        }
+        cust_resp = self.get_stripe_resp(cust_data, 'customers')
+        if not cust_resp.get('id'):
+            raise ValidationError(_('Stripe: cannot create customer sepa debit %s' % pprint.pformat(cust_resp)))
+        _logger.info('Stripe: create customer sepa debit %s' % pprint.pformat(cust_resp))
+        charge_data = {
+            'amount': kwargs.get('amount'),
+            'currency': kwargs.get('currency'),
+            'source': source_resp.get('id'),
+            'customer': cust_resp.get('id')
+        }
+        response_data = self.get_stripe_resp(charge_data, 'charges')
+        if not response_data.get('id'):
+            raise ValidationError(_('Stripe: cannot take charge sepa debit %s' % pprint.pformat(response_data)))
+        _logger.info('Stripe: take charge sepa debit %s' % pprint.pformat(response_data))
+        self.form_feedback(response_data.get('source'), 'stripe')
+        return_url = response_data.get('source').get('metadata', {}).get('return_url') or "/"
+        return return_url
+
+    def do_stripe_payment(self, **kwargs):
+        if kwargs.get('type') == 'card':
+            return self._do_card_stripe_payment(**kwargs)
+        elif kwargs.get('type') == 'sepa_debit':
+            return self._do_sepa_debit_stripe_payment(**kwargs)
+        else:
+            return self._do_generic_stripe_payment(**kwargs)
+
     def _create_stripe_charge(self, acquirer_ref=None, tokenid=None, email=None):
-        api_url_charge = 'https://%s/charges' % (self.acquirer_id._get_stripe_api_url())
+        api_url_charge = '%s/charges' % (self.acquirer_id._get_stripe_api_url())
         charge_params = {
             'amount': int(self.amount if self.currency_id.name in INT_CURRENCIES else float_round(self.amount * 100, 2)),
             'currency': self.currency_id.name,
@@ -136,7 +241,7 @@ class PaymentTransactionStripe(models.Model):
 
 
     def _create_stripe_refund(self):
-        api_url_refund = 'https://%s/refunds' % (self.acquirer_id._get_stripe_api_url())
+        api_url_refund = '%s/refunds' % (self.acquirer_id._get_stripe_api_url())
 
         refund_params = {
             'charge': self.acquirer_reference,
@@ -193,25 +298,33 @@ class PaymentTransactionStripe(models.Model):
         if self.state != 'draft':
             _logger.info('Stripe: trying to validate an already validated tx (ref %s)', self.reference)
             return True
-
         status = tree.get('status')
-        if status == 'succeeded':
+        if status in ['succeeded', 'consumed']:
             self.write({
                 'date': fields.datetime.now(),
                 'acquirer_reference': tree.get('id'),
+                'stripe_payment_type': tree.get('type')
             })
             self._set_transaction_done()
             self.execute_callback()
             if self.payment_token_id:
                 self.payment_token_id.verified = True
             return True
+        elif status in ['pending', 'chargeable']:
+            self.write({
+                'date': fields.datetime.now(),
+                'acquirer_reference': tree.get('id'),
+                'stripe_payment_type': tree.get('type')
+            })
+            self._set_transaction_pending()
         else:
-            error = tree['error']['message']
+            error = tree.get('error', {}).get('message')
             _logger.warn(error)
             self.sudo().write({
                 'state_message': error,
                 'acquirer_reference': tree.get('id'),
                 'date': fields.datetime.now(),
+                'stripe_payment_type': tree.get('type')
             })
             self._set_transaction_cancel()
             return False
@@ -239,7 +352,7 @@ class PaymentTokenStripe(models.Model):
         payment_acquirer = self.env['payment.acquirer'].browse(values.get('acquirer_id'))
         # when asking to create a token on Stripe servers
         if values.get('cc_number'):
-            url_token = 'https://%s/tokens' % payment_acquirer._get_stripe_api_url()
+            url_token = '%s/tokens' % payment_acquirer._get_stripe_api_url()
             payment_params = {
                 'card[number]': values['cc_number'].replace(' ', ''),
                 'card[exp_month]': str(values['cc_expiry'][:2]),
@@ -282,7 +395,7 @@ class PaymentTokenStripe(models.Model):
             raise Exception('We are unable to process your credit card information.')
 
         payment_acquirer = self.env['payment.acquirer'].browse(acquirer_id or self.acquirer_id.id)
-        url_customer = 'https://%s/customers' % payment_acquirer._get_stripe_api_url()
+        url_customer = '%s/customers' % payment_acquirer._get_stripe_api_url()
 
         customer_params = {
             'source': token['id'],
@@ -305,3 +418,10 @@ class PaymentTokenStripe(models.Model):
         }
 
         return values
+
+
+class PaymentMethodStripe(models.Model):
+    _name = 'stripe.payment.method'
+
+    name = fields.Char(string="Payment Name")
+    country_ids = fields.Many2many('res.country', string="Country")

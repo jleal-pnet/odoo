@@ -118,7 +118,7 @@
                             </t>
                         </ul>
                     </div>
-                    <div t-attf-id="o_payment_form_acq_{{acq.id}}" t-attf-class="d-none {{'card-footer' if acq.save_token == 'ask' else ''}}">
+                    <div t-attf-id="o_payment_form_acq_{{acq.id}}" t-attf-class="d-none {{'card-footer' if acq.save_token == 'ask' else ''}}" class="stripe_card_type">
                         <label t-if="acq.save_token == 'ask'"><input type="checkbox" name="o_payment_form_save_token" data-remove-me=""/> Save my payment data</label>
                     </div>
                 </t>
