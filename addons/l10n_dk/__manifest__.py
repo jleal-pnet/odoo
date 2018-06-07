@@ -1,11 +1,11 @@
-# -*- encoding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Author: Odoo House ApS <info@odoohouse.dk> 
 
 # Copyright (c) 2018 - Present | Odoo House ApS - https://odoohouse.dk
 # All rights reserved.
 
 {
-    'name': 'Denmark - Accounting (v. 1.0)',
+    'name': 'Denmark - Accounting',
     'version': '1.0',
     'author': 'Odoo House ApS',
     'website': 'https://odoohouse.dk',
@@ -16,13 +16,14 @@ Localization Module for Denmark
 This is the module to manage the **accounting chart for Denmark**. Cover both one-man business as well as I/S, IVS, ApS and A/S
 
 **Modulet opsætter:**
+
 - **Dansk kontoplan**
+
 - Dansk moms
         - 25% moms
         - Hotel moms 12,50%
         - Resturationsmoms 6,25%
         - Omvendt betalingspligt
-
 - Konteringsgrupper
         - EU (Virksomhed)
         - EU (Privat)
@@ -33,9 +34,8 @@ This is the module to manage the **accounting chart for Denmark**. Cover both on
         - Momsafregning
             - Afregning
             - Rubrik A, B og C
-
 - **Anglo-Saxon regnskabsmetode**
-.
+
 Produkt setup:
 ==============
 **Vare**
@@ -70,16 +70,12 @@ Copyright 2018 Odoo House ApS
     'depends': ['account', 'base_iban', 'base_vat'],
     'demo_xml': [],
     'data': [
-        'data/account_account_types.xml',
-        'data/account_chart.xml',
-        'data/account_tax.xml',
-        'data/account_fiscal_position_template.xml',
-        'data/account_fiscal_position_tax_template.xml',
-        'data/account_fiscal_position_account_template.xml',
-        'data/account_chart_template_data.xml',
-        'data/account_financial_report.xml',
-        'data/account_defaults.xml',
+        'data/account_type_data.xml',
+        'data/l10n_dk_chart_data.xml',
+        'data/account_tax_data.xml',
+        'data/account_fiscal_position_data.xml',
+        'data/account_chart_template_configuration_data.xml',
+#         'data/account_financial_report.xml',
+#         'data/account_defaults.xml',
     ],
-    'active': False,
-    'installable': True
 }

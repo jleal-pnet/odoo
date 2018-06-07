@@ -232,7 +232,7 @@
             <field name="parent_id" ref="account_financial_report_immaterielleanlaegsaktiver"/>
             <field name="display_detail">detail_with_hierarchy</field>
             <field name="type">account_type</field>
-            <field name="account_type_ids" eval="[(4,ref('l10n_dk.account_type_Goodwill_licenses_etc'))]"/>
+            <field name="account_type_ids" eval="[(4,ref('l10n_dk.account_type_goodwill_licenses_etc'))]"/>
             <field name="style_overwrite" eval="3"/>
             <field name="sequence">125</field>
        </record>
@@ -457,7 +457,7 @@
             <field name="parent_id" ref="account_financial_report_kortfristetgaeld"/>
             <field name="display_detail">detail_with_hierarchy</field>
             <field name="type">account_type</field>
-            <field name="account_type_ids" eval="[(4,ref('l10n_dk.account_type_Payroll_related_liabilities'))]"/>
+            <field name="account_type_ids" eval="[(4,ref('l10n_dk.account_type_payroll_related_liabilities'))]"/>
             <field name="style_overwrite" eval="3"/>
             <field name="sequence">151</field>
         </record>
