@@ -7,7 +7,7 @@
     'summary': 'Inventory, Logistics, Warehousing',
     'description': "",
     'website': 'https://www.odoo.com/page/warehouse',
-    'depends': ['product', 'barcodes'],
+    'depends': ['product', 'barcodes','sale_management','purchase'],
     'category': 'Warehouse',
     'sequence': 13,
     'demo': [
