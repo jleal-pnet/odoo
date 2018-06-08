@@ -22,6 +22,45 @@ class AccountingTestCase(HttpCase):
             _logger.warn('Test skipped because there is no chart of account defined ...')
             self.skipTest("No Chart of account found")
 
+    def check_complete_records(self, records, theorical_dicts):
+        ''' Compare records with theorical list of dictionaries representing the expected results.
+        The dictionary uses field names as keys. Field names could be either applied on the record itself
+        (e.g. 'debit') or a composite path to another records (e.g. 'move_id.line_ids.debit').
+        Comparison for many2one field could be either an id [resp. a list of ids] or a dict [resp. a list of dict].
+
+        :param records:             The records to compare.
+        :param theorical_dicts:     The expected results as a list of dicts.
+        :return:                    True if all is equivalent, False otherwise.
+        '''
+        if len(records) != len(theorical_dicts):
+            raise ValidationError('Too many records to compare: %d != %d.' % (len(records), len(theorical_dicts)))
+
+        def _get_matching_record(record_values, theorical_dicts):
+            # Search for a theorical dict having same values as the record.
+            index = 0
+            for candidate in theorical_dicts:
+                if candidate == record_values:
+                    return index
+                index += 1
+            return False
+
+        keys = list(theorical_dicts[0].keys())
+        for record_values in records.read(keys, load=False):
+            # remove 'id' field which is automatically added by read()
+            del(record_values['id'])
+
+            # search for matching values in theorical_dicts
+            matching_index = _get_matching_record(record_values, theorical_dicts)
+            if matching_index is not False:
+                del theorical_dicts[matching_index]
+            else:
+                raise ValidationError('Unexpected record found: %s.' % str(record_values))
+
+        # theorical_dicts should be empty, otherwise there are missing lines in checked records
+        if theorical_dicts:
+            raise ValidationError('Remaining theorical line (not found): %s)' % str(theorical_dicts))
+        return True
+
     def ensure_account_property(self, property_name):
         '''Ensure the ir.property targeting an account.account passed as parameter exists.
         In case it's not: create it with a random account. This is useful when testing with
