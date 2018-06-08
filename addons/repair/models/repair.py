@@ -78,7 +78,7 @@ class Repair(models.Model):
         'stock.production.lot', 'Lot/Serial',
         domain="[('product_id','=', product_id)]",
         help="Products repaired are all belonging to this lot", oldname="prodlot_id")
-    guarantee_limit = fields.Date('Warranty Expiration', states={'confirmed': [('readonly', True)]})
+    warranty_limit = fields.Date(related='lot_id.warranty_expiration_date',store="True", help="Warranty expiration date of the lot/serial Number")
     operations = fields.One2many(
         'repair.line', 'repair_id', 'Parts',
         copy=True, readonly=True, states={'draft': [('readonly', False)]})
@@ -115,7 +115,7 @@ class Repair(models.Model):
     amount_tax = fields.Float('Taxes', compute='_amount_tax', store=True)
     amount_total = fields.Float('Total', compute='_amount_total', store=True)
     tracking = fields.Selection('Product Tracking', related="product_id.tracking")
-
+    
     @api.one
     @api.depends('partner_id')
     def _compute_default_address_id(self):
@@ -158,7 +158,7 @@ class Repair(models.Model):
 
     @api.onchange('product_id')
     def onchange_product_id(self):
-        self.guarantee_limit = False
+        self.warranty_limit = False
         self.lot_id = False
         if self.product_id:
             self.product_uom = self.product_id.uom_id.id
@@ -184,7 +184,7 @@ class Repair(models.Model):
             self.address_id = addresses['delivery'] or addresses['contact']
             self.partner_invoice_id = addresses['invoice']
             self.pricelist_id = self.partner_id.property_product_pricelist.id
-
+     
     @api.multi
     def button_dummy(self):
         # TDE FIXME: this button is very interesting
@@ -543,7 +543,7 @@ class RepairLine(models.Model):
         """ On change of operation type it sets source location, destination location
         and to invoice field.
         @param product: Changed operation type.
-        @param guarantee_limit: Guarantee limit of current record.
+        @param warranty_limit: Guarantee limit of current record.
         @return: Dictionary of values.
         """
         if not self.type:
