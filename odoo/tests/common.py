@@ -224,32 +224,40 @@ class BaseCase(TreeCase, MetaCase('DummyCase', (object,), {})):
         else:
             yield
 
-    def assertRecordsetEquals(self, recordset, theoretical_dicts):
-        ''' Compare a recordset with a list of dictionaries representing the expected results.
+    def assertRecordsetEquals(self, records, theorical_dicts):
+        ''' Compare records with theorical list of dictionaries representing the expected results.
+        The order of candidates doesn't matter.
+        Comparison between falsy values is supported: False match with None.
+        Comparison between monetary field is also treated according the currency's decimal places.
 
-        Note that:
-          - The order of candidates doesn't matter.
-          - Comparison between falsy values is supported: False match with None.
-          - Comparison between monetary field is also treated according the currency's rounding.
-
-        :param recordset:             The records to compare.
-        :param theoretical_dicts:     The expected results as a list of dicts.
-        :return:                      True if all is equivalent, False otherwise.
+        :param records:             The records to compare.
+        :param theorical_dicts:     The expected results as a list of dicts.
+        :return:                    True if all is equivalent, False otherwise.
         '''
-        def _get_matching_candidate_index(record, record_values, theoretical_dicts):
-            # Search for a theoretical dict having same values as the record.
+        if len(records) != len(theorical_dicts):
+            self.fail('Too many records to compare: %d != %d.' % (len(records), len(theorical_dicts)))
+
+        keys = list(theorical_dicts[0].keys())
+        monetary_fields = records.env['ir.model.fields'].search([
+            ('model', '=', records._name), ('name', 'in', keys), ('ttype', '=', 'monetary')
+        ])
+        monetary_field_names = monetary_fields.mapped('name')
+
+        def _get_matching_candidate_index(record, record_values, theorical_dicts):
+            # Search for a theorical dict having same values as the record.
             index = 0
-            for candidate in theoretical_dicts:
+            for candidate in theorical_dicts:
                 match = True
-                for field_name in candidate.keys():
+                for field_name in keys:
                     record_value = record_values[field_name]
                     candidate_value = candidate[field_name]
                     if field_name in monetary_field_names:
                         # Compare monetary field.
-                        currency_field_name = record._fields[field_name]._related_currency_field
-                        record_currency = getattr(record, currency_field_name)
-                        if record_currency.compare_amounts(candidate_value, record_value)\
-                                if record_currency else candidate_value != record_value:
+                        currency_field = record._fields[field_name]
+                        currency_field_name = currency_field._related_currency_field
+                        currency = getattr(record, currency_field_name)
+                        if currency.compare_amounts(candidate_value, record_value)\
+                                if currency else candidate_value != record_value:
                             match = False
                             break
                     elif (candidate_value or record_value) and record_value != candidate_value:
@@ -261,33 +269,23 @@ class BaseCase(TreeCase, MetaCase('DummyCase', (object,), {})):
                 index += 1
             return False
 
-        # if the length or both things to compare is different, we can already tell they're not equal
-        if len(recordset) != len(theoretical_dicts):
-            self.fail('Wrong number of records to compare: %d != %d.' % (len(recordset), len(theoretical_dicts)))
-
-        # monetary fields are special cases, as value read by the ORM isn't rounded (it is rounded on the write
-        # but, in some case, the stored value might be different than what's given to write()). We thus need to
-        monetary_fields = recordset.env['ir.model.fields'].search([
-            ('model', '=', recordset._name), ('ttype', '=', 'monetary')
-        ])
-        monetary_field_names = monetary_fields.mapped('name')
-
         # Perform a read to compare relational fields more easily.
-        all_records_values = recordset.read([], load=False)
+        records_values = records.read(keys, load=False)
         index = 0
-        for record in recordset:
-            record_values = all_records_values[index]
-            # Search for matching values in theoretical_dicts.
-            matching_index = _get_matching_candidate_index(record, record_values, theoretical_dicts)
+        for record in records:
+            record_values = records_values[index]
+
+            # Search for matching values in theorical_dicts.
+            matching_index = _get_matching_candidate_index(record, record_values, theorical_dicts)
             if matching_index is not False:
-                del theoretical_dicts[matching_index]
+                del theorical_dicts[matching_index]
             else:
-                self.fail('Unexpected record found: %s.' % record_values)
+                self.fail('Unexpected record found: %s.' % str(getattr(record, k) for k in keys))
             index += 1
 
-        # theoretical_dicts should be empty, otherwise there are missing lines in checked recordset.
-        if theoretical_dicts:
-            self.fail('Remaining theoretical line (not found): %s)' % str(theoretical_dicts))
+        # Theorical_dicts should be empty, otherwise there are missing lines in checked records.
+        if theorical_dicts:
+            self.fail('Remaining theorical line (not found): %s)' % str(theorical_dicts))
         return True
 
     def shortDescription(self):
