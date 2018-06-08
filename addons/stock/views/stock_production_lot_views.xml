@@ -32,6 +32,24 @@
                                 <field name="product_uom_id" readonly="1" groups="uom.group_uom"/>
                             </div>
                         <field name="ref"/>
+                        <field name="purchase_order_ids" widget="many2many" readonly="True">
+                            <tree>
+                                <field name="name"/>
+                                <field name="partner_id"/>
+                                <field name="amount_total"/>
+                                <field name="state" invisible="1"/>
+                            </tree>
+                        </field>
+                    </group>
+                    <group>
+                        <field name="sale_order_ids" widget="many2many" readonly="True">
+                            <tree>
+                                <field name="name"/>
+                                <field name="partner_id"/>
+                                <field name="amount_total"/>
+                                <field name="state" invisible="1"/>
+                            </tree>
+                        </field>
                     </group>
                 </group>
                 </sheet>
@@ -59,6 +77,24 @@
                     <group name="main_group">
                         <field name="product_id" attrs="{'readonly': [('product_id', '!=', False)]}" force_save="1" help="Product this lot/serial number contains. You cannot change it anymore if it has already been moved."/>
                         <field name="ref"/>
+                        <field name="purchase_order_ids" widget="many2many" readonly="True">
+                            <tree>
+                                <field name="name"/>
+                                <field name="partner_id"/>
+                                <field name="amount_total"/>
+                                <field name="state" invisible="1"/>
+                            </tree>
+                        </field>
+                    </group>
+                    <group>
+                        <field name="sale_order_ids" widget="many2many" readonly="True">
+                            <tree>
+                                <field name="name"/>
+                                <field name="partner_id"/>
+                                <field name="amount_total"/>
+                                <field name="state" invisible="1"/>
+                            </tree>
+                        </field>
                     </group>
                 </sheet>
             </form>
