@@ -2,8 +2,8 @@
 {
     'name' : 'Products Expiration Date',
     'category' : 'Warehouse',
-    'depends' : ['stock'],
-    'demo' : [],
+    'depends' : ['stock','mail'],
+    'demo' : ['data/product_expiry_demo.xml'],
     'description': """
 Track different dates on products and production lots.
 ======================================================
