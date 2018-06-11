@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo noupdate="1">
     <!--Resultatopgørelse-->
-    <!-- account.data_account_type_revenue -->
-    <record id="account_type_revenue" model="account.account.type">
-        <field name="name">Omsætning</field>
-    </record>
-    <!-- account.data_account_type_direct_costs -->
-    <record id="account_type_direct_costs" model="account.account.type">
-        <field name="name">Direkte omkostninger</field>
-    </record>
     <record id="account_type_staff_costs" model="account.account.type">
         <field name="name">Personaleomkostninger</field>
     </record>
@@ -23,10 +15,6 @@
     </record>
     <record id="account_type_administration_costs" model="account.account.type">
         <field name="name">Administrationsomkostninger</field>
-    </record>
-    <!-- account.data_account_type_depreciation -->
-    <record id="account_type_depreciation" model="account.account.type">
-        <field name="name">Af- og nedskrivninger</field>
     </record>
     <record id="account_type_financial_income" model="account.account.type">
         <field name="name">Finansielle indtægter</field>
@@ -62,12 +50,6 @@
         <field name="name">Igangværende arbejder</field>
         <field name="include_initial_balance" eval="True"/>
     </record>
-    <!-- account.data_account_type_prepayments -->
-    <record id="account_type_prepayments" model="account.account.type">
-        <field name="name">Forudbetaling til leverandører</field>
-        <field name="include_initial_balance" eval="True"/>
-    </record>
-    <!-- account.data_account_type_receivable -->
     <record id="account_type_other_receivables" model="account.account.type">
         <field name="name">Andre tilgodehavender</field>
         <field name="include_initial_balance" eval="True"/>
@@ -92,11 +74,6 @@
     </record>
     <record id="account_type_prepayments_from_customers" model="account.account.type">
         <field name="name">Forudbetalinger fra kunder</field>
-        <field name="include_initial_balance" eval="True"/>
-    </record>
-    <!-- account.data_account_type_payable -->
-    <record id="account_type_payables" model="account.account.type">
-        <field name="name">Leverandørgæld</field>
         <field name="include_initial_balance" eval="True"/>
     </record>
     <record id="account_type_vat_taxes" model="account.account.type">
