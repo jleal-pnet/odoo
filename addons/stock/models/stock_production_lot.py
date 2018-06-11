@@ -57,8 +57,6 @@ class ProductionLot(models.Model):
         self.product_qty = sum(quants.mapped('quantity'))
 
 
-
-    @api.depends('name')
     def _sale_orders(self):
         for stock_move_line in self.env['stock.move.line'].search([('lot_id','=',self.id),('state','=','done')]):
             for stock_move in stock_move_line.move_id:
