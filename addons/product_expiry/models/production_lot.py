@@ -65,6 +65,15 @@ class StockProductionLot(models.Model):
         stock_quants = self.env['stock.quant'].search([
             ('lot_id', 'in', alert_lot_ids.ids),
             ('quantity', '>', 0)]).filtered(lambda quant: quant.location_id.usage == 'internal' )
+
+        # only for the products that do not have already an activity
+        stock_quants = stock_quants.filtered(lambda quant: 
+            self.env['mail.activity'].search_count([
+                ('res_model', '=', 'stock.production.lot'),
+                ('res_id', '=', quant.lot_id.id),
+                ('activity_type_id','=',mail_activity_type)]) == 0 )
+
+        # when an activity is deleted, it goes into message
         stock_quants = stock_quants.filtered(lambda quant: 
             self.env['mail.message'].search_count([
                 ('model', '=', 'stock.production.lot'),
