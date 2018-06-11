@@ -68,14 +68,11 @@ Produkt setup:
 Copyright 2018 Odoo House ApS
     """,
     'depends': ['account', 'base_iban', 'base_vat'],
-    'demo_xml': [],
     'data': [
         'data/account_type_data.xml',
         'data/l10n_dk_chart_data.xml',
         'data/account_tax_data.xml',
         'data/account_fiscal_position_data.xml',
         'data/account_chart_template_configuration_data.xml',
-#         'data/account_financial_report.xml',
-#         'data/account_defaults.xml',
     ],
 }
