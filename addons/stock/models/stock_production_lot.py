@@ -23,7 +23,6 @@ class ProductionLot(models.Model):
     quant_ids = fields.One2many('stock.quant', 'lot_id', 'Quants', readonly=True)
     create_date = fields.Datetime('Creation Date')
     product_qty = fields.Float('Quantity', compute='_product_qty')
-    purchase_order_ids = fields.Many2many('purchase.order', string="Purchase Orders", compute='_purchase_orders', readonly=True, store=False)
     sale_order_ids = fields.Many2many('sale.order', string="Sale Orders", compute='_sale_orders', readonly=True, store=False)
 
     _sql_constraints = [
@@ -58,12 +57,6 @@ class ProductionLot(models.Model):
         self.product_qty = sum(quants.mapped('quantity'))
 
 
-    @api.depends('name')
-    def _purchase_orders(self):
-        for stock_move_line in self.env['stock.move.line'].search([('lot_id','=',self.id),('state','=','done')]):
-            for stock_move in stock_move_line.move_id:
-                if (stock_move_line.move_id.picking_id.location_id.usage == "supplier" and stock_move.state=="done" ):
-                    self.purchase_order_ids = [ stock_move.purchase_line_id.order_id.id]
 
     @api.depends('name')
     def _sale_orders(self):
