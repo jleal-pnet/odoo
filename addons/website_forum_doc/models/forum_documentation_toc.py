@@ -38,7 +38,7 @@ class Documentation(models.Model):
 
 class DocumentationStage(models.Model):
     _name = 'forum.documentation.stage'
-    _description = 'Post Stage'
+    _description = 'Documentation Stage'
     _order = 'sequence'
 
     sequence = fields.Integer('Sequence')

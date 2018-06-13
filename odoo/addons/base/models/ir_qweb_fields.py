@@ -140,6 +140,7 @@ class FieldConverter(models.AbstractModel):
 
 class IntegerConverter(models.AbstractModel):
     _name = 'ir.qweb.field.integer'
+    _description = 'Qweb Field Integer'
     _inherit = 'ir.qweb.field'
 
     @api.model
@@ -149,6 +150,7 @@ class IntegerConverter(models.AbstractModel):
 
 class FloatConverter(models.AbstractModel):
     _name = 'ir.qweb.field.float'
+    _description = 'Qweb Field Float'
     _inherit = 'ir.qweb.field'
 
     @api.model
@@ -193,6 +195,7 @@ class FloatConverter(models.AbstractModel):
 
 class DateConverter(models.AbstractModel):
     _name = 'ir.qweb.field.date'
+    _description = 'Qweb Field Date'
     _inherit = 'ir.qweb.field'
 
     @api.model
@@ -210,6 +213,7 @@ class DateConverter(models.AbstractModel):
 
 class DateTimeConverter(models.AbstractModel):
     _name = 'ir.qweb.field.datetime'
+    _description = 'Qweb Field Datetime'
     _inherit = 'ir.qweb.field'
 
     @api.model
@@ -252,6 +256,7 @@ class DateTimeConverter(models.AbstractModel):
 
 class TextConverter(models.AbstractModel):
     _name = 'ir.qweb.field.text'
+    _description = 'Qweb Field Text'
     _inherit = 'ir.qweb.field'
 
     @api.model
@@ -264,6 +269,7 @@ class TextConverter(models.AbstractModel):
 
 class SelectionConverter(models.AbstractModel):
     _name = 'ir.qweb.field.selection'
+    _description = 'Qweb Field Selection'
     _inherit = 'ir.qweb.field'
 
     @api.model
@@ -289,6 +295,7 @@ class SelectionConverter(models.AbstractModel):
 
 class ManyToOneConverter(models.AbstractModel):
     _name = 'ir.qweb.field.many2one'
+    _description = 'Qweb Field Many to One'
     _inherit = 'ir.qweb.field'
 
     @api.model
@@ -303,6 +310,7 @@ class ManyToOneConverter(models.AbstractModel):
 
 class ManyToManyConverter(models.AbstractModel):
     _name = 'ir.qweb.field.many2many'
+    _description = 'Qweb field many2many'
     _inherit = 'ir.qweb.field'
 
     @api.model
@@ -315,6 +323,7 @@ class ManyToManyConverter(models.AbstractModel):
 
 class HTMLConverter(models.AbstractModel):
     _name = 'ir.qweb.field.html'
+    _description = 'Qweb Field HTML'
     _inherit = 'ir.qweb.field'
 
     @api.model
@@ -342,6 +351,7 @@ class ImageConverter(models.AbstractModel):
               needs website-aware
     """
     _name = 'ir.qweb.field.image'
+    _description = 'Qweb Field Image'
     _inherit = 'ir.qweb.field'
 
     @api.model
@@ -372,6 +382,7 @@ class MonetaryConverter(models.AbstractModel):
               It's set under the ``_values`` key.
     """
     _name = 'ir.qweb.field.monetary'
+    _description = 'Qweb Field Monerary'
     _inherit = 'ir.qweb.field'
 
     @api.model
@@ -456,6 +467,7 @@ class FloatTimeConverter(models.AbstractModel):
     Can be used on any numerical field.
     """
     _name = 'ir.qweb.field.float_time'
+    _description = 'Qweb Field Float Time'
     _inherit = 'ir.qweb.field'
 
     @api.model
@@ -482,6 +494,7 @@ class DurationConverter(models.AbstractModel):
     Sub-second values will be ignored.
     """
     _name = 'ir.qweb.field.duration'
+    _description = 'Qweb Field Duration'
     _inherit = 'ir.qweb.field'
 
     @api.model
@@ -539,6 +552,7 @@ class DurationConverter(models.AbstractModel):
 
 class RelativeDatetimeConverter(models.AbstractModel):
     _name = 'ir.qweb.field.relative'
+    _description = 'Qweb Field Relative'
     _inherit = 'ir.qweb.field'
 
     @api.model
@@ -574,6 +588,7 @@ class BarcodeConverter(models.AbstractModel):
     instead.
     """
     _name = 'ir.qweb.field.barcode'
+    _description = 'Qweb Field Barcode'
     _inherit = 'ir.qweb.field'
 
     @api.model
@@ -599,6 +614,7 @@ class BarcodeConverter(models.AbstractModel):
 
 class Contact(models.AbstractModel):
     _name = 'ir.qweb.field.contact'
+    _description = 'Qweb Field Contact'
     _inherit = 'ir.qweb.field.many2one'
 
     @api.model
@@ -642,6 +658,7 @@ class Contact(models.AbstractModel):
 
 class QwebView(models.AbstractModel):
     _name = 'ir.qweb.field.qweb'
+    _description = 'Qweb Field qweb'
     _inherit = 'ir.qweb.field.many2one'
 
     @api.model
