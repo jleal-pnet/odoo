@@ -1,0 +1,27 @@
+.oe_kanban_global_area {
+    border-radius: 5px;
+
+}
+.o_image_thumbnail {
+    //width: 20%;
+    //height: 100%;
+}
+
+.o_no_preview {
+
+    width:60px;
+    height:60px;
+}
+
+.o_bottom_right {
+    position: absolute;
+    right: 5%;
+    bottom: 7%;
+
+}
+
+.o_kanban_title {
+    left: 22%;
+    overflow: hidden;
+    max-width: 56%;
+}

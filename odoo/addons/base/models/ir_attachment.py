@@ -291,6 +291,13 @@ class IrAttachment(models.Model):
     checksum = fields.Char("Checksum/SHA1", size=40, index=True, readonly=True)
     mimetype = fields.Char('Mime Type', readonly=True)
     index_content = fields.Text('Indexed Content', readonly=True, prefetch=False)
+    active = fields.Boolean(default=True, string="Active", oldname='archived')
+    favorited_ids = fields.Many2many('res.users', string="Favorite of")
+
+    @api.multi
+    def toggle_favorited(self):
+        self.ensure_one()
+        self.write({'favorited_ids': [(3 if self.env.user in self[0].favorited_ids else 4, self.env.user.id)]})
 
     @api.model_cr_context
     def _auto_init(self):
