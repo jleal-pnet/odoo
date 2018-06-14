@@ -297,7 +297,7 @@ var Activity = AbstractActivityField.extend({
         if (id) {
             ev.preventDefault();
             var model = $(ev.target).data('oe-model');
-            this.trigger_up('redirect', {
+            this.trigger('redirect', {
                 res_id: id,
                 res_model: model,
             });

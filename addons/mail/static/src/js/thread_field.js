@@ -184,7 +184,7 @@ var ThreadField = AbstractField.extend({
             message.getDocumentModel() === this.model &&
             message.getDocumentID() === this.res_id
         ) {
-            this.trigger_up('new_message', {
+            this.trigger('new_message', {
                 id: this.value.id,
                 messageIDs: this._documentThread.getMessageIDs(),
             });
@@ -208,7 +208,7 @@ var ThreadField = AbstractField.extend({
      * @param {integer} resID
      */
     _onRedirect: function (ev) {
-        this.trigger_up('redirect', {
+        this.trigger('redirect', {
             res_id: ev.data.resID,
             res_model: ev.data.resModel,
         });

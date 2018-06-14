@@ -100,7 +100,7 @@ return Widget.extend({
         var search = this.searchview.build_search_data(true);
         var domain = pyUtils.assembleDomains(search.domains, 'AND');
         var controllerContext;
-        this.trigger_up('get_controller_context', {
+        this.trigger('get_controller_context', {
             callback: function (ctx) {
                 controllerContext = ctx;
             },
@@ -304,7 +304,7 @@ return Widget.extend({
      */
     _createFilter: function (filter) {
         var def = $.Deferred();
-        this.trigger_up('create_filter', {
+        this.trigger('create_filter', {
             filter: filter,
             on_success: def.resolve.bind(def),
         });

@@ -554,8 +554,8 @@ QUnit.test('dashboard intercepts custom events triggered by sub controllers', fu
     // we want the dashboard to intercept (to stop them or to tweak their data)
     testUtils.patch(ListController, {
         start: function () {
-            this.trigger_up('update_filters');
-            this.trigger_up('env_updated');
+            this.trigger('update_filters');
+            this.trigger('env_updated');
             this.do_action({}, {keepSearchView: true});
         },
     });

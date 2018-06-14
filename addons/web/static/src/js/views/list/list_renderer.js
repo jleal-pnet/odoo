@@ -334,7 +334,7 @@ var ListRenderer = BasicRenderer.extend({
             var self = this;
             $button.on("click", function (e) {
                 e.stopPropagation();
-                self.trigger_up('button_clicked', {
+                self.trigger('button_clicked', {
                     attrs: node.attrs,
                     record: record,
                 });
@@ -396,7 +396,7 @@ var ListRenderer = BasicRenderer.extend({
         pager.on('pager_changed', this, function (ev) {
             var self = this;
             pager.disable();
-            this.trigger_up('load', {
+            this.trigger('load', {
                 id: group.id,
                 limit: ev.data.limit,
                 offset: ev.data.current_min - 1,
@@ -722,7 +722,7 @@ var ListRenderer = BasicRenderer.extend({
         this.selection = _.map($selectedRows, function (row) {
             return $(row).data('id');
         });
-        this.trigger_up('selection_changed', { selection: this.selection });
+        this.trigger('selection_changed', { selection: this.selection });
         this._updateFooter();
     },
 
@@ -752,7 +752,7 @@ var ListRenderer = BasicRenderer.extend({
                     e.preventDefault();
                     var id = $(e.currentTarget).data('id');
                     if (id) {
-                        this.trigger_up('open_record', {id:id, target: e.target});
+                        this.trigger('open_record', {id:id, target: e.target});
                     }
                     break;
             }
@@ -768,7 +768,7 @@ var ListRenderer = BasicRenderer.extend({
         if (!$(event.target).prop('special_click')) {
             var id = $(event.currentTarget).data('id');
             if (id) {
-                this.trigger_up('open_record', {id:id, target: event.target});
+                this.trigger('open_record', {id:id, target: event.target});
             }
         }
     },
@@ -789,7 +789,7 @@ var ListRenderer = BasicRenderer.extend({
      */
     _onSortColumn: function (event) {
         var name = $(event.currentTarget).data('name');
-        this.trigger_up('toggle_column_order', {id: this.state.id, name: name});
+        this.trigger('toggle_column_order', {id: this.state.id, name: name});
     },
     /**
      * @private
@@ -798,7 +798,7 @@ var ListRenderer = BasicRenderer.extend({
     _onToggleGroup: function (event) {
         var group = $(event.currentTarget).data('group');
         if (group.count) {
-            this.trigger_up('toggle_group', {group: group});
+            this.trigger('toggle_group', {group: group});
         }
     },
     /**

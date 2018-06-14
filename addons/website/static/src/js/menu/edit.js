@@ -74,7 +74,7 @@ var EditPageMenu = websiteNavbarData.WebsiteNavbarActionWidget.extend({
             var $wrapwrap = $('#wrapwrap'); // TODO find this element another way
             $wrapwrap.find('.oe_structure.oe_empty, [data-oe-type="html"]').attr('data-editor-message', _t('DRAG BUILDING BLOCKS HERE'));
             var def = $.Deferred();
-            self.trigger_up('animation_start_demand', {
+            self.trigger('animation_start_demand', {
                 editableMode: true,
                 onSuccess: def.resolve.bind(def),
                 onFailure: def.reject.bind(def),
@@ -95,7 +95,7 @@ var EditPageMenu = websiteNavbarData.WebsiteNavbarActionWidget.extend({
      * @param {OdooEvent} ev
      */
     _onSnippetDropped: function (ev) {
-        this.trigger_up('animation_start_demand', {
+        this.trigger('animation_start_demand', {
             editableMode: true,
             $target: ev.data.$target,
         });

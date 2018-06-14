@@ -127,12 +127,12 @@ var KanbanColumn = Widget.extend({
                     if (index >= 0) {
                         if ($.contains(self.$el[0], record.$el[0])) {
                             // resequencing records
-                            self.trigger_up('kanban_column_resequence', {ids: self._getIDs()});
+                            self.trigger('kanban_column_resequence', {ids: self._getIDs()});
                         }
                     } else {
                         // adding record to this column
                         ui.item.addClass('o_updating');
-                        self.trigger_up('kanban_column_add_record', {record: record, ids: self._getIDs()});
+                        self.trigger('kanban_column_add_record', {record: record, ids: self._getIDs()});
                     }
                 }
             });
@@ -188,7 +188,7 @@ var KanbanColumn = Widget.extend({
     addQuickCreate: function () {
         if (this.folded) {
             // first open the column, and then add the quick create
-            this.trigger_up('column_toggle_fold', {
+            this.trigger('column_toggle_fold', {
                 openQuickCreate: true,
             });
             return;
@@ -197,8 +197,8 @@ var KanbanColumn = Widget.extend({
         if (this.quickCreateWidget) {
             return $.Deferred().reject();
         }
-        this.trigger_up('close_quick_create'); // close other quick create widgets
-        this.trigger_up('start_quick_create');
+        this.trigger('close_quick_create'); // close other quick create widgets
+        this.trigger('start_quick_create');
         var context = this.data.getContext();
         context['default_' + this.groupedBy] = this.id;
         this.quickCreateWidget = new RecordQuickCreate(this, {
@@ -329,14 +329,14 @@ var KanbanColumn = Widget.extend({
      */
     _onLoadMore: function (event) {
         event.preventDefault();
-        this.trigger_up('kanban_load_more');
+        this.trigger('kanban_load_more');
     },
     /**
      * @private
      * @param {OdooEvent} event
      */
     _onQuickCreateAddRecord: function (event) {
-        this.trigger_up('quick_create_record', event.data);
+        this.trigger('quick_create_record', event.data);
     },
     /**
      * @private
@@ -344,7 +344,7 @@ var KanbanColumn = Widget.extend({
      */
     _onToggleFold: function (event) {
         event.preventDefault();
-        this.trigger_up('column_toggle_fold');
+        this.trigger('column_toggle_fold');
     },
     /**
      * @private
@@ -380,7 +380,7 @@ var KanbanColumn = Widget.extend({
      */
     _onUnarchiveRecords: function (event) {
         event.preventDefault();
-        this.trigger_up('kanban_column_records_toggle_active', {
+        this.trigger('kanban_column_records_toggle_active', {
             archive: false,
         });
     }

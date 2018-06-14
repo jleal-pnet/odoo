@@ -3684,7 +3684,7 @@ var BasicModel = AbstractModel.extend({
                     return;
                 }
                 if (result.warning) {
-                    self.trigger_up('warning', {
+                    self.trigger('warning', {
                         message: result.warning.message,
                         title: result.warning.title,
                         type: 'dialog',

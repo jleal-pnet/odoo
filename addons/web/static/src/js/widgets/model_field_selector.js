@@ -270,7 +270,7 @@ var ModelFieldSelector = Widget.extend({
 
         if (this.dirty) {
             this.dirty = false;
-            this.trigger_up("field_chain_changed", {chain: this.chain});
+            this.trigger("field_chain_changed", {chain: this.chain});
         }
     },
     /**
@@ -468,7 +468,7 @@ var ModelFieldSelector = Widget.extend({
             userChain = [userChain[0]];
         }
         this.setChain(userChain).then((function () {
-            this.trigger_up("field_chain_changed", {chain: this.chain});
+            this.trigger("field_chain_changed", {chain: this.chain});
         }).bind(this));
     },
     /**

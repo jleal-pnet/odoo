@@ -115,7 +115,7 @@ var StatementRenderer = Widget.extend(FieldManagerMixin, {
             this.$el.children().hide();
             // display rainbowman after full reconciliation
             if (session.show_effect) {
-                this.trigger_up('show_effect', {
+                this.trigger('show_effect', {
                     type: 'rainbow_man',
                     fadeout: 'no',
                     message: $done,
@@ -174,7 +174,7 @@ var StatementRenderer = Widget.extend(FieldManagerMixin, {
      * @param {MouseEvent} event
      */
     _onCloseBankStatement: function (e) {
-        this.trigger_up('close_statement');
+        this.trigger('close_statement');
     },
     /**
      * @private
@@ -221,14 +221,14 @@ var StatementRenderer = Widget.extend(FieldManagerMixin, {
      * @param {MouseEvent} event
      */
     _onLoadMore: function (e) {
-        this.trigger_up('load_more');
+        this.trigger('load_more');
     },
     /**
      * @private
      */
     _onValidateName: function () {
         var name = this.$('.statement_name_edition input').val().trim();
-        this.trigger_up('change_name', {'data': name});
+        this.trigger('change_name', {'data': name});
     },
     /**
      * Save title on enter key pressed
@@ -639,12 +639,12 @@ var LineRenderer = Widget.extend(FieldManagerMixin, {
         var fieldName = event.target.name;
         if (fieldName === 'partner_id') {
             var partner_id = event.data.changes.partner_id;
-            this.trigger_up('change_partner', {'data': partner_id});
+            this.trigger('change_partner', {'data': partner_id});
         } else {
             if (event.data.changes.amount && isNaN(event.data.changes.amount)) {
                 return;
             }
-            this.trigger_up('update_proposition', {'data': event.data.changes});
+            this.trigger('update_proposition', {'data': event.data.changes});
         }
     },
     /**
@@ -652,27 +652,27 @@ var LineRenderer = Widget.extend(FieldManagerMixin, {
      */
     _onTogglePanel: function () {
         var mode = this.$el.data('mode') === 'inactive' ? 'match' : 'inactive';
-        this.trigger_up('change_mode', {'data': mode});
+        this.trigger('change_mode', {'data': mode});
     },
     /**
      * @private
      */
     _onSearchBalanceAmount: function () {
-        this.trigger_up('search_balance_amount');
+        this.trigger('search_balance_amount');
     },
     /**
      * @private
      */
     _onShowPanel: function () {
         var mode = (this.$el.data('mode') === 'inactive' || this.$el.data('mode') === 'match') ? 'create' : 'match';
-        this.trigger_up('change_mode', {'data': mode});
+        this.trigger('change_mode', {'data': mode});
     },
     /**
      * @private
      * @param {input event} event
      */
     _onFilterChange: function (event) {
-        this.trigger_up('change_filter', {'data': _.str.strip($(event.target).val())});
+        this.trigger('change_filter', {'data': _.str.strip($(event.target).val())});
     },
     /**
      * @private
@@ -710,7 +710,7 @@ var LineRenderer = Widget.extend(FieldManagerMixin, {
      */
     _onLoadMore: function (ev) {
         ev.preventDefault();
-        this.trigger_up('change_offset', {'data': 1});
+        this.trigger('change_offset', {'data': 1});
     },
     /**
      * @private
@@ -720,7 +720,7 @@ var LineRenderer = Widget.extend(FieldManagerMixin, {
         var $el = $(event.target);
         this._destroyPopover($el);
         var moveLineId = $el.closest('.mv_line').data('line-id');
-        this.trigger_up('add_proposition', {'data': moveLineId});
+        this.trigger('add_proposition', {'data': moveLineId});
     },
     /**
      * @private
@@ -730,7 +730,7 @@ var LineRenderer = Widget.extend(FieldManagerMixin, {
         var $el = $(event.target);
         this._destroyPopover($el);
         var moveLineId = $el.closest('.mv_line').data('line-id');
-        this.trigger_up('remove_proposition', {'data': moveLineId});
+        this.trigger('remove_proposition', {'data': moveLineId});
     },
     /**
      * @private
@@ -738,7 +738,7 @@ var LineRenderer = Widget.extend(FieldManagerMixin, {
      */
     _onQuickCreateProposition: function (event) {
         document.activeElement && document.activeElement.blur();
-        this.trigger_up('quick_create_proposition', {'data': $(event.target).data('reconcile-model-id')});
+        this.trigger('quick_create_proposition', {'data': $(event.target).data('reconcile-model-id')});
     },
     /**
      * @private
@@ -755,13 +755,13 @@ var LineRenderer = Widget.extend(FieldManagerMixin, {
             this.do_warn(_t("Some fields are undefined"), invalid.join(', '));
             return;
         }
-        this.trigger_up('create_proposition');
+        this.trigger('create_proposition');
     },
     /**
      * @private
      */
     _onValidate: function () {
-        this.trigger_up('validate');
+        this.trigger('validate');
     },
     /**
      * @private
@@ -771,7 +771,7 @@ var LineRenderer = Widget.extend(FieldManagerMixin, {
         e.stopPropagation();
         var popover = $(e.target).data('bs.popover');
         popover && popover.dispose();
-        this.trigger_up('toggle_partial_reconcile');
+        this.trigger('toggle_partial_reconcile');
     }
 });
 

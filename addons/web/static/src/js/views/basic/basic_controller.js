@@ -151,7 +151,7 @@ var BasicController = AbstractController.extend(FieldManagerMixin, {
                 .then(function () {
                     // Reset the scroll position to the top on page changed only
                     if (!limitChanged) {
-                        self.trigger_up('scrollTo', {top: 0});
+                        self.trigger('scrollTo', {top: 0});
                     }
                 })
                 .then(this.pager.enable.bind(this.pager));
@@ -216,7 +216,7 @@ var BasicController = AbstractController.extend(FieldManagerMixin, {
     _abandonRecord: function (recordID) {
         recordID = recordID || this.handle;
         if (recordID === this.handle) {
-            this.trigger_up('history_back');
+            this.trigger('history_back');
         } else {
             this.model.removeLine(recordID);
         }
@@ -250,7 +250,7 @@ var BasicController = AbstractController.extend(FieldManagerMixin, {
         };
         record = record || this.model.get(this.handle);
 
-        this.trigger_up('execute_action', {
+        this.trigger('execute_action', {
             action_data: _.extend({}, attrs, {
                 context: record.getContext({additionalContext: attrs.context || {}}),
             }),
@@ -482,7 +482,7 @@ var BasicController = AbstractController.extend(FieldManagerMixin, {
             var sidebarEnv = this._getSidebarEnv();
             this.sidebar.updateEnv(sidebarEnv);
         }
-        this.trigger_up('env_updated', {controllerID: this.controllerID, env: env});
+        this.trigger('env_updated', {controllerID: this.controllerID, env: env});
     },
     /**
      * Helper method, to make sure the information displayed by the pager is up

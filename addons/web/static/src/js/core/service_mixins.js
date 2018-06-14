@@ -113,7 +113,7 @@ var ServicesMixin = {
     call: function (service, method) {
         var args = Array.prototype.slice.call(arguments, 2);
         var result;
-        this.trigger_up('call_service', {
+        this.trigger('call_service', {
             service: service,
             method: method,
             args: args,
@@ -146,7 +146,7 @@ var ServicesMixin = {
     },
     loadViews: function (modelName, context, views, options) {
         var def = $.Deferred();
-        this.trigger_up('load_views', {
+        this.trigger('load_views', {
             modelName: modelName,
             context: context,
             views: views,
@@ -157,7 +157,7 @@ var ServicesMixin = {
     },
     loadFilters: function (dataset, action_id) {
         var def = $.Deferred();
-        this.trigger_up('load_filters', {
+        this.trigger('load_filters', {
             dataset: dataset,
             action_id: action_id,
             on_success: def.resolve.bind(def),
@@ -167,7 +167,7 @@ var ServicesMixin = {
     // Session stuff
     getSession: function () {
         var session;
-        this.trigger_up('get_session', {
+        this.trigger('get_session', {
             callback: function (result) {
                 session = result;
             }
@@ -187,7 +187,7 @@ var ServicesMixin = {
     do_action: function (action, options) {
         var def = $.Deferred();
 
-        this.trigger_up('do_action', {
+        this.trigger('do_action', {
             action: action,
             options: options,
             on_success: function (result) { def.resolve(result); },

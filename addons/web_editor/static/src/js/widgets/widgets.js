@@ -543,7 +543,7 @@ var ImageWidget = MediaWidget.extend({
                 }
 
                 if (!self.multiImages) {
-                    self.trigger_up('save_request');
+                    self.trigger('save_request');
                 }
             }
         });
@@ -569,7 +569,7 @@ var ImageWidget = MediaWidget.extend({
      */
     _onImageDblClick: function (ev) {
         this._onImageClick(ev, true);
-        this.trigger_up('save_request');
+        this.trigger('save_request');
     },
     /**
      * @private
@@ -799,7 +799,7 @@ var IconWidget = MediaWidget.extend({
      * @private
      */
     _onIconDblClick: function () {
-        this.trigger_up('save_request');
+        this.trigger('save_request');
     },
 });
 

@@ -37,7 +37,7 @@ KanbanRecord.include({
                         args: [[self.id], { 'invoiced_target': value }],
                     })
                     .done(function() {
-                        self.trigger_up('kanban_record_update', {id: self.id});
+                        self.trigger('kanban_record_update', {id: self.id});
                     });
             }
         });

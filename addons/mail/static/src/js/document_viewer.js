@@ -157,7 +157,7 @@ var DocumentViewer = Widget.extend({
     _onClose: function (e) {
         e.preventDefault();
         this.$el.modal('hide');
-        this.trigger_up('document_viewer_closed');
+        this.trigger('document_viewer_closed');
     },
     /**
      * When popup close complete destroyed modal even DOM footprint too

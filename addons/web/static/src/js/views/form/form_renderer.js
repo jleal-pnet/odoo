@@ -241,12 +241,12 @@ var FormRenderer = BasicRenderer.extend({
         //if we are the last widget, we should give the focus to the first Primary Button in the form
         //else do the default behavior
         if ( (currentIndex + 1) >= (this.allFieldWidgets[record.id] || []).length) {
-            this.trigger_up('focus_control_button');
+            this.trigger('focus_control_button');
             this.lastActivatedFieldIndex = -1;
         } else {
             var activatedIndex =  this._super.apply(this, arguments);
             if (activatedIndex === -1 ) { // no widget have been activated, we should go to the edit/save buttons
-                this.trigger_up('focus_control_button');
+                this.trigger('focus_control_button');
                 this.lastActivatedFieldIndex = -1;
             }
             else {
@@ -282,7 +282,7 @@ var FormRenderer = BasicRenderer.extend({
     _addOnClickAction: function ($el, node) {
         var self = this;
         $el.click(function () {
-            self.trigger_up('button_clicked', {
+            self.trigger('button_clicked', {
                 attrs: node.attrs,
                 record: self.state,
             });
@@ -943,7 +943,7 @@ var FormRenderer = BasicRenderer.extend({
      */
     _onClick: function () {
         if (this.mode === 'readonly') {
-            this.trigger_up('bounce_edit');
+            this.trigger('bounce_edit');
         }
     },
     /**
@@ -973,7 +973,7 @@ var FormRenderer = BasicRenderer.extend({
      */
     _onTranslate: function (event) {
         event.preventDefault();
-        this.trigger_up('translate', {fieldName: event.target.name, id: this.state.id});
+        this.trigger('translate', {fieldName: event.target.name, id: this.state.id});
     },
 });
 

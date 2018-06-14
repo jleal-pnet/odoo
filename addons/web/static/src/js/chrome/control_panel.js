@@ -251,7 +251,7 @@ var ControlPanel = Widget.extend({
         if (!is_last) {
             $bc.click(function (ev) {
                 ev.preventDefault();
-                self.trigger_up('breadcrumb_clicked', {controllerID: bc.controllerID});
+                self.trigger('breadcrumb_clicked', {controllerID: bc.controllerID});
             });
         }
         return $bc;

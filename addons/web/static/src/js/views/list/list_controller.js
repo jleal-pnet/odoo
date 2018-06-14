@@ -402,7 +402,7 @@ var ListController = BasicController.extend({
         if (this.editable && !state.groupedBy.length) {
             this._addRecord();
         } else {
-            this.trigger_up('switch_view', {view_type: 'form', res_id: undefined});
+            this.trigger('switch_view', {view_type: 'form', res_id: undefined});
         }
     },
     /**
@@ -430,7 +430,7 @@ var ListController = BasicController.extend({
     _onEditLine: function (ev) {
         var self = this;
         ev.stopPropagation();
-        this.trigger_up('mutexify', {
+        this.trigger('mutexify', {
             action: function () {
                 var record = self.model.get(self.handle);
                 var editedRecord = record.data[ev.data.index];
@@ -472,7 +472,7 @@ var ListController = BasicController.extend({
     _onResequence: function (event) {
         var self = this;
 
-        this.trigger_up('mutexify', {
+        this.trigger('mutexify', {
             action: function () {
                 var state = self.model.get(self.handle);
                 var resIDs = _.map(event.data.rowIDs, function(rowID) {

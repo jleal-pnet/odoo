@@ -446,7 +446,7 @@ QUnit.module('ActionManager', {
 
         actionManager.doAction(4);
         actionManager.doAction(3);
-        actionManager.trigger_up('history_back');
+        actionManager.trigger('history_back');
 
         assert.strictEqual($('.o_control_panel .breadcrumb-item').length, 1,
             "there should be one controller in the breadcrumbs");
@@ -949,7 +949,7 @@ QUnit.module('ActionManager', {
                 var self = this;
                 var $button = $('<button>').text('Click Me!');
                 $button.on('click', function () {
-                    self.trigger_up('push_state', {
+                    self.trigger('push_state', {
                         controllerID: self.controllerID,
                         state: {someValue: 'X'},
                     });
@@ -1000,7 +1000,7 @@ QUnit.module('ActionManager', {
             start: function () {
                 assert.step('start');
                 this.$el.text(this.a);
-                this.trigger_up('push_state', {
+                this.trigger('push_state', {
                     controllerID: this.controllerID,
                     state: {a: this.a},
                 });
@@ -3371,7 +3371,7 @@ QUnit.module('ActionManager', {
             data: this.data,
         });
         actionManager.doAction('ClientAction');
-        actionManager.trigger_up('navigation_move', {direction:'down'});
+        actionManager.trigger('navigation_move', {direction:'down'});
 
         assert.ok(true); // no error so it's good
         actionManager.destroy();

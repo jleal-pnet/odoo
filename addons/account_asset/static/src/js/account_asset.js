@@ -72,7 +72,7 @@ var AccountAssetWidget = AbstractField.extend({
      */
     _onClick: function (event) {
         event.stopPropagation();
-        this.trigger_up('button_clicked', {
+        this.trigger('button_clicked', {
             attrs: {
                 name: 'create_move',
                 type: 'object',

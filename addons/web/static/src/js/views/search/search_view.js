@@ -322,7 +322,7 @@ var SearchView = Widget.extend({
                 case $.ui.keyCode.DOWN:
                     if (!this.autocomplete.is_expanded()) {
                         e.preventDefault();
-                        this.trigger_up('navigation_move', {direction: 'down'});
+                        this.trigger('navigation_move', {direction: 'down'});
                         break;
                     }
             }
@@ -513,7 +513,7 @@ var SearchView = Widget.extend({
             return;
         }
         var search = this.build_search_data();
-        this.trigger_up('search', search);
+        this.trigger('search', search);
     },
     /**
      * @param {boolean} noDomainEvaluation determines if domain are evaluated or not.

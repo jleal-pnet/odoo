@@ -215,7 +215,7 @@ var Followers = AbstractField.extend({
         });
     },
     _reload: function () {
-        this.trigger_up('reload', {fieldNames: [this.name]});
+        this.trigger('reload', {fieldNames: [this.name]});
     },
     _follow: function () {
         var kwargs = {

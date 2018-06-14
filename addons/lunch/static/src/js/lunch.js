@@ -77,7 +77,7 @@ var LunchPreviousOrdersWidget = AbstractField.extend({
         };
 
         // create a new order line
-        this.trigger_up('field_changed', {
+        this.trigger('field_changed', {
             dataPointID: this.dataPointID,
             changes: {
                 order_line_ids: {

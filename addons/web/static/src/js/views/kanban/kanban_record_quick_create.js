@@ -140,7 +140,7 @@ var RecordQuickCreate = Widget.extend({
         return this.controller.commitChanges().then(function () {
             var canBeSaved = self.controller.canBeSaved();
             if (canBeSaved) {
-                self.trigger_up('quick_create_add_record', {
+                self.trigger('quick_create_add_record', {
                     openRecord: options && options.openRecord || false,
                     values: self.controller.getChanges(),
                 });
@@ -154,7 +154,7 @@ var RecordQuickCreate = Widget.extend({
      * @returns {Deferred}
      */
     _cancel: function () {
-        this.trigger_up('cancel_quick_create');
+        this.trigger('cancel_quick_create');
     },
 
     //--------------------------------------------------------------------------

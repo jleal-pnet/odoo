@@ -613,7 +613,7 @@ var DataImport = AbstractAction.extend(ControlPanelMixin, {
         this.exit();
     },
     exit: function () {
-        this.trigger_up('history_back');
+        this.trigger('history_back');
     },
     onresults: function (event, from, to, results) {
         var message = results.messages;

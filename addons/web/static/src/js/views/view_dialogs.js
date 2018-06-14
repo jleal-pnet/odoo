@@ -235,7 +235,7 @@ var FormViewDialog = ViewDialog.extend({
      * @override
      */
     _focusOnClose: function() {
-        this.trigger_up('form_dialog_discarded');
+        this.trigger('form_dialog_discarded');
         return true;
     },
 
@@ -273,7 +273,7 @@ var SelectCreateListController = ListController.extend({
     custom_events: _.extend({}, ListController.prototype.custom_events, {
         open_record: function (event) {
             var selectedRecord = this.model.get(event.data.id);
-            this.trigger_up('select_record', {
+            this.trigger('select_record', {
                 id: selectedRecord.res_id,
                 display_name: selectedRecord.data.display_name,
             });
@@ -463,7 +463,7 @@ var SelectCreateDialog = ViewDialog.extend({
      * @override
      */
     _focusOnClose: function() {
-        this.trigger_up('form_dialog_discarded');
+        this.trigger('form_dialog_discarded');
         return true;
     },
     //--------------------------------------------------------------------------
