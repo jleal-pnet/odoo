@@ -133,7 +133,6 @@ class Partner(models.Model):
 
         Mail = self.env['mail.mail'].sudo()
         emails = self.env['mail.mail'].sudo()
-        email_pids = set()
         recipients_nbr, recipients_max = 0, 50
         for group_tpl_values in [group for group in recipients.values() if group['recipients']]:
             # generate notification email content
@@ -151,20 +150,19 @@ class Partner(models.Model):
                 }
                 create_values.update(base_mail_values)
                 create_values.update(recipient_values)
-                email_pids.update(r[1] for r in create_values.get('recipient_ids', []))
+                email_pids = [r[1] for r in create_values.get('recipient_ids', [])]
                 emails |= Mail.create(create_values)
-
-        if email_pids:
-            notifications = self.env['mail.notification'].sudo().search([
-                ('mail_message_id', '=', emails[0].mail_message_id.id),
-                ('res_partner_id', 'in', list(email_pids))
-            ])
-            notifications.write({
-                'is_email': True,
-                # 'mail_id': email.id,
-                'is_read': True,  # handle by email discards Inbox notification
-                'email_status': 'ready',
-            })
+                if email_pids:
+                    notifications = self.env['mail.notification'].sudo().search([
+                        ('mail_message_id', '=', emails[0].mail_message_id.id),
+                        ('res_partner_id', 'in', list(email_pids))
+                    ])
+                    notifications.write({
+                        'is_email': True,
+                        'mail_id': emails[-1].id,
+                        'is_read': True,  # handle by email discards Inbox notification
+                        'email_status': 'ready',
+                    })
 
         # NOTE:
         #   1. for more than 50 followers, use the queue system
