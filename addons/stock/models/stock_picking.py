@@ -440,6 +440,17 @@ class Picking(models.Model):
             else:
                 picking.show_validate = True
 
+    @api.onchange('owner_id')
+    def onchange_picking_owner(self):
+        move_lines = self.mapped('move_ids_without_package')
+        for move_line in move_lines:
+            if self.picking_type_code != 'incoming' and move_line.reserved_availability or move_line.quantity_done > 0.0:
+                raise UserError(_('You cannot change the owner as there are products reserved or done in this operation. Please unreserve the products first.'))
+            elif self.picking_type_code == 'incoming':
+                move_line.mapped('move_line_ids').write({'owner_id': self.owner_id.id})
+            else:
+                move_line.write({'restrict_partner_id': self.owner_id.id})
+
     @api.onchange('picking_type_id', 'partner_id')
     def onchange_picking_type(self):
         if self.picking_type_id:
@@ -526,13 +537,6 @@ class Picking(models.Model):
         self.mapped('move_lines').unlink() # Checks if moves are not done
         return super(Picking, self).unlink()
 
-    # Actions
-    # ----------------------------------------
-
-    @api.one
-    def action_assign_owner(self):
-        self.move_line_ids.write({'owner_id': self.owner_id.id})
-
     @api.multi
     def do_print_picking(self):
         self.write({'printed': True})
@@ -548,6 +552,9 @@ class Picking(models.Model):
         # call `_action_assign` on every confirmed move which location_id bypasses the reservation
         self.filtered(lambda picking: picking.location_id.usage in ('supplier', 'inventory', 'production') and picking.state == 'confirmed')\
             .mapped('move_lines')._action_assign()
+        for picking in self.filtered(lambda l: l.owner_id):
+            picking.mapped('move_lines').write({'restrict_partner_id': picking.owner_id.id})
+            picking.mapped('move_line_ids').write({'owner_id': picking.owner_id.id})
         return True
 
     @api.multi
