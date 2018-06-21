@@ -15,6 +15,9 @@
         <record id="cess_group" model="account.tax.group">
             <field name="name">Cess</field>
         </record>
+        <record id="gst_group" model="account.tax.group">
+            <field name="name">GST</field>
+        </record>
 
     </data>
 </odoo>

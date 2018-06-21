@@ -185,6 +185,7 @@ if tax > result:result=tax</field>
         <field name="amount">0</field>
         <field name="chart_template_id" ref="indian_chart_template_standard"/>
         <field name="children_tax_ids" eval="[(6, 0, [ref('sgst_sale_0_5'), ref('cgst_sale_0_5'),])]"/>
+        <field name="tax_group_id" ref="gst_group"/>
     </record>
 
     <record id="sgst_sale_1_2" model="account.tax.template">
@@ -221,6 +222,7 @@ if tax > result:result=tax</field>
         <field name="amount">0</field>
         <field name="chart_template_id" ref="indian_chart_template_standard"/>
         <field name="children_tax_ids" eval="[(6, 0, [ref('sgst_sale_1_2'), ref('cgst_sale_1_2'),])]"/>
+        <field name="tax_group_id" ref="gst_group"/>
     </record>
 
     <record id="sgst_sale_14" model="account.tax.template">
@@ -257,6 +259,7 @@ if tax > result:result=tax</field>
         <field name="amount">0</field>
         <field name="chart_template_id" ref="indian_chart_template_standard"/>
         <field name="children_tax_ids" eval="[(6, 0, [ref('sgst_sale_14'),ref('cgst_sale_14'),])]"/>
+        <field name="tax_group_id" ref="gst_group"/>
     </record>
 
         <record id="sgst_sale_9" model="account.tax.template">
@@ -293,6 +296,7 @@ if tax > result:result=tax</field>
         <field name="amount">0</field>
         <field name="chart_template_id" ref="indian_chart_template_standard"/>
         <field name="children_tax_ids" eval="[(6, 0, [ref('sgst_sale_9'),ref('cgst_sale_9'),])]"/>
+        <field name="tax_group_id" ref="gst_group"/>
     </record>
 
     <record id="sgst_sale_6" model="account.tax.template">
@@ -329,6 +333,7 @@ if tax > result:result=tax</field>
         <field name="amount">0</field>
         <field name="chart_template_id" ref="indian_chart_template_standard"/>
         <field name="children_tax_ids" eval="[(6, 0, [ref('sgst_sale_6'),ref('cgst_sale_6'),])]"/>
+        <field name="tax_group_id" ref="gst_group"/>
     </record>
 
         <record id="sgst_sale_2_5" model="account.tax.template">
@@ -365,6 +370,7 @@ if tax > result:result=tax</field>
         <field name="amount">0</field>
         <field name="chart_template_id" ref="indian_chart_template_standard"/>
         <field name="children_tax_ids" eval="[(6, 0, [ref('sgst_sale_2_5'), ref('cgst_sale_2_5'),])]"/>
+        <field name="tax_group_id" ref="gst_group"/>
     </record>
 
     <!-- Purchase Taxes-->
@@ -533,6 +539,7 @@ if tax > result:result=tax</field>
         <field name="amount">0</field>
         <field name="chart_template_id" ref="indian_chart_template_standard"/>
         <field name="children_tax_ids" eval="[(6, 0, [ref('sgst_purchase_0_5'),ref('cgst_purchase_0_5'),])]"/>
+        <field name="tax_group_id" ref="gst_group"/>
     </record>
 
     <record id="sgst_purchase_1_2" model="account.tax.template">
@@ -569,6 +576,7 @@ if tax > result:result=tax</field>
         <field name="amount">0</field>
         <field name="chart_template_id" ref="indian_chart_template_standard"/>
         <field name="children_tax_ids" eval="[(6, 0, [ref('sgst_purchase_1_2'),ref('cgst_purchase_1_2'),])]"/>
+        <field name="tax_group_id" ref="gst_group"/>
     </record>
 
     <record id="sgst_purchase_14" model="account.tax.template">
@@ -605,6 +613,7 @@ if tax > result:result=tax</field>
         <field name="amount">0</field>
         <field name="chart_template_id" ref="indian_chart_template_standard"/>
         <field name="children_tax_ids" eval="[(6, 0, [ref('sgst_purchase_14'),ref('cgst_purchase_14'),])]"/>
+        <field name="tax_group_id" ref="gst_group"/>
     </record>
 
         <record id="sgst_purchase_9" model="account.tax.template">
@@ -641,6 +650,7 @@ if tax > result:result=tax</field>
         <field name="amount">0</field>
         <field name="chart_template_id" ref="indian_chart_template_standard"/>
         <field name="children_tax_ids" eval="[(6, 0, [ref('sgst_purchase_9'),ref('cgst_purchase_9'),])]"/>
+        <field name="tax_group_id" ref="gst_group"/>
     </record>
 
     <record id="sgst_purchase_6" model="account.tax.template">
@@ -677,6 +687,7 @@ if tax > result:result=tax</field>
         <field name="amount">0</field>
         <field name="chart_template_id" ref="indian_chart_template_standard"/>
         <field name="children_tax_ids" eval="[(6, 0, [ref('sgst_purchase_6'),ref('cgst_purchase_6'),])]"/>
+        <field name="tax_group_id" ref="gst_group"/>
     </record>
 
     <record id="sgst_purchase_2_5" model="account.tax.template">
@@ -713,6 +724,7 @@ if tax > result:result=tax</field>
         <field name="amount">0</field>
         <field name="chart_template_id" ref="indian_chart_template_standard"/>
         <field name="children_tax_ids" eval="[(6, 0, [ref('sgst_purchase_2_5'),ref('cgst_purchase_2_5'),])]"/>
+        <field name="tax_group_id" ref="gst_group"/>
     </record>
 
 </odoo>
