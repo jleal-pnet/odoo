@@ -26,6 +26,7 @@ class AccountInvoice(models.Model):
         string='Export Type', default='regular', required=True)
     l10n_in_shipping_bill_number = fields.Char('Shipping bill number', readonly=True, states={'draft': [('readonly', False)]})
     l10n_in_shipping_bill_date = fields.Date('Shipping bill date', readonly=True, states={'draft': [('readonly', False)]})
+    l10n_in_shipping_port_code_id = fields.Many2one('l10n_in.port.code', 'Shipping port code', states={'draft': [('readonly', False)]})
 
     def _get_printed_report_name(self):
         self.ensure_one()
@@ -65,7 +66,8 @@ class AccountInvoice(models.Model):
             vals = {
                 'l10n_in_export_type': inv.l10n_in_export_type,
                 'l10n_in_shipping_bill_number': inv.l10n_in_shipping_bill_number,
-                'l10n_in_shipping_bill_date': inv.l10n_in_shipping_bill_date
+                'l10n_in_shipping_bill_date': inv.l10n_in_shipping_bill_date,
+                'l10n_in_shipping_port_code_id': inv.l10n_in_shipping_port_code_id.id
                 }
             inv.move_id.write(vals)
         return res

@@ -27,6 +27,7 @@ class AccountMove(models.Model):
         string='Export Type', default='regular', required=True, states={'posted': [('readonly', True)]})
     l10n_in_shipping_bill_number = fields.Char('Shipping bill number', states={'posted': [('readonly', True)]})
     l10n_in_shipping_bill_date = fields.Date('Shipping bill date', states={'posted': [('readonly', True)]})
+    l10n_in_shipping_port_code_id = fields.Many2one('l10n_in.port.code', 'Shipping port code', states={'posted': [('readonly', True)]})
 
 
 class AccountMoveLine(models.Model):
