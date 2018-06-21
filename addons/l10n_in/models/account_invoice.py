@@ -14,6 +14,18 @@ class AccountInvoice(models.Model):
             invoice.amount_total_words = invoice.currency_id.amount_to_text(invoice.amount_total)
 
     amount_total_words = fields.Char("Total (In Words)", compute="_compute_amount_total_words")
+    #Use for invisible fields in form views.
+    l10n_in_import_export = fields.Boolean(related='journal_id.l10n_in_import_export', readonly=True)
+    #For Export invoice this data is need in GSTR report
+    l10n_in_export_type = fields.Selection([
+        ('regular', 'Regular'), ('deemed', 'Deemed'),
+        ('sale_from_bonded_wh', 'Sale from Bonded WH'),
+        ('export_with_igst', 'Export with IGST'),
+        ('sez_with_igst', 'SEZ with IGST payment'),
+        ('sez_without_igst', 'SEZ without IGST payment')],
+        string='Export Type', default='regular', required=True)
+    l10n_in_shipping_bill_number = fields.Char('Shipping bill number', readonly=True, states={'draft': [('readonly', False)]})
+    l10n_in_shipping_bill_date = fields.Date('Shipping bill date', readonly=True, states={'draft': [('readonly', False)]})
 
     def _get_printed_report_name(self):
         self.ensure_one()
@@ -46,6 +58,17 @@ class AccountInvoice(models.Model):
             'l10n_in_tax_price_unit': line.get('l10n_in_tax_price_unit', 0),
             })
         return vals
+
+    def action_move_create(self):
+        res = super(AccountInvoice, self).action_move_create()
+        for inv in self:
+            vals = {
+                'l10n_in_export_type': inv.l10n_in_export_type,
+                'l10n_in_shipping_bill_number': inv.l10n_in_shipping_bill_number,
+                'l10n_in_shipping_bill_date': inv.l10n_in_shipping_bill_date
+                }
+            inv.move_id.write(vals)
+        return res
 
 
 class AccountInvoiceLine(models.Model):

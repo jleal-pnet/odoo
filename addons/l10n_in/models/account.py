@@ -4,6 +4,31 @@
 from odoo import api, fields, models
 
 
+class AccountJournal(models.Model):
+
+    _inherit = "account.journal"
+
+    #Use for filter import and export type.
+    l10n_in_import_export = fields.Boolean("Import/Export", help="Tick this if this journal is use for Import/Export Under Indian GST.")
+
+
+class AccountMove(models.Model):
+    _inherit = "account.move"
+
+    #Use for invisible fields in form views.
+    l10n_in_import_export = fields.Boolean(related='journal_id.l10n_in_import_export', readonly=True)
+    #For Export invoice this data is need in GSTR report
+    l10n_in_export_type = fields.Selection([
+        ('regular', 'Regular'), ('deemed', 'Deemed'),
+        ('sale_from_bonded_wh', 'Sale from Bonded WH'),
+        ('export_with_igst', 'Export with IGST'),
+        ('sez_with_igst', 'SEZ with IGST payment'),
+        ('sez_without_igst', 'SEZ without IGST payment')],
+        string='Export Type', default='regular', required=True, states={'posted': [('readonly', True)]})
+    l10n_in_shipping_bill_number = fields.Char('Shipping bill number', states={'posted': [('readonly', True)]})
+    l10n_in_shipping_bill_date = fields.Date('Shipping bill date', states={'posted': [('readonly', True)]})
+
+
 class AccountMoveLine(models.Model):
     _inherit = "account.move.line"
 
