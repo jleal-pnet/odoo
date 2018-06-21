@@ -28,16 +28,49 @@ class AccountInvoice(models.Model):
             self.type == 'in_refund' and self.state == 'draft' and _('Vendor Credit Note') or \
             self.type == 'in_refund' and _('Vendor Credit Note - %s') % (self.number)
 
-    @api.multi
-    def _invoice_line_tax_values(self):
-        self.ensure_one()
-        tax_datas = {}
-        TAX = self.env['account.tax']
+    @api.model
+    def invoice_line_move_line_get(self):
+        lines_res = super(AccountInvoice, self).invoice_line_move_line_get()
+        for line_res in lines_res:
+            line = self.env['account.invoice.line'].browse(line_res.get('invl_id'))
+            line_res.update({
+                'l10n_in_tax_price_unit': (line.price_unit * (1 - (line.discount or 0.0) / 100.0))
+                })
+        return lines_res
 
-        for line in self.mapped('invoice_line_ids'):
-            price_unit = line.price_unit * (1 - (line.discount or 0.0) / 100.0)
-            tax_lines = line.invoice_line_tax_ids.compute_all(price_unit, line.invoice_id.currency_id, line.quantity, line.product_id, line.invoice_id.partner_id)['taxes']
-            for tax_line in tax_lines:
-                tax_line['tag_ids'] = TAX.browse(tax_line['id']).tag_ids.ids
-            tax_datas[line.id] = tax_lines
-        return tax_datas
+    @api.model
+    def line_get_convert(self, line, part):
+        """Update account move line convert vals for new field value pass to account move line"""
+        vals = super(AccountInvoice, self).line_get_convert(line, part)
+        vals.update({
+            'l10n_in_tax_price_unit': line.get('l10n_in_tax_price_unit', 0),
+            })
+        return vals
+
+
+class AccountInvoiceLine(models.Model):
+    _inherit = "account.invoice.line"
+
+    #This tax amount show in invoice PDF report
+    l10n_in_igst_amount = fields.Float(string="IGST Amount", compute='_compute_l10n_in_taxes_amount', store=True, readonly=True)
+    l10n_in_cgst_amount = fields.Float(string="CGST Amount", compute='_compute_l10n_in_taxes_amount', store=True, readonly=True)
+    l10n_in_sgst_amount = fields.Float(string="SGST Amount", compute='_compute_l10n_in_taxes_amount', store=True, readonly=True)
+    l10n_in_cess_amount = fields.Float(string="CESS Amount", compute='_compute_l10n_in_taxes_amount', store=True, readonly=True)
+
+    @api.depends('price_unit', 'discount', 'invoice_line_tax_ids', 'quantity',
+        'product_id', 'invoice_id.currency_id', 'invoice_id.company_id')
+    def _compute_l10n_in_taxes_amount(self):
+        AccountMoveLine = self.env['account.move.line']
+        for line in self:
+            price = line.price_unit * (1 - (line.discount or 0.0) / 100.0)
+            taxes_data = AccountMoveLine._compute_l10n_in_tax(
+                taxes=line.invoice_line_tax_ids,
+                price_unit=price,
+                currency=line.invoice_id.currency_id or None,
+                quantity=line.quantity,
+                product=line.product_id or None,
+                partner=line.invoice_id.partner_id or None)
+            line.l10n_in_igst_amount = taxes_data['igst_amount']
+            line.l10n_in_cgst_amount = taxes_data['cgst_amount']
+            line.l10n_in_sgst_amount = taxes_data['sgst_amount']
+            line.l10n_in_cess_amount = taxes_data['cess_amount']

@@ -5,15 +5,10 @@
         <xpath expr="//table[@name='invoice_line_table']" position="before">
             <t t-if="o.company_id.country_id.code == 'IN'">
                 <!-- Tag wise Tax Calculation -->
-                <t t-set="tag_cgst_id" t-value="env.ref('l10n_in.cgst_tag_tax').id"/>
-                <t t-set="tag_sgst_id" t-value="env.ref('l10n_in.sgst_tag_tax').id"/>
-                <t t-set="tag_igst_id" t-value="env.ref('l10n_in.igst_tag_tax').id"/>
-                <t t-set="tag_cess_id" t-value="env.ref('l10n_in.cess_tag_tax').id"/>
-                <t t-set="tax_map" t-value="o.tax_line_ids.mapped('tax_id.tag_ids.id')"/>
-                <t t-set="is_igst" t-value="tag_igst_id in tax_map"/>
-                <t t-set="is_cgst" t-value="tag_cgst_id in tax_map"/>
-                <t t-set="is_cess" t-value="tag_cess_id in tax_map"/>
-                <t t-set="tax_datas" t-value="o._invoice_line_tax_values()"/>
+                <t t-set="display_igst" t-value="any([l.l10n_in_igst_amount for l in o.invoice_line_ids])"/>
+                <t t-set="display_cgst" t-value="any([l.l10n_in_cgst_amount for l in o.invoice_line_ids])"/>
+                <t t-set="display_sgst" t-value="any([l.l10n_in_sgst_amount for l in o.invoice_line_ids])"/>
+                <t t-set="display_cess" t-value="any([l.l10n_in_cess_amount for l in o.invoice_line_ids])"/>
             </t>
         </xpath>
 
@@ -28,10 +23,10 @@
 
         <xpath expr="//table[@name='invoice_line_table']/thead/tr" position="inside">
             <t t-if="o.company_id.country_id.code == 'IN'">
-                <th class="text-right" t-if="is_cgst">CGST<t t-set="colspan" t-value="colspan+1"/></th>
-                <th class="text-right" t-if="is_cgst">SGST<t t-set="colspan" t-value="colspan+1"/></th>
-                <th class="text-right" t-if="is_igst">IGST<t t-set="colspan" t-value="colspan+1"/></th>
-                <th class="text-right" t-if="is_cess">CESS<t t-set="colspan" t-value="colspan+1"/></th>
+                <th t-if="display_cgst" class="text-right">CGST</th>
+                <th t-if="display_sgst" class="text-right">SGST</th>
+                <th t-if="display_igst" class="text-right">IGST</th>
+                <th t-if="display_cess" class="text-right">CESS</th>
             </t>
         </xpath>
 
@@ -41,36 +36,20 @@
 
         <xpath expr="//t[@name='account_invoice_line_accountable']" position="inside">
             <t t-if="o.company_id.country_id.code == 'IN'">
-                <td class="text-right" t-if="is_cgst">
-                    <t t-foreach="tax_datas[line.id]" t-as="tax_data">
-                        <t t-if="tag_cgst_id in tax_data['tag_ids']">
-                            <t t-esc="tax_data['amount']" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
-                        </t>
-                    </t>
-                </td>
-                <td class="text-right" t-if="is_cgst">
-                    <t t-foreach="tax_datas[line.id]" t-as="tax_data">
-                        <t t-if="tag_sgst_id in tax_data['tag_ids']">
-                            <t t-esc="tax_data['amount']" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
-                        </t>
-                    </t>
-                </td>
-                <td class="text-right" t-if="is_igst">
-                    <t t-foreach="tax_datas[line.id]" t-as="tax_data">
-                        <t t-if="tag_igst_id in tax_data['tag_ids']">
-                            <t t-esc="tax_data['amount']" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
-                        </t>
-                    </t>
-                </td>
-                <td class="text-right" t-if="is_cess">
-                    <t t-set="total_cess" t-value="0.0"/>
-                    <t t-foreach="tax_datas[line.id]" t-as="tax_data">
-                        <t t-if="tag_cess_id in tax_data['tag_ids']">
-                            <t t-set="total_cess" t-value="total_cess + tax_data['amount']" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
-                        </t>
-                    </t>
-                    <t t-esc="total_cess" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
-                </td>
+                <t t-if="o.company_id.country_id.code == 'IN'">
+                    <td class="text-right" t-if="display_cgst">
+                        <span t-field="line.l10n_in_cgst_amount" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                    </td>
+                    <td class="text-right" t-if="display_sgst">
+                        <span t-field="line.l10n_in_sgst_amount" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                    </td>
+                    <td class="text-right" t-if="display_igst">
+                        <span t-field="line.l10n_in_igst_amount" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                    </td>
+                    <td class="text-right" t-if="display_cess">
+                        <t t-esc="line.l10n_in_cess_amount" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                    </td>
+                </t>
             </t>
         </xpath>
 
