@@ -41,8 +41,8 @@ def geo_query_address(street=None, zip=None, city=None, state=None, country=None
 class ResPartner(models.Model):
     _inherit = "res.partner"
 
-    partner_latitude = fields.Float(string='Geo Latitude', digits=(16, 5))
-    partner_longitude = fields.Float(string='Geo Longitude', digits=(16, 5))
+    partner_latitude = fields.Float(string='Geo Latitude', digits=(16, 5), is_business_field = True)
+    partner_longitude = fields.Float(string='Geo Longitude', digits=(16, 5), is_business_field = True)
     date_localization = fields.Date(string='Geolocation Date')
 
     @api.multi

@@ -70,7 +70,7 @@ class PartnerCategory(models.Model):
     _order = 'name'
     _parent_store = True
 
-    name = fields.Char(string='Tag Name', required=True, translate=True)
+    name = fields.Char(string='Tag Name', required=True, translate=True, is_business_field = True)
     color = fields.Integer(string='Color Index')
     parent_id = fields.Many2one('res.partner.category', string='Parent Category', index=True, ondelete='cascade')
     child_ids = fields.One2many('res.partner.category', 'parent_id', string='Child Tags')
@@ -136,15 +136,15 @@ class Partner(models.Model):
     def _default_company(self):
         return self.env['res.company']._company_default_get('res.partner')
 
-    name = fields.Char(index=True)
+    name = fields.Char(index=True, is_business_field = True)
     display_name = fields.Char(compute='_compute_display_name', store=True, index=True)
     date = fields.Date(index=True)
-    title = fields.Many2one('res.partner.title')
+    title = fields.Many2one('res.partner.title', is_business_field = True)
     parent_id = fields.Many2one('res.partner', string='Related Company', index=True)
     parent_name = fields.Char(related='parent_id.name', readonly=True, string='Parent name')
     child_ids = fields.One2many('res.partner', 'parent_id', string='Contacts', domain=[('active', '=', True)])  # force "active_test" domain to bypass _search() override
-    ref = fields.Char(string='Internal Reference', index=True)
-    lang = fields.Selection(_lang_get, string='Language', default=lambda self: self.env.lang,
+    ref = fields.Char(string='Internal Reference', index=True, is_business_field = True)
+    lang = fields.Selection(_lang_get, string='Language', default=lambda self: self.env.lang, is_business_field=True,
                             help="If the selected language is loaded in the system, all documents related to "
                                  "this contact will be printed in this language. If not, it will be English.")
     tz = fields.Selection(_tz_get, string='Timezone', default=lambda self: self._context.get('tz'),
@@ -153,7 +153,7 @@ class Partner(models.Model):
                                "You should use the same timezone that is otherwise used to pick and "
                                "render date and time values: your computer's timezone.")
     tz_offset = fields.Char(compute='_compute_tz_offset', string='Timezone offset', invisible=True)
-    user_id = fields.Many2one('res.users', string='Salesperson',
+    user_id = fields.Many2one('res.users', string='Salesperson', is_business_field=True,
       help='The internal user that is in charge of communicating with this contact if any.')
     vat = fields.Char(string='TIN', help="Tax Identification Number. "
                                          "Fill it if the company is subjected to taxes. "
@@ -162,17 +162,17 @@ class Partner(models.Model):
     website = fields.Char(help="Website of Partner or Company")
     comment = fields.Text(string='Notes')
 
-    category_id = fields.Many2many('res.partner.category', column1='partner_id',
+    category_id = fields.Many2many('res.partner.category', column1='partner_id', is_business_field=True,
                                     column2='category_id', string='Tags', default=_default_category)
     credit_limit = fields.Float(string='Credit Limit')
     barcode = fields.Char(oldname='ean13')
-    active = fields.Boolean(default=True)
-    customer = fields.Boolean(string='Is a Customer', default=True,
+    active = fields.Boolean(default=True, is_business_field=True)
+    customer = fields.Boolean(string='Is a Customer', default=True, is_business_field=True,
                                help="Check this box if this contact is a customer.")
-    supplier = fields.Boolean(string='Is a Vendor',
+    supplier = fields.Boolean(string='Is a Vendor', is_business_field=True,
                                help="Check this box if this contact is a vendor. "
                                "If it's not checked, purchase people will not see it when encoding a purchase order.")
-    employee = fields.Boolean(help="Check this box if this contact is an Employee.")
+    employee = fields.Boolean(help="Check this box if this contact is an Employee.", is_business_field=True)
     function = fields.Char(string='Job Position')
     type = fields.Selection(
         [('contact', 'Contact'),
@@ -181,23 +181,23 @@ class Partner(models.Model):
          ('other', 'Other address'),
          ("private", "Private Address"),
         ], string='Address Type',
-        default='contact',
+        default='contact', is_business_field=True,
         help="Used to select automatically the right address according to the context in sales and purchases documents.")
-    street = fields.Char()
-    street2 = fields.Char()
-    zip = fields.Char(change_default=True)
-    city = fields.Char()
-    state_id = fields.Many2one("res.country.state", string='State', ondelete='restrict')
-    country_id = fields.Many2one('res.country', string='Country', ondelete='restrict')
-    email = fields.Char()
+    street = fields.Char(is_business_field = True)
+    street2 = fields.Char(is_business_field = True)
+    zip = fields.Char(change_default=True, is_business_field = True)
+    city = fields.Char(is_business_field = True)
+    state_id = fields.Many2one("res.country.state", string='State', ondelete='restrict', is_business_field = True)
+    country_id = fields.Many2one('res.country', string='Country', ondelete='restrict', is_business_field = True)
+    email = fields.Char(is_business_field = True)
     email_formatted = fields.Char(
         'Formatted Email', compute='_compute_email_formatted',
         help='Format email address "Name <email@domain>"')
-    phone = fields.Char()
-    mobile = fields.Char()
-    is_company = fields.Boolean(string='Is a Company', default=False,
+    phone = fields.Char(is_business_field = True)
+    mobile = fields.Char(is_business_field = True)
+    is_company = fields.Boolean(string='Is a Company', default=False, is_business_field=True,
         help="Check if the contact is a company, otherwise it is a person")
-    industry_id = fields.Many2one('res.partner.industry', 'Industry')
+    industry_id = fields.Many2one('res.partner.industry', 'Industry', is_business_field = True)
     # company_type is only an interface field, do not use it in business logic
     company_type = fields.Selection(string='Company Type',
         selection=[('person', 'Individual'), ('company', 'Company')],
@@ -216,7 +216,7 @@ class Partner(models.Model):
                                              string='Commercial Entity', store=True, index=True)
     commercial_company_name = fields.Char('Company Name Entity', compute='_compute_commercial_company_name',
                                           store=True)
-    company_name = fields.Char('Company Name')
+    company_name = fields.Char('Company Name', is_business_field=True)
 
     # image: all image fields are base64 encoded and PIL-supported
     image = fields.Binary("Image", attachment=True,
@@ -833,6 +833,6 @@ class ResPartnerIndustry(models.Model):
     _name = "res.partner.industry"
     _order = "name"
 
-    name = fields.Char('Name', translate=True)
+    name = fields.Char('Name', translate=True, is_business_field = True)
     full_name = fields.Char('Full Name', translate=True)
     active = fields.Boolean('Active', default=True)

@@ -33,7 +33,7 @@ class Country(models.Model):
     _order = 'name'
 
     name = fields.Char(
-        string='Country Name', required=True, translate=True, help='The full name of the country.')
+        string='Country Name', required=True, translate=True, is_business_field = True, help='The full name of the country.')
     code = fields.Char(
         string='Country Code', size=2,
         help='The ISO country code in two chars. \nYou can use this field for quick search.')
@@ -108,7 +108,7 @@ class CountryState(models.Model):
     _order = 'code'
 
     country_id = fields.Many2one('res.country', string='Country', required=True)
-    name = fields.Char(string='State Name', required=True,
+    name = fields.Char(string='State Name', required=True, is_business_field=True,
                help='Administrative divisions of a country. E.g. Fed. State, Departement, Canton')
     code = fields.Char(string='State Code', help='The state code.', required=True)
 

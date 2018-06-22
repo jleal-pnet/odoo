@@ -13,12 +13,12 @@ class Partner(models.Model):
         help="A member with whom you want to associate your membership. "
              "It will consider the membership state of the associated member.")
     member_lines = fields.One2many('membership.membership_line', 'partner', string='Membership')
-    free_member = fields.Boolean(string='Free Member',
+    free_member = fields.Boolean(string='Free Member', is_business_field = True,
         help="Select if you want to give free membership.")
     membership_amount = fields.Float(string='Membership Amount', digits=(16, 2),
         help='The price negotiated by the partner')
     membership_state = fields.Selection(membership.STATE, compute='_compute_membership_state',
-        string='Current Membership Status', store=True,
+        string='Current Membership Status', store=True, is_business_field = True,
         help='It indicates the membership state.\n'
              '-Non Member: A partner who has not applied for any membership.\n'
              '-Cancelled Member: A member who has cancelled his membership.\n'

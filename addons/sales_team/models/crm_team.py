@@ -40,7 +40,7 @@ class CrmTeam(models.Model):
     def _get_default_favorite_user_ids(self):
         return [(6, 0, [self.env.uid])]
 
-    name = fields.Char('Sales Channel', required=True, translate=True)
+    name = fields.Char('Sales Channel', required=True, translate=True, is_business_field = True)
     active = fields.Boolean(default=True, help="If the active field is set to false, it will allow you to hide the sales channel without removing it.")
     company_id = fields.Many2one('res.company', string='Company',
                                  default=lambda self: self.env['res.company']._company_default_get('crm.team'))
