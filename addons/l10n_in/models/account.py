@@ -30,6 +30,12 @@ class AccountMove(models.Model):
     l10n_in_shipping_port_code_id = fields.Many2one('l10n_in.port.code', 'Shipping port code', states={'posted': [('readonly', True)]})
     l10n_in_reseller_partner_id = fields.Many2one('res.partner', 'Reseller', domain=[('vat', '!=', False)], states={'posted': [('readonly', True)]})
     l10n_in_reverse_charge = fields.Boolean('Reverse Charge', states={'posted': [('readonly', True)]})
+    l10n_in_gstin_partner_id = fields.Many2one(
+        'res.partner',
+        string="GSTIN",
+        required=True,
+        default=lambda self: self.env['res.company']._company_default_get('account.move').partner_id,
+        domain="[('l10n_in_gstin_company_id', '=', company_id)]")
 
 
 class AccountMoveLine(models.Model):

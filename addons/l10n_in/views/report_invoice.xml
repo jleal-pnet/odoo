@@ -2,6 +2,12 @@
 <odoo>
     <template id="l10n_in_report_invoice_document_inherit" inherit_id="account.report_invoice_document">
 
+        <xpath expr="//t[@t-call='web.external_layout']" position="attributes">
+            <t t-if="o.company_id.country_id.code == 'IN'">
+                <attribute name="t-call">l10n_in.l10n_in_external_layout</attribute>
+            </t>
+        </xpath>
+
         <xpath expr="//table[@name='invoice_line_table']" position="before">
             <t t-if="o.company_id.country_id.code == 'IN'">
                 <!-- Tag wise Tax Calculation -->

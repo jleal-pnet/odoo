@@ -30,12 +30,20 @@ class AccountInvoice(models.Model):
     l10n_in_shipping_port_code_id = fields.Many2one('l10n_in.port.code', 'Shipping port code', states={'draft': [('readonly', False)]})
     l10n_in_reseller_partner_id = fields.Many2one('res.partner', 'Reseller', domain=[('vat', '!=', False)], help="Only Registered Reseller", readonly=True, states={'draft': [('readonly', False)]})
     l10n_in_reverse_charge = fields.Boolean('Reverse Charge', readonly=True, states={'draft': [('readonly', False)]})
+    l10n_in_gstin_partner_id = fields.Many2one(
+        'res.partner',
+        string="GSTIN",
+        required=True,
+        default=lambda self: self.env['res.company']._company_default_get('account.invoice').partner_id,
+        readonly=True, states={'draft': [('readonly', False)]}
+        )
 
     @api.model
     def _get_refund_common_fields(self):
         """This list of fields value pass to refund invoice."""
         return super(AccountInvoice, self)._get_refund_common_fields() + [
-            'l10n_in_reverse_charge']
+            'l10n_in_reverse_charge',
+            'l10n_in_gstin_partner_id']
 
     def _get_printed_report_name(self):
         self.ensure_one()
@@ -79,7 +87,8 @@ class AccountInvoice(models.Model):
                 'l10n_in_shipping_bill_date': inv.l10n_in_shipping_bill_date,
                 'l10n_in_shipping_port_code_id': inv.l10n_in_shipping_port_code_id.id,
                 'l10n_in_reseller_partner_id': inv.l10n_in_reseller_partner_id.id,
-                'l10n_in_reverse_charge': inv.l10n_in_reverse_charge
+                'l10n_in_reverse_charge': inv.l10n_in_reverse_charge,
+                'l10n_in_gstin_partner_id': inv.l10n_in_gstin_partner_id.id
                 }
             inv.move_id.write(vals)
         return res
@@ -107,6 +116,10 @@ class AccountInvoice(models.Model):
     def _onchange_l10n_in_reverse_charge(self):
         """For update tax_lines."""
         return self._onchange_invoice_line_ids()
+
+    @api.onchange('company_id')
+    def _onchange_l10n_in_company(self):
+        self.l10n_in_gstin_partner_id = self.company_id.partner_id
 
 
 class AccountInvoiceLine(models.Model):
