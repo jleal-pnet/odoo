@@ -303,6 +303,7 @@ class Field(MetaField('DummyField', (object,), {})):
         'help': None,                   # field tooltip
         'readonly': False,              # whether the field is readonly
         'required': False,              # whether the field is required
+        'is_business_field': False,     # whether the field is business related
         'states': None,                 # set readonly and required depending on state
         'groups': None,                 # csv list of group xml ids
         'change_default': False,        # whether the field may trigger a "user-onchange"
@@ -620,6 +621,7 @@ class Field(MetaField('DummyField', (object,), {})):
     _related_string = property(attrgetter('string'))
     _related_help = property(attrgetter('help'))
     _related_readonly = property(attrgetter('readonly'))
+    _related_is_business_field = property(attrgetter('is_business_field'))
     _related_groups = property(attrgetter('groups'))
     _related_group_operator = property(attrgetter('group_operator'))
 
@@ -734,6 +736,7 @@ class Field(MetaField('DummyField', (object,), {})):
     _description_depends = property(attrgetter('depends'))
     _description_related = property(attrgetter('related'))
     _description_company_dependent = property(attrgetter('company_dependent'))
+    _description_is_business_field = property(attrgetter('is_business_field'))
     _description_readonly = property(attrgetter('readonly'))
     _description_required = property(attrgetter('required'))
     _description_states = property(attrgetter('states'))

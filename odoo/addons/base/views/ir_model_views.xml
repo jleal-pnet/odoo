@@ -253,6 +253,7 @@
                                     <group>
                                         <field name="required"/>
                                         <field name="readonly"/>
+                                        <field name="is_business_field"/>
                                         <field name="store" groups="base.group_no_one"/>
                                         <field name="index" groups="base.group_no_one"/>
                                         <field name="copy" groups="base.group_no_one"/>

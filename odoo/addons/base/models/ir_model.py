@@ -349,6 +349,7 @@ class IrModelFields(models.Model):
                                                       "a list of comma-separated field names, like\n\n"
                                                       "    name, partner_id.name")
     store = fields.Boolean(string='Stored', default=True, help="Whether the value is stored in the database.")
+    is_business_field = fields.Boolean(string='Business Field', help="Whether the field is business related")
 
     @api.depends('relation', 'relation_field')
     def _compute_relation_field_id(self):
@@ -757,6 +758,7 @@ class IrModelFields(models.Model):
             'related': ".".join(field.related) if field.related else None,
             'readonly': bool(field.readonly),
             'required': bool(field.required),
+            'is_business_field': bool(field.is_business_field),
             'selectable': bool(field.search or field.store),
             'translate': bool(field.translate),
             'relation_field': field.inverse_name if field.type == 'one2many' else None,
@@ -856,6 +858,7 @@ class IrModelFields(models.Model):
             'required': bool(field_data['required']),
             'readonly': bool(field_data['readonly']),
             'store': bool(field_data['store']),
+            'is_business_field': bool(field_data['is_business_field']),
         }
         if field_data['ttype'] in ('char', 'text', 'html'):
             attrs['translate'] = bool(field_data['translate'])
