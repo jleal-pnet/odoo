@@ -1,27 +1,73 @@
-.oe_kanban_global_area {
-    border-radius: 5px;
+.o_kanban_view .o_kanban_record.o_kanban_attachment {
+    @include o-flex-display();
+    height: 100px;
+    margin: 8px 4px;
+    padding: 0;
 
-}
-.o_image_thumbnail {
-    //width: 20%;
-    //height: 100%;
-}
+    .o_kanban_image {
+        @include o-flex-display();
+        min-width: 100px;
+        align-items: center;
+        justify-content: center;
+        
+        .o_image {
+            background-repeat: no-repeat;
+            transform: scale(1.8);
+        }
 
-.o_no_preview {
+        .o_attachment_image > img {
+            padding: 0;
+        }
 
-    width:60px;
-    height:60px;
-}
+        & + div {
+            padding-left: 0;
+        }
+    }
 
-.o_bottom_right {
-    position: absolute;
-    right: 5%;
-    bottom: 7%;
+    .oe_kanban_details {
+        @include o-flex(1, 1, auto);
+        @include o-flex-display();
+        @include o-flex-direction(column);
+        margin-left: 12px;
 
-}
+        .o_kanban_title {
+            @include o-flex(1, 1, auto);
+            margin: 8px 8px 0 0;
 
-.o_kanban_title {
-    left: 22%;
-    overflow: hidden;
-    max-width: 56%;
+            font-size: $font-size-h4;
+            font-weight: bold;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .o_kanban_content {
+            @include o-flex(1, 1, auto);
+            margin: 8px 8px 0 0;
+            font-size: $font-size-small;
+        }
+
+        .o_kanban_record_bottom {
+            @include o-flex-display();
+            justify-content: end;
+            align-items: center;
+            margin: 8px 8px 8px 0;
+
+            .o_bottom_left {
+                @include o-flex(1, 1, auto);
+                text-align: left;
+                color: $gray-light;
+                font-weight: bold;
+            }
+
+            .o_bottom_right {
+                text-align: right;
+            }
+
+            .oe_kanban_avatar {
+                border-radius: 4px;
+                border: 1px solid $gray-lighter;
+            }
+        }
+    }
+
 }

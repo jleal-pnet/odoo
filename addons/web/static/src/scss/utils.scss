@@ -33,6 +33,13 @@
 
     display: inline-flex;
 }
+@mixin o-flex-direction($direction) {
+    -ms-flex-direction: $direction;
+    -moz-flex-direction: $direction;
+    -webkit-flex-direction: $direction;
+    -o-flex-direction: $direction;
+    flex-direction: $direction;
+}
 @mixin o-flex-flow($direction, $wrap) {
     -ms-flex-flow: $direction $wrap;
     -moz-flex-flow: $direction $wrap;
