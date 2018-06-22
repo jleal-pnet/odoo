@@ -49,6 +49,7 @@ Sheet, now only Vertical format has been permitted Which is Supported By Odoo.
         'wizard/account_invoice_refund_views.xml',
         'report/account_invoice_report_views.xml',
         'report/account_payment_report_views.xml',
-        'report/hsn_gst_report_views.xml'
+        'report/hsn_gst_report_views.xml',
+        'report/exempted_gst_report_views.xml'
     ],
 }

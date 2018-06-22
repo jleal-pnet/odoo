@@ -91,9 +91,13 @@ class AccountMoveLine(models.Model):
         """Find GST tax from tax_ids and set in l10n_in_tax_id"""
         igst_group = self.env.ref('l10n_in.igst_group', False)
         gst_group = self.env.ref('l10n_in.gst_group', False)
+        exempt_group = self.env.ref('l10n_in.exempt_group', False)
+        nil_rated_group = self.env.ref('l10n_in.nil_rated_group', False)
         gst_group_ids = [
             gst_group and gst_group.id or False,
-            igst_group and igst_group.id or False]
+            igst_group and igst_group.id or False,
+            exempt_group and exempt_group.id or False,
+            nil_rated_group and nil_rated_group.id or False]
         for line in self:
             tax_id = False
             for tax in line.tax_ids:

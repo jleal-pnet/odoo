@@ -83,6 +83,13 @@
             <field name="chart_template_id" ref="indian_chart_template_standard"/>
             <field name="tag_ids" eval="[(6,0,[ref('cess_tag_account'),])]"/>
         </record>
+        <record id="p10056" model="account.account.template">
+            <field name="name">Tax Receivable</field>
+            <field name="code">10056</field>
+            <field name="user_type_id" ref="account.data_account_type_current_assets"/>
+            <field name="reconcile" eval="False"/>
+            <field name="chart_template_id" ref="indian_chart_template_standard"/>
+        </record>
         <record model="account.account.template" id="p10061">
             <field name="name">Deposit Account</field>
             <field name="code">10061</field>
@@ -239,6 +246,13 @@
             <field name="reconcile" eval="False"/>
             <field name="chart_template_id" ref="indian_chart_template_standard"/>
             <field name="tag_ids" eval="[(6,0,[ref('cess_tag_account'),])]"/>
+        </record>
+        <record id="p11236" model="account.account.template">
+            <field name="name">Tax Payable</field>
+            <field name="code">11236</field>
+            <field name="user_type_id" ref="account.data_account_type_current_liabilities"/>
+            <field name="reconcile" eval="False"/>
+            <field name="chart_template_id" ref="indian_chart_template_standard"/>
         </record>
         <record model="account.account.template" id="p11241">
             <field name="name">Wages Payable</field>

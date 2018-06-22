@@ -76,6 +76,36 @@ if tax > result:result=tax</field>
         <field name="tag_ids" eval="[(6,0,[ref('cess_tag_tax'),])]"/>
     </record>
 
+    <!-- Exempt -->
+
+    <record id="exempt_sale" model="account.tax.template">
+        <field name="name">Exempt Sale</field>
+        <field name="description">Exempt</field>
+        <field name="type_tax_use">sale</field>
+        <field name="amount_type">percent</field>
+        <field name="amount">0</field>
+        <field name="account_id" ref="p11236"/>
+        <field name="refund_account_id" ref="p10056"/>
+        <field name="chart_template_id" ref="indian_chart_template_standard"/>
+        <field name="tax_group_id" ref="exempt_group"/>
+        <field name="l10n_in_description">0</field>
+    </record>
+
+    <!-- Nil Rated -->
+
+    <record id="nil_rated_sale" model="account.tax.template">
+        <field name="name">Nil Rated</field>
+        <field name="description">Nil Rated</field>
+        <field name="type_tax_use">sale</field>
+        <field name="amount_type">percent</field>
+        <field name="amount">0</field>
+        <field name="account_id" ref="p11236"/>
+        <field name="refund_account_id" ref="p10056"/>
+        <field name="chart_template_id" ref="indian_chart_template_standard"/>
+        <field name="tax_group_id" ref="nil_rated_group"/>
+        <field name="l10n_in_description">0</field>
+    </record>
+
     <!-- IGST -->
 
     <record id="igst_sale_1" model="account.tax.template">
@@ -458,6 +488,36 @@ if tax > result:result=tax</field>
         <field name="tax_group_id" ref="cess_group"/>
         <field name="chart_template_id" ref="indian_chart_template_standard"/>
         <field name="tag_ids" eval="[(6,0,[ref('cess_tag_tax'),])]"/>
+    </record>
+
+    <!-- Exempt -->
+
+    <record id="exempt_purchase" model="account.tax.template">
+        <field name="name">Exempt purchase</field>
+        <field name="description">Exempt</field>
+        <field name="type_tax_use">purchase</field>
+        <field name="amount_type">percent</field>
+        <field name="amount">0</field>
+        <field name="account_id" ref="p10056"/>
+        <field name="refund_account_id" ref="p11236"/>
+        <field name="chart_template_id" ref="indian_chart_template_standard"/>
+        <field name="tax_group_id" ref="exempt_group"/>
+        <field name="l10n_in_description">0</field>
+    </record>
+
+    <!-- Nil Rated -->
+
+    <record id="nil_rated_purchase" model="account.tax.template">
+        <field name="name">Nil Rated</field>
+        <field name="description">Nil Rat</field>
+        <field name="type_tax_use">purchase</field>
+        <field name="amount_type">percent</field>
+        <field name="amount">0</field>
+        <field name="account_id" ref="p10056"/>
+        <field name="refund_account_id" ref="p11236"/>
+        <field name="chart_template_id" ref="indian_chart_template_standard"/>
+        <field name="tax_group_id" ref="nil_rated_group"/>
+        <field name="l10n_in_description">0</field>
     </record>
 
     <!-- IGST -->
