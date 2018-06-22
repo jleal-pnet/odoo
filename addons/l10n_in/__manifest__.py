@@ -30,6 +30,7 @@ Sheet, now only Vertical format has been permitted Which is Supported By Odoo.
         'data/res_country_state_data.xml',
         'data/account_chart_template_data.xml',
         'data/refund_reason_data.xml',
+        'data/uom_data.xml',
         'views/account_invoice_views.xml',
         'views/account_journal_views.xml',
         'views/account_move_views.xml',
@@ -44,8 +45,10 @@ Sheet, now only Vertical format has been permitted Which is Supported By Odoo.
         'views/res_country_state_view.xml',
         'views/res_partner_views.xml',
         'views/account_tax_views.xml',
+        'views/uom_uom_views.xml',
         'wizard/account_invoice_refund_views.xml',
         'report/account_invoice_report_views.xml',
-        'report/account_payment_report_views.xml'
+        'report/account_payment_report_views.xml',
+        'report/hsn_gst_report_views.xml'
     ],
 }
