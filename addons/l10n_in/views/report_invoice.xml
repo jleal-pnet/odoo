@@ -18,6 +18,9 @@
                     <strong>Total (In Words): </strong>
                     <span t-field="o.amount_total_words"/>
                 </p>
+                <p t-if="o.l10n_in_reverse_charge" name="l10n_in_reverse_charge">
+                    <strong>*Tax to be paid on Reverse Charge</strong>
+                </p>
             </t>
         </xpath>
 

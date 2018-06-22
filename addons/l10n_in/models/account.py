@@ -29,6 +29,7 @@ class AccountMove(models.Model):
     l10n_in_shipping_bill_date = fields.Date('Shipping bill date', states={'posted': [('readonly', True)]})
     l10n_in_shipping_port_code_id = fields.Many2one('l10n_in.port.code', 'Shipping port code', states={'posted': [('readonly', True)]})
     l10n_in_reseller_partner_id = fields.Many2one('res.partner', 'Reseller', domain=[('vat', '!=', False)], states={'posted': [('readonly', True)]})
+    l10n_in_reverse_charge = fields.Boolean('Reverse Charge', states={'posted': [('readonly', True)]})
 
 
 class AccountMoveLine(models.Model):

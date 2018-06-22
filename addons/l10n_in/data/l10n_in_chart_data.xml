@@ -23,6 +23,10 @@
             <field name="name">IGST</field>
             <field name="applicability">accounts</field>
         </record>
+        <record id="cess_tag_account" model="account.account.tag">
+            <field name="name">CESS</field>
+            <field name="applicability">accounts</field>
+        </record>
 
         <record model="account.account.template" id="p10031">
             <field name="name">Inventories</field>
@@ -70,6 +74,14 @@
             <field name="user_type_id" ref="account.data_account_type_current_assets"/>
             <field name="reconcile" eval="False"/>
             <field name="chart_template_id" ref="indian_chart_template_standard"/>
+        </record>
+        <record id="p10055" model="account.account.template">
+            <field name="name">CESS Receivable</field>
+            <field name="code">10055</field>
+            <field name="user_type_id" ref="account.data_account_type_current_assets"/>
+            <field name="reconcile" eval="False"/>
+            <field name="chart_template_id" ref="indian_chart_template_standard"/>
+            <field name="tag_ids" eval="[(6,0,[ref('cess_tag_account'),])]"/>
         </record>
         <record model="account.account.template" id="p10061">
             <field name="name">Deposit Account</field>
@@ -219,6 +231,14 @@
             <field name="reconcile" eval="False"/>
             <field name="chart_template_id" ref="indian_chart_template_standard"/>
             <field name="tag_ids" eval="[(6,0,[ref('igst_tag_account'),])]"/>
+        </record>
+        <record model="account.account.template" id="p11235">
+            <field name="name">CESS Payable</field>
+            <field name="code">11235</field>
+            <field name="user_type_id" ref="account.data_account_type_current_liabilities"/>
+            <field name="reconcile" eval="False"/>
+            <field name="chart_template_id" ref="indian_chart_template_standard"/>
+            <field name="tag_ids" eval="[(6,0,[ref('cess_tag_account'),])]"/>
         </record>
         <record model="account.account.template" id="p11241">
             <field name="name">Wages Payable</field>
