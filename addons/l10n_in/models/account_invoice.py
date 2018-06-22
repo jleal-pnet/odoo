@@ -37,6 +37,7 @@ class AccountInvoice(models.Model):
         default=lambda self: self.env['res.company']._company_default_get('account.invoice').partner_id,
         readonly=True, states={'draft': [('readonly', False)]}
         )
+    l10n_in_refund_reason_id = fields.Many2one('l10n_in.refund.reason', string="Refund Reason")
 
     @api.model
     def _get_refund_common_fields(self):

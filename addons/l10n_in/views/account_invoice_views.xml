@@ -20,7 +20,10 @@
             </xpath>
             <xpath expr="//page[@name='other_info']//field[@name='account_id']" position="after">
                 <field name="l10n_in_gstin_partner_id" groups='l10n_in.group_l10n_in_multi_gstin' options="{'no_create': True}" domain="[('l10n_in_gstin_company_id', '=', company_id)]"/>
-           </xpath>
+            </xpath>
+            <xpath expr="//page[@name='other_info']//field[@name='name']" position="after">
+                <field name="l10n_in_refund_reason_id" attrs="{'invisible': [('type', 'not in', ('in_refund','out_refund'))], 'readonly': [('state','!=','draft')]}"/>
+            </xpath>
         </field>
     </record>
 </odoo>
