@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="l10n_in_advances_payment_report_tree_view" model="ir.ui.view">
+        <field name="name">l10n_in.advances.payment.report.tree</field>
+        <field name="model">l10n_in.advances.payment.report</field>
+        <field name="arch" type="xml">
+            <tree string="GST Payment Report">
+                <field name="gstin_partner_id" groups='l10n_in.group_l10n_in_multi_gstin'/>
+                <field name="payment_id"/>
+                <field name="date"/>
+                <field name="amount"/>
+                <field name="reconcile_amount" groups="base.group_no_one"/>
+                <field name="partner_id"/>
+                <field name="supply_type"/>
+                <field name="payment_type"/>
+                <field name="default_tax_id" groups="base.group_no_one"/>
+                <field name="l10n_in_description"/>
+                <field name="igst_amount"/>
+                <field name="cgst_amount"/>
+                <field name="sgst_amount"/>
+                <field name="cess_amount"/>
+                <field name="place_of_supply"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="l10n_in_advances_payment_report_search_view" model="ir.ui.view">
+        <field name="name">l10n_in.advances.payment.report.search</field>
+        <field name="model">l10n_in.advances.payment.report</field>
+        <field name="arch" type="xml">
+            <search string="GST Payment Report">
+                <field name="gstin_partner_id" groups='l10n_in.group_l10n_in_multi_gstin'/>
+                <separator/>
+                <filter string="This Month" name="this_month" domain="[('date', '&gt;=', context_today().strftime('%%Y-%%m-01')), ('date', '&lt;', (context_today() + relativedelta(months=1)).strftime('%%Y-%%m-01'))]"/>
+                <filter string="Last Month" name="last_month" domain="['&amp;', ('date', '&gt;=', (context_today() - relativedelta(months=1)).strftime('%%Y-%%m-01')), ('date', '&lt;', context_today().strftime('%%Y-%%m-01'))]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Supply Type" name="group_out_supply_type" domain="[]" context="{'group_by':'place_of_supply'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="l10n_in_advances_payment_report_action" model="ir.actions.act_window">
+        <field name="name">GST Advances Payment Report</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">l10n_in.advances.payment.report</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">tree</field>
+        <field name="domain">[('amount', '>', 0),('payment_type','=','inbound')]</field>
+        <field name="context">{'search_default_this_month': 1}</field>
+    </record>
+
+    <menuitem name="GST Payment Report" parent="l10n_in.account_reports_in_statements_menu" sequence="2" action="l10n_in_advances_payment_report_action" id="menu_l10n_in_advances_payment_report"/>
+
+
+    <record id="l10n_in_advances_payment_adjustment_report_tree_view" model="ir.ui.view">
+        <field name="name">l10n_in.advances.payment.adjustment.report.tree</field>
+        <field name="model">l10n_in.advances.payment.adjustment.report</field>
+        <field name="arch" type="xml">
+            <tree string="GST Payment Adjustment Report">
+                <field name="gstin_partner_id" groups='l10n_in.group_l10n_in_multi_gstin'/>
+                <field name="payment_id"/>
+                <field name="date"/>
+                <field name="amount"/>
+                <field name="partner_id"/>
+                <field name="supply_type"/>
+                <field name="payment_type"/>
+                <field name="default_tax_id" groups="base.group_no_one"/>
+                <field name="l10n_in_description"/>
+                <field name="igst_amount"/>
+                <field name="cgst_amount"/>
+                <field name="sgst_amount"/>
+                <field name="cess_amount"/>
+                <field name="place_of_supply"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="l10n_in_advances_payment_adjustment_report_search_view" model="ir.ui.view">
+        <field name="name">l10n_in.advances.payment.adjustment.report.search</field>
+        <field name="model">l10n_in.advances.payment.adjustment.report</field>
+        <field name="arch" type="xml">
+            <search string="GST Payment Adjustment Report">
+                <field name="gstin_partner_id" groups='l10n_in.group_l10n_in_multi_gstin'/>
+                <separator/>
+                <filter string="This Month" name="this_month" domain="[('date', '&gt;=', context_today().strftime('%%Y-%%m-01')), ('date', '&lt;', (context_today() + relativedelta(months=1)).strftime('%%Y-%%m-01'))]"/>
+                <filter string="Last Month" name="last_month" domain="[('date', '&gt;=', (context_today() - relativedelta(months=1)).strftime('%%Y-%%m-01')), ('date', '&lt;', context_today().strftime('%%Y-%%m-01'))]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Supply Type" name="group_out_supply_type" domain="[]" context="{'group_by':'place_of_supply'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="l10n_in_advances_payment_adjustment_report_action" model="ir.actions.act_window">
+        <field name="name">GST advances payment adjustment report</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">l10n_in.advances.payment.adjustment.report</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">tree</field>
+        <field name="domain">[('payment_type','=','inbound')]</field>
+        <field name="context">{'search_default_this_month': 1}</field>
+    </record>
+    
+    <menuitem name="GST Payment Adjustment Report" parent="l10n_in.account_reports_in_statements_menu" sequence="3" action="l10n_in_advances_payment_adjustment_report_action" id="menu_l10n_in_advances_payment_adjustment_report"/>
+
+</odoo>
