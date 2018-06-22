@@ -47,6 +47,7 @@ class AccountMoveLine(models.Model):
     l10n_in_sgst_amount = fields.Float(string="SGST Amount", compute='_compute_l10n_in_taxes_amount', store=True, readonly=True)
     l10n_in_cess_amount = fields.Float(string="CESS Amount", compute='_compute_l10n_in_taxes_amount', store=True, readonly=True)
     l10n_in_tax_price_unit = fields.Float(string="Tax Base Amount")
+    l10n_in_tax_id = fields.Many2one('account.tax', compute="_compute_l10n_in_tax_id", store=True, readonly=True)
 
     @api.depends('l10n_in_tax_price_unit', 'tax_ids', 'quantity', 'product_id', 'partner_id', 'company_currency_id')
     def _compute_l10n_in_taxes_amount(self):
@@ -84,3 +85,25 @@ class AccountMoveLine(models.Model):
             if tax_group_id == (cess_group and cess_group.id or False):
                 res['cess_amount'] += tax_data['amount']
         return res
+
+    @api.depends('tax_ids')
+    def _compute_l10n_in_tax_id(self):
+        """Find GST tax from tax_ids and set in l10n_in_tax_id"""
+        igst_group = self.env.ref('l10n_in.igst_group', False)
+        gst_group = self.env.ref('l10n_in.gst_group', False)
+        gst_group_ids = [
+            gst_group and gst_group.id or False,
+            igst_group and igst_group.id or False]
+        for line in self:
+            tax_id = False
+            for tax in line.tax_ids:
+                if tax.tax_group_id.id in gst_group_ids:
+                    tax_id = tax.id
+            line.l10n_in_tax_id = tax_id
+
+
+class AccountTax(models.Model):
+    _inherit = 'account.tax'
+
+    #use in GSTR export report as Rate of tax.
+    l10n_in_description = fields.Char(string='Label on GST Report', help="Tax rate show in Indian GSTR report.")

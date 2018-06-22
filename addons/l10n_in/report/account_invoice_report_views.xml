@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="l10n_in_account_invoice_report_tree_view" model="ir.ui.view">
+        <field name="name">l10n_in.account.invoice.report.tree</field>
+        <field name="model">l10n_in.account.invoice.report</field>
+        <field name="arch" type="xml">
+            <tree string="GST Account Invoice Report">
+                <field name="gstin_partner_id" groups='l10n_in.group_l10n_in_multi_gstin'/>
+                <field name="name"/>
+                <field name="date"/>
+                <field name="partner_id"/>
+                <field name="partner_vat"/>
+                <field name="place_of_supply"/>
+                <field name="supply_type"/>
+                <field name="l10n_in_description"/>
+                <field name="igst_amount"/>
+                <field name="cgst_amount"/>
+                <field name="sgst_amount"/>
+                <field name="cess_amount"/>
+                <field name="price_total"/>
+                <field name="total"/>
+                <field name="ecommerce_partner_id"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="l10n_in_account_invoice_report_search_view" model="ir.ui.view">
+        <field name="name">l10n_in.account.invoice.report.search</field>
+        <field name="model">l10n_in.account.invoice.report</field>
+        <field name="arch" type="xml">
+            <search string="GST Account Invoice Report">
+                <field name="name" string="Invoice Number" filter_domain="[('name', 'ilike', self)]"/>
+                <separator/>
+                <filter name="b2b" string="B2B Invoice" domain="[('partner_vat','!=', False)]"/>
+                <filter name="b2bl" string="B2CL Invoice" domain="[('partner_vat','=', False),('total', '&gt;', '250000')]"/>
+                <filter name="b2bs" string="B2CS Invoice" domain="[('partner_vat','=', False),('total', '&lt;=', '250000')]"/>
+                <filter name="exp" string="Export Invoice" domain="[('journal_id.l10n_in_import_export','=', True)]"/>
+
+                <filter name="credit_note_registed" string="CDNR Invoice" help="" domain="[('partner_vat','!=', False),('invoice_type', 'in', ('out_refund','in_refund'))]"/>
+                <filter name="credit_note_unregisted" string="CDNUR Invoice" domain="[('partner_vat','=', False),('invoice_type', 'in', ('out_refund','in_refund'))]"/>
+                <separator/>
+                <filter string="This Month" name="this_month" domain="[('date', '&gt;=', context_today().strftime('%%Y-%%m-01')), ('date', '&lt;', (context_today() + relativedelta(months=1)).strftime('%%Y-%%m-01'))]"/>
+                <filter string="Last Month" name="last_month" domain="['&amp;', ('date', '&gt;=', (context_today() - relativedelta(months=1)).strftime('%%Y-%%m-01')), ('date', '&lt;', context_today().strftime('%%Y-%%m-01'))]"/>
+                <group expand="0" string="Group By">
+                        <filter name="group_by_gstin_partner_id" string="GSTIN" context="{'group_by':'gstin_partner_id'}" groups='l10n_in.group_l10n_in_multi_gstin'/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="l10n_in_account_invoice_report_action" model="ir.actions.act_window">
+        <field name="name">GSTR Invoice Report</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">l10n_in.account.invoice.report</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">tree</field>
+        <field name="domain">[('journal_id.type', '=', 'sale')]</field>
+        <field name="context">{'search_default_this_month': 1}</field>
+    </record>
+
+    <menuitem id="menu_l10n_in_account_invoice_report" name="GSTR Invoice Report" action="l10n_in_account_invoice_report_action" parent="l10n_in.account_reports_in_statements_menu" sequence="1"/>
+
+</odoo>
