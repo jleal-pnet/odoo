@@ -27,8 +27,8 @@ class SaleOrder(models.Model):
         string="Can be directly marked as paid", store=True,
         help="""Checked if the sales order can directly be marked as paid, i.e. if the quotation
                 is sent or confirmed and if the payment acquire is of the type transfer or manual""")
-    is_abandoned_cart = fields.Boolean('Abandoned Cart', compute='_compute_abandoned_cart', search='_search_abandoned_cart')
-    cart_recovery_email_sent = fields.Boolean('Cart recovery email already sent')
+    is_abandoned_cart = fields.Boolean('Abandoned Cart', compute='_compute_abandoned_cart', search='_search_abandoned_cart', is_business_field = True)
+    cart_recovery_email_sent = fields.Boolean('Cart recovery email already sent', is_business_field = True)
 
     @api.depends('state', 'transaction_ids')
     def _compute_can_directly_mark_as_paid(self):

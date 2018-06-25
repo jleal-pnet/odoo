@@ -113,9 +113,9 @@ class SaleOrder(models.Model):
         for order in self:
             order.order_line._compute_tax_id()
 
-    name = fields.Char(string='Order Reference', required=True, copy=False, readonly=True, states={'draft': [('readonly', False)]}, index=True, default=lambda self: _('New'))
+    name = fields.Char(string='Order Reference', required=True, copy=False, is_business_field = True, readonly=True, states={'draft': [('readonly', False)]}, index=True, default=lambda self: _('New'))
     origin = fields.Char(string='Source Document', help="Reference of the document that generated this sales order request.")
-    client_order_ref = fields.Char(string='Customer Reference', copy=False)
+    client_order_ref = fields.Char(string='Customer Reference', copy=False, is_business_field = True)
     access_token = fields.Char(
         'Security Token', copy=False,
         default=_get_default_access_token)
@@ -125,19 +125,19 @@ class SaleOrder(models.Model):
         ('sale', 'Sales Order'),
         ('done', 'Locked'),
         ('cancel', 'Cancelled'),
-        ], string='Status', readonly=True, copy=False, index=True, track_visibility='onchange', default='draft')
-    date_order = fields.Datetime(string='Order Date', required=True, readonly=True, index=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)]}, copy=False, default=fields.Datetime.now)
+        ], string='Status', readonly=True, copy=False, index=True, is_business_field = True, track_visibility='onchange', default='draft')
+    date_order = fields.Datetime(string='Order Date', required=True, readonly=True, is_business_field = True, index=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)]}, copy=False, default=fields.Datetime.now)
     validity_date = fields.Date(string='Quote Validity', readonly=True, copy=False, states={'draft': [('readonly', False)], 'sent': [('readonly', False)]},
         help="Validity date of the quotation, after this date, the customer won't be able to validate the quotation online.")
     is_expired = fields.Boolean(compute='_compute_is_expired', string="Is expired")
-    create_date = fields.Datetime(string='Creation Date', readonly=True, index=True, help="Date on which sales order is created.")
-    confirmation_date = fields.Datetime(string='Confirmation Date', readonly=True, index=True, help="Date on which the sales order is confirmed.", oldname="date_confirm", copy=False)
-    user_id = fields.Many2one('res.users', string='Salesperson', index=True, track_visibility='onchange', default=lambda self: self.env.user)
-    partner_id = fields.Many2one('res.partner', string='Customer', readonly=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)]}, required=True, change_default=True, index=True, track_visibility='always')
+    create_date = fields.Datetime(string='Creation Date', readonly=True, index=True, help="Date on which sales order is created.", is_business_field = True)
+    confirmation_date = fields.Datetime(string='Confirmation Date', readonly=True, index=True, is_business_field = True, help="Date on which the sales order is confirmed.", oldname="date_confirm", copy=False)
+    user_id = fields.Many2one('res.users', string='Salesperson', index=True, track_visibility='onchange', default=lambda self: self.env.user, is_business_field = True)
+    partner_id = fields.Many2one('res.partner', string='Customer', readonly=True, is_business_field = True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)]}, required=True, change_default=True, index=True, track_visibility='always')
     partner_invoice_id = fields.Many2one('res.partner', string='Invoice Address', readonly=True, required=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)], 'sale': [('readonly', False)]}, help="Invoice address for current sales order.")
     partner_shipping_id = fields.Many2one('res.partner', string='Delivery Address', readonly=True, required=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)], 'sale': [('readonly', False)]}, help="Delivery address for current sales order.")
 
-    pricelist_id = fields.Many2one('product.pricelist', string='Pricelist', required=True, readonly=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)]}, help="Pricelist for current sales order.")
+    pricelist_id = fields.Many2one('product.pricelist', string='Pricelist', is_business_field = True, required=True, readonly=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)]}, help="Pricelist for current sales order.")
     currency_id = fields.Many2one("res.currency", related='pricelist_id.currency_id', string="Currency", readonly=True, required=True)
     analytic_account_id = fields.Many2one('account.analytic.account', 'Analytic Account', readonly=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)]}, help="The analytic account related to a sales order.", copy=False, oldname='project_id')
 
@@ -150,23 +150,23 @@ class SaleOrder(models.Model):
         ('invoiced', 'Fully Invoiced'),
         ('to invoice', 'To Invoice'),
         ('no', 'Nothing to Invoice')
-        ], string='Invoice Status', compute='_get_invoiced', store=True, readonly=True)
+        ], string='Invoice Status', compute='_get_invoiced', is_business_field = True, store=True, readonly=True)
 
     note = fields.Text('Terms and conditions', default=_default_note)
 
-    amount_untaxed = fields.Monetary(string='Untaxed Amount', store=True, readonly=True, compute='_amount_all', track_visibility='onchange')
+    amount_untaxed = fields.Monetary(string='Untaxed Amount', store=True, is_business_field = True, readonly=True, compute='_amount_all', track_visibility='onchange')
     amount_tax = fields.Monetary(string='Taxes', store=True, readonly=True, compute='_amount_all')
-    amount_total = fields.Monetary(string='Total', store=True, readonly=True, compute='_amount_all', track_visibility='always')
+    amount_total = fields.Monetary(string='Total', store=True, readonly=True, is_business_field = True, compute='_amount_all', track_visibility='always')
 
     payment_term_id = fields.Many2one('account.payment.term', string='Payment Terms', oldname='payment_term')
     fiscal_position_id = fields.Many2one('account.fiscal.position', oldname='fiscal_position', string='Fiscal Position')
     company_id = fields.Many2one('res.company', 'Company', default=lambda self: self.env['res.company']._company_default_get('sale.order'))
-    team_id = fields.Many2one('crm.team', 'Sales Channel', change_default=True, default=_get_default_team, oldname='section_id')
+    team_id = fields.Many2one('crm.team', 'Sales Channel', change_default=True, default=_get_default_team, is_business_field = True, oldname='section_id')
 
     signature = fields.Binary('Signature', help='Signature received through the portal.', copy=False, attachment=True)
     signed_by = fields.Char('Signed by', help='Name of the person that signed the SO.', copy=False)
 
-    product_id = fields.Many2one('product.product', related='order_line.product_id', string='Product')
+    product_id = fields.Many2one('product.product', related='order_line.product_id', string='Product', is_business_field = True)
 
     def _compute_portal_url(self):
         super(SaleOrder, self)._compute_portal_url()
@@ -887,7 +887,7 @@ class SaleOrderLine(models.Model):
         return result
 
     order_id = fields.Many2one('sale.order', string='Order Reference', required=True, ondelete='cascade', index=True, copy=False)
-    name = fields.Text(string='Description', required=True)
+    name = fields.Text(string='Description', required=True, is_business_field = True)
     sequence = fields.Integer(string='Sequence', default=10)
 
     invoice_lines = fields.Many2many('account.invoice.line', 'sale_order_line_invoice_rel', 'order_line_id', 'invoice_line_id', string='Invoice Lines', copy=False)
@@ -896,7 +896,7 @@ class SaleOrderLine(models.Model):
         ('invoiced', 'Fully Invoiced'),
         ('to invoice', 'To Invoice'),
         ('no', 'Nothing to Invoice')
-        ], string='Invoice Status', compute='_compute_invoice_status', store=True, readonly=True, default='no')
+        ], string='Invoice Status', compute='_compute_invoice_status', store=True, readonly=True, default='no', is_business_field = True)
     price_unit = fields.Float('Unit Price', required=True, digits=dp.get_precision('Product Price'), default=0.0)
 
     price_subtotal = fields.Monetary(compute='_compute_amount', string='Subtotal', readonly=True, store=True)
@@ -935,7 +935,7 @@ class SaleOrderLine(models.Model):
         compute='_get_invoice_qty', string='Invoiced', store=True, readonly=True,
         digits=dp.get_precision('Product Unit of Measure'))
 
-    salesman_id = fields.Many2one(related='order_id.user_id', store=True, string='Salesperson', readonly=True)
+    salesman_id = fields.Many2one(related='order_id.user_id', store=True, string='Salesperson', is_business_field = True, readonly=True)
     currency_id = fields.Many2one(related='order_id.currency_id', depends=['order_id'], store=True, string='Currency', readonly=True)
     company_id = fields.Many2one(related='order_id.company_id', string='Company', store=True, readonly=True)
     order_partner_id = fields.Many2one(related='order_id.partner_id', store=True, string='Customer')

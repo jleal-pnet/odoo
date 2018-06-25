@@ -21,7 +21,7 @@ class UtmCampaign(models.Model):
     _name = 'utm.campaign'
     _description = 'Campaign'
 
-    name = fields.Char(string='Campaign Name', required=True, translate=True)
+    name = fields.Char(string='Campaign Name', required=True, translate=True, is_business_field = True)
 
 
 class UtmSource(models.Model):
@@ -36,7 +36,7 @@ class UtmMixin(models.AbstractModel):
     """Mixin class for objects which can be tracked by marketing. """
     _name = 'utm.mixin'
 
-    campaign_id = fields.Many2one('utm.campaign', 'Campaign',
+    campaign_id = fields.Many2one('utm.campaign', 'Campaign', is_business_field = True,
                                   help="This is a name that helps you keep track of your different campaign efforts, e.g. Fall_Drive, Christmas_Special")
     source_id = fields.Many2one('utm.source', 'Source',
                                 help="This is the source of the link, e.g. Search Engine, another domain, or name of email list", is_business_field = True)

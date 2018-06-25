@@ -25,7 +25,7 @@ class Pricelist(models.Model):
         vals.update(compute_price='formula')
         return [[0, False, vals]]
 
-    name = fields.Char('Pricelist Name', required=True, translate=True)
+    name = fields.Char('Pricelist Name', required=True, translate=True, is_business_field = True)
     active = fields.Boolean('Active', default=True, help="If unchecked, it will allow you to hide the pricelist without removing it.")
     item_ids = fields.One2many(
         'product.pricelist.item', 'pricelist_id', 'Pricelist Items',

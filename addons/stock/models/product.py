@@ -399,9 +399,9 @@ class ProductTemplate(models.Model):
         ('serial', 'By Unique Serial Number'),
         ('lot', 'By Lots'),
         ('none', 'No Tracking')], string="Tracking", default='none', required=True)
-    description_picking = fields.Text('Description on Picking', translate=True)
-    description_pickingout = fields.Text('Description on Delivery Orders', translate=True)
-    description_pickingin = fields.Text('Description on Receptions', translate=True)
+    description_picking = fields.Text('Description on Picking', translate=True, is_business_field=True)
+    description_pickingout = fields.Text('Description on Delivery Orders', translate=True, is_business_field=True)
+    description_pickingin = fields.Text('Description on Receptions', translate=True, is_business_field=True)
     qty_available = fields.Float(
         'Quantity On Hand', compute='_compute_quantities', search='_search_qty_available',
         digits=dp.get_precision('Product Unit of Measure'))

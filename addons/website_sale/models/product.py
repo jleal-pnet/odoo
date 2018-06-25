@@ -110,7 +110,7 @@ class ProductTemplate(models.Model):
     _name = 'product.template'
     _mail_post_access = 'read'
 
-    website_description = fields.Html('Description for the website', sanitize_attributes=False, translate=html_translate)
+    website_description = fields.Html('Description for the website', sanitize_attributes=False, translate=html_translate, is_business_field = True)
     alternative_product_ids = fields.Many2many('product.template', 'product_alternative_rel', 'src_id', 'dest_id',
                                                string='Alternative Products', help='Suggest more expensive alternatives to '
                                                'your customers (upsell strategy). Those products show up on the product page.')

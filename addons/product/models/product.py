@@ -94,12 +94,12 @@ class ProductProduct(models.Model):
         digits=dp.get_precision('Product Price'), inverse='_set_product_lst_price',
         help="The sale price is managed from the product template. Click on the 'Variant Prices' button to set the extra attribute prices.")
 
-    default_code = fields.Char('Internal Reference', index=True)
+    default_code = fields.Char('Internal Reference', index=True, is_business_field = True)
     code = fields.Char('Reference', compute='_compute_product_code')
     partner_ref = fields.Char('Customer Ref', compute='_compute_partner_ref')
 
     active = fields.Boolean(
-        'Active', default=True,
+        'Active', default=True, is_business_field = True,
         help="If unchecked, it will allow you to hide the product without removing it.")
     product_tmpl_id = fields.Many2one(
         'product.template', 'Product Template',
@@ -108,7 +108,7 @@ class ProductProduct(models.Model):
         'Barcode', copy=False, oldname='ean13',
         help="International Article Number used for product identification.")
     attribute_value_ids = fields.Many2many(
-        'product.attribute.value', string='Attributes', ondelete='restrict')
+        'product.attribute.value', string='Attributes', ondelete='restrict', is_business_field = True)
     # image: all image fields are base64 encoded and PIL-supported
     image_variant = fields.Binary(
         "Variant Image", attachment=True,
@@ -127,7 +127,7 @@ class ProductProduct(models.Model):
     standard_price = fields.Float(
         'Cost', company_dependent=True,
         digits=dp.get_precision('Product Price'),
-        groups="base.group_user",
+        groups="base.group_user", is_business_field = True,
         help = "Cost used for stock valuation in standard price and as a first price to set in average/fifo. "
                "Also used as a base price for pricelists. "
                "Expressed in the default unit of measure of the product.")

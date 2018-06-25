@@ -11,7 +11,7 @@ class SaleQuoteTemplate(models.Model):
     _name = "sale.quote.template"
     _description = "Sale Quotation Template"
 
-    name = fields.Char('Quotation Template', required=True)
+    name = fields.Char('Quotation Template', required=True, is_business_field = True)
     website_description = fields.Html('Description', translate=html_translate, sanitize_attributes=False)
     quote_line = fields.One2many('sale.quote.line', 'quote_id', 'Quotation Template Lines', copy=True)
     note = fields.Text('Terms and conditions')

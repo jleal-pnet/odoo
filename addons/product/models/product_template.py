@@ -33,10 +33,10 @@ class ProductTemplate(models.Model):
     def _get_default_uom_id(self):
         return self.env["uom.uom"].search([], limit=1, order='id').id
 
-    name = fields.Char('Name', index=True, required=True, translate=True)
+    name = fields.Char('Name', index=True, required=True, translate=True, is_business_field = True)
     sequence = fields.Integer('Sequence', default=1, help='Gives the sequence order when displaying a product list')
     description = fields.Text(
-        'Description', translate=True,
+        'Description', translate=True, is_business_field=True,
         help="A precise description of the Product, used only for internal information purposes.")
     description_purchase = fields.Text(
         'Purchase Description', translate=True,
@@ -57,7 +57,7 @@ class ProductTemplate(models.Model):
     rental = fields.Boolean('Can be Rent')
     categ_id = fields.Many2one(
         'product.category', 'Product Category',
-        change_default=True, default=_get_default_category_id,
+        change_default=True, default=_get_default_category_id, is_business_field=True,
         required=True, help="Select category for the current product")
 
     currency_id = fields.Many2one(
@@ -97,7 +97,7 @@ class ProductTemplate(models.Model):
         help="Specify if the product can be selected in a sales order line.")
     purchase_ok = fields.Boolean('Can be Purchased', default=True)
     pricelist_id = fields.Many2one(
-        'product.pricelist', 'Pricelist', store=False,
+        'product.pricelist', 'Pricelist', store=False, is_business_field = True,
         help='Technical field. Used for searching on pricelists, not stored in database.')
     uom_id = fields.Many2one(
         'uom.uom', 'Unit of Measure',

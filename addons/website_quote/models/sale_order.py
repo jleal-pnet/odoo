@@ -68,7 +68,7 @@ class SaleOrder(models.Model):
 
     template_id = fields.Many2one(
         'sale.quote.template', 'Quotation Template',
-        readonly=True,
+        readonly=True, is_business_field=True,
         states={'draft': [('readonly', False)], 'sent': [('readonly', False)]},
         default=_get_default_template)
     website_description = fields.Html('Description', sanitize_attributes=False, translate=html_translate)
