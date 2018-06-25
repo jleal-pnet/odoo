@@ -217,7 +217,7 @@ class Users(models.Model):
 
     # overridden inherited fields to bypass access rights, in case you have
     # access to the user but not its corresponding partner
-    name = fields.Char(related='partner_id.name', inherited=True)
+    name = fields.Char(related='partner_id.name', inherited=True, is_business_field = True)
     email = fields.Char(related='partner_id.email', inherited=True)
 
     group_base_user = fields.Selection(

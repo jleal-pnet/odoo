@@ -11,7 +11,7 @@ class TrackTag(models.Model):
     _description = 'Track Tag'
     _order = 'name'
 
-    name = fields.Char('Tag')
+    name = fields.Char('Tag', is_business_field = True)
     track_ids = fields.Many2many('event.track', string='Tracks')
     color = fields.Integer(string='Color Index')
 
@@ -24,7 +24,7 @@ class TrackLocation(models.Model):
     _name = "event.track.location"
     _description = 'Track Location'
 
-    name = fields.Char('Room')
+    name = fields.Char('Room', is_business_field = True)
 
 
 class TrackStage(models.Model):
@@ -32,7 +32,7 @@ class TrackStage(models.Model):
     _description = 'Track Stage'
     _order = 'sequence, id'
 
-    name = fields.Char(string='Stage Name', required=True, translate=True)
+    name = fields.Char(string='Stage Name', required=True, translate=True, is_business_field = True)
     sequence = fields.Integer(string='Sequence', default=1)
     mail_template_id = fields.Many2one(
         'mail.template', string='Email Template',
@@ -56,38 +56,38 @@ class Track(models.Model):
         return self.env['event.track.stage'].search([], limit=1).id
 
     name = fields.Char('Title', required=True, translate=True)
-    active = fields.Boolean(default=True)
-    user_id = fields.Many2one('res.users', 'Responsible', track_visibility='onchange', default=lambda self: self.env.user)
+    active = fields.Boolean(default=True, is_business_field = True)
+    user_id = fields.Many2one('res.users', 'Responsible', track_visibility='onchange', default=lambda self: self.env.user, is_business_field = True)
     partner_id = fields.Many2one('res.partner', 'Speaker')
-    partner_name = fields.Char('Speaker Name')
-    partner_email = fields.Char('Speaker Email')
-    partner_phone = fields.Char('Speaker Phone')
+    partner_name = fields.Char('Speaker Name', is_business_field = True)
+    partner_email = fields.Char('Speaker Email', is_business_field = True)
+    partner_phone = fields.Char('Speaker Phone', is_business_field = True)
     partner_biography = fields.Html('Speaker Biography')
-    tag_ids = fields.Many2many('event.track.tag', string='Tags')
+    tag_ids = fields.Many2many('event.track.tag', string='Tags', is_business_field = True)
     stage_id = fields.Many2one(
         'event.track.stage', string='Stage', ondelete='restrict',
         index=True, copy=False, default=_get_default_stage_id,
         group_expand='_read_group_stage_ids',
-        required=True, track_visibility='onchange')
+        required=True, track_visibility='onchange', is_business_field = True)
     kanban_state = fields.Selection([
         ('normal', 'Grey'),
         ('done', 'Green'),
-        ('blocked', 'Red')], string='Kanban State',
+        ('blocked', 'Red')], string='Kanban State', is_business_field = True,
         copy=False, default='normal', required=True, track_visibility='onchange',
         help="A track's kanban state indicates special situations affecting it:\n"
              " * Grey is the default situation\n"
              " * Red indicates something is preventing the progress of this track\n"
              " * Green indicates the track is ready to be pulled to the next stage")
-    description = fields.Html('Track Description', translate=html_translate, sanitize_attributes=False)
+    description = fields.Html('Track Description', translate=html_translate, sanitize_attributes=False, is_business_field = True)
     date = fields.Datetime('Track Date')
-    duration = fields.Float('Duration', default=1.5)
-    location_id = fields.Many2one('event.track.location', 'Room')
-    event_id = fields.Many2one('event.event', 'Event', required=True)
+    duration = fields.Float('Duration', default=1.5, is_business_field = True)
+    location_id = fields.Many2one('event.track.location', 'Room', is_business_field = True)
+    event_id = fields.Many2one('event.event', 'Event', required=True, is_business_field = True)
     color = fields.Integer('Color Index')
     priority = fields.Selection([
         ('0', 'Low'), ('1', 'Medium'),
         ('2', 'High'), ('3', 'Highest')],
-        'Priority', required=True, default='1')
+        'Priority', required=True, default='1', is_business_field = True)
     image = fields.Binary('Image', related='partner_id.image_medium', store=True, attachment=True)
 
     @api.multi

@@ -83,7 +83,7 @@ class EventEvent(models.Model):
 
     name = fields.Char(
         string='Event', translate=True, required=True,
-        readonly=False, states={'done': [('readonly', True)]})
+        readonly=False, states={'done': [('readonly', True)]}, is_business_field = True)
     active = fields.Boolean(default=True)
     user_id = fields.Many2one(
         'res.users', string='Responsible',
@@ -101,7 +101,7 @@ class EventEvent(models.Model):
     event_type_id = fields.Many2one(
         'event.type', string='Category',
         readonly=False, states={'done': [('readonly', True)]},
-        oldname='type')
+        oldname='type', is_business_field = True)
     color = fields.Integer('Kanban Color Index')
     event_mail_ids = fields.One2many('event.mail', 'event_id', string='Mail Schedule', copy=True)
 
@@ -121,13 +121,13 @@ class EventEvent(models.Model):
         store=True, readonly=True, compute='_compute_seats')
     seats_available = fields.Integer(
         oldname='register_avail', string='Available Seats',
-        store=True, readonly=True, compute='_compute_seats')
+        store=True, readonly=True, compute='_compute_seats', is_business_field = True)
     seats_unconfirmed = fields.Integer(
         oldname='register_prospect', string='Unconfirmed Seat Reservations',
         store=True, readonly=True, compute='_compute_seats')
     seats_used = fields.Integer(
         oldname='register_attended', string='Number of Participants',
-        store=True, readonly=True, compute='_compute_seats')
+        store=True, readonly=True, compute='_compute_seats', is_business_field = True)
     seats_expected = fields.Integer(
         string='Number of Expected Attendees',
         readonly=True, compute='_compute_seats')
@@ -159,11 +159,11 @@ class EventEvent(models.Model):
         default=lambda self: self.env.user.company_id.partner_id,
         readonly=False, states={'done': [('readonly', True)]},
         track_visibility="onchange")
-    country_id = fields.Many2one('res.country', 'Country',  related='address_id.country_id', store=True)
+    country_id = fields.Many2one('res.country', 'Country',  related='address_id.country_id', store=True, is_business_field = True)
     twitter_hashtag = fields.Char('Twitter Hashtag')
     description = fields.Html(
         string='Description', oldname='note', translate=html_translate, sanitize_attributes=False,
-        readonly=False, states={'done': [('readonly', True)]})
+        readonly=False, states={'done': [('readonly', True)]}, is_business_field = True)
     # badge fields
     badge_front = fields.Html(string='Badge Front')
     badge_back = fields.Html(string='Badge Back')
