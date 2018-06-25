@@ -8,7 +8,7 @@ import datetime
 
 from odoo import api, fields, models, _
 from odoo.exceptions import AccessError, ValidationError
-from odoo.addons import decimal_precision as dp
+from odoo.addons.base.models import decimal_precision as dp
 from odoo.osv import expression
 
 

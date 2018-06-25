@@ -7,7 +7,7 @@ from odoo import api, fields, models, tools, _
 from odoo.exceptions import ValidationError
 from odoo.osv import expression
 
-from odoo.addons import decimal_precision as dp
+from odoo.addons.base.models import decimal_precision as dp
 
 from odoo.tools import float_compare, pycompat
 

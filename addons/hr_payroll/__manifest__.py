@@ -10,7 +10,6 @@
     'depends': [
         'hr_contract',
         'hr_holidays',
-        'decimal_precision',
     ],
     'data': [
         'security/hr_payroll_security.xml',

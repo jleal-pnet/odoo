@@ -9,7 +9,7 @@ from odoo.exceptions import RedirectWarning, UserError, ValidationError
 from odoo.tools.misc import formatLang
 from odoo.tools import float_is_zero, float_compare
 from odoo.tools.safe_eval import safe_eval
-from odoo.addons import decimal_precision as dp
+from odoo.addons.base.models import decimal_precision as dp
 from lxml import etree
 
 #----------------------------------------------------------

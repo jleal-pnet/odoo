@@ -12,7 +12,7 @@ from odoo.osv import expression
 from odoo.tools import float_is_zero, float_compare
 
 
-from odoo.addons import decimal_precision as dp
+from odoo.addons.base.models import decimal_precision as dp
 
 
 class SaleOrder(models.Model):

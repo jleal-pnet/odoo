@@ -3,7 +3,7 @@
 
 from odoo import api, fields, models
 
-from odoo.addons import decimal_precision as dp
+from odoo.addons.base.models import decimal_precision as dp
 
 
 class StockMove(models.Model):

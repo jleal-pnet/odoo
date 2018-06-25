@@ -6,7 +6,7 @@ from datetime import datetime
 from dateutil import relativedelta
 
 from odoo import api, fields, models, _
-from odoo.addons import decimal_precision as dp
+from odoo.addons.base.models import decimal_precision as dp
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT
 

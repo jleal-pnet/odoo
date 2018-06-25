@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 from odoo import api, fields, models, tools, _
-from odoo.addons import decimal_precision as dp
+from odoo.addons.base.models import decimal_precision as dp
 
 from odoo.tools import pycompat
 from odoo.tools.translate import html_translate

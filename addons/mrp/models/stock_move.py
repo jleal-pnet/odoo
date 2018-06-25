@@ -4,7 +4,7 @@
 from odoo import api, exceptions, fields, models, _
 from odoo.exceptions import UserError
 from odoo.tools import float_compare, float_round
-from odoo.addons import decimal_precision as dp
+from odoo.addons.base.models import decimal_precision as dp
 
 
 class StockMoveLine(models.Model):

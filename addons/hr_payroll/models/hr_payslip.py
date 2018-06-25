@@ -7,7 +7,7 @@ from dateutil.relativedelta import relativedelta
 from pytz import timezone
 
 from odoo import api, fields, models, tools, _
-from odoo.addons import decimal_precision as dp
+from odoo.addons.base.models import decimal_precision as dp
 from odoo.exceptions import UserError, ValidationError
 
 class HrPayslip(models.Model):

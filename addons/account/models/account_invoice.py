@@ -16,7 +16,7 @@ from odoo.tools.misc import formatLang
 
 from odoo.exceptions import AccessError, UserError, RedirectWarning, ValidationError, Warning
 
-from odoo.addons import decimal_precision as dp
+from odoo.addons.base.models import decimal_precision as dp
 import logging
 
 _logger = logging.getLogger(__name__)
