@@ -68,12 +68,12 @@ class EventTicket(models.Model):
     def _default_product_id(self):
         return self.env.ref('event_sale.product_product_event', raise_if_not_found=False)
 
-    name = fields.Char(string='Name', required=True, translate=True)
-    event_type_id = fields.Many2one('event.type', string='Event Category', ondelete='cascade')
+    name = fields.Char(string='Name', required=True, translate=True, is_business_field = True)
+    event_type_id = fields.Many2one('event.type', string='Event Category', ondelete='cascade', is_business_field = True)
     event_id = fields.Many2one('event.event', string="Event", ondelete='cascade')
     product_id = fields.Many2one('product.product', string='Product',
         required=True, domain=[("event_ok", "=", True)],
-        default=_default_product_id)
+        default=_default_product_id, is_business_field = True)
     registration_ids = fields.One2many('event.registration', 'event_ticket_id', string='Registrations')
     price = fields.Float(string='Price', digits=dp.get_precision('Product Price'))
     deadline = fields.Date(string="Sales End")
@@ -164,7 +164,7 @@ class EventTicket(models.Model):
 class EventRegistration(models.Model):
     _inherit = 'event.registration'
 
-    event_ticket_id = fields.Many2one('event.event.ticket', string='Event Ticket')
+    event_ticket_id = fields.Many2one('event.event.ticket', string='Event Ticket', is_business_field = True)
     # in addition to origin generic fields, add real relational fields to correctly
     # handle attendees linked to sales orders and their lines
     # TDE FIXME: maybe add an onchange on sale_order_id + origin
