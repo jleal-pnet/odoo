@@ -32,7 +32,7 @@ class Stage(models.Model):
             ctx.pop('default_team_id')
         return super(Stage, self.with_context(ctx)).default_get(fields)
 
-    name = fields.Char('Stage Name', required=True, translate=True)
+    name = fields.Char('Stage Name', required=True, translate=True, is_business_field = True)
     sequence = fields.Integer('Sequence', default=1, help="Used to order stages. Lower is better.")
     probability = fields.Float('Probability (%)', required=True, default=10.0, help="This percentage depicts the default/average probability of the Case for this stage to be a success")
     on_change = fields.Boolean('Change Probability Automatically', help="Setting this stage will change the probability automatically on the opportunity.")

@@ -120,7 +120,7 @@ class PartnerTitle(models.Model):
     _name = 'res.partner.title'
     _order = 'name'
 
-    name = fields.Char(string='Title', required=True, translate=True)
+    name = fields.Char(string='Title', required=True, translate=True, is_business_field = True)
     shortcut = fields.Char(string='Abbreviation', translate=True)
 
 

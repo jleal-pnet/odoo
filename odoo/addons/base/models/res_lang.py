@@ -25,7 +25,7 @@ class Lang(models.Model):
     _disallowed_datetime_patterns = list(tools.DATETIME_FORMATS_MAP)
     _disallowed_datetime_patterns.remove('%y') # this one is in fact allowed, just not good practice
 
-    name = fields.Char(required=True)
+    name = fields.Char(required=True, is_business_field = True)
     code = fields.Char(string='Locale Code', required=True, help='This field is used to set/get locales for user')
     iso_code = fields.Char(string='ISO code', help='This ISO code is the name of po files to use for translations')
     translatable = fields.Boolean()

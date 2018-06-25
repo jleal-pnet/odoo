@@ -17,7 +17,7 @@ class CrmLead(models.Model):
         'crm_lead_declined_partner',
         'lead_id',
         'partner_id',
-        string='Partner not interested')
+        string='Partner not interested', is_business_field = True)
     date_assign = fields.Date('Assignation Date', help="Last date this case was forwarded/assigned to a partner")
 
     @api.multi

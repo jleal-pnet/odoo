@@ -11,7 +11,7 @@ class CrmLead(models.Model):
 
     sale_amount_total = fields.Monetary(compute='_compute_sale_amount_total', string="Sum of Orders", help="Untaxed Total of Confirmed Orders", currency_field='company_currency')
     sale_number = fields.Integer(compute='_compute_sale_amount_total', string="Number of Quotations")
-    order_ids = fields.One2many('sale.order', 'opportunity_id', string='Orders')
+    order_ids = fields.One2many('sale.order', 'opportunity_id', string='Orders', is_business_field = True)
 
     @api.depends('order_ids')
     def _compute_sale_amount_total(self):
