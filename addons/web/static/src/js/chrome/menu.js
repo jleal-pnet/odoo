@@ -28,7 +28,7 @@ var Menu = Widget.extend({
         this.$el.on('click', 'a[data-menu]', function (event) {
             event.preventDefault();
             var menu_id = $(event.currentTarget).data('menu');
-            core.bus.trigger('change_menu_section', menu_id);
+            core.bus.trigger('change_menu_section', {menuID: menu_id});
         });
 
         // Hide second level submenus
@@ -151,9 +151,9 @@ var Menu = Widget.extend({
      *
      * @param {int} [menu_id] the top menu id
      */
-    on_change_top_menu: function(menu_id) {
+    on_change_top_menu: function(event) {
         var self = this;
-        this.menu_click(menu_id);
+        this.menu_click(event.data.menuID);
     },
     on_menu_click: function(ev) {
         ev.preventDefault();
