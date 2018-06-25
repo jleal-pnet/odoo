@@ -12,7 +12,7 @@ class UtmMedium(models.Model):
     _description = 'Channels'
     _order = 'name'
 
-    name = fields.Char(string='Channel Name', required=True)
+    name = fields.Char(string='Channel Name', required=True, is_business_field = True)
     active = fields.Boolean(default=True)
 
 
@@ -28,7 +28,7 @@ class UtmSource(models.Model):
     _name = 'utm.source'
     _description = 'Source'
 
-    name = fields.Char(string='Source Name', required=True, translate=True)
+    name = fields.Char(string='Source Name', required=True, translate=True, is_business_field = True)
 
 
 class UtmMixin(models.AbstractModel):
@@ -39,9 +39,9 @@ class UtmMixin(models.AbstractModel):
     campaign_id = fields.Many2one('utm.campaign', 'Campaign',
                                   help="This is a name that helps you keep track of your different campaign efforts, e.g. Fall_Drive, Christmas_Special")
     source_id = fields.Many2one('utm.source', 'Source',
-                                help="This is the source of the link, e.g. Search Engine, another domain, or name of email list")
+                                help="This is the source of the link, e.g. Search Engine, another domain, or name of email list", is_business_field = True)
     medium_id = fields.Many2one('utm.medium', 'Medium',
-                                help="This is the method of delivery, e.g. Postcard, Email, or Banner Ad", oldname='channel_id')
+                                help="This is the method of delivery, e.g. Postcard, Email, or Banner Ad", oldname='channel_id', is_business_field = True)
 
     def tracking_fields(self):
         # This function cannot be overridden in a model which inherit utm.mixin
