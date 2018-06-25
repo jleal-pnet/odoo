@@ -114,6 +114,14 @@ var KanbanRecord = Widget.extend({
         return new Domain(d).compute(this.state.evalContext);
     },
     /**
+     * @private
+     * @param {JQuery} $el a subnode of this.$el in which we'll look for an
+     *   action to execute
+     */
+    _executeDefaultAction: function ($el) {
+        $el.find('a, button').first().click();
+    },
+    /**
      * Generates the color classname from a given variable
      *
      * @private
@@ -523,6 +531,7 @@ var KanbanRecord = Widget.extend({
      */
     _onKanbanActionClicked: function (event) {
         event.preventDefault();
+        event.stopPropagation();
 
         var $action = $(event.currentTarget);
         var type = $action.data('type') || 'button';
@@ -574,7 +583,7 @@ var KanbanRecord = Widget.extend({
         switch (event.keyCode) {
             case $.ui.keyCode.ENTER:
                 event.preventDefault();
-                $(event.target).find('a, button').first().click();
+                this._executeDefaultAction($(event.target));
                 break;
         }
     },
