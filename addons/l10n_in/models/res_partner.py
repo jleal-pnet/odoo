@@ -9,3 +9,5 @@ class ResPartner(models.Model):
 
     #Use for Multi GSTIN
     l10n_in_gstin_company_id = fields.Many2one('res.company', string="GSTIN Company")
+    #Use in view attrs. Need to required state_id if Country is India.
+    country_code = fields.Char(related="country_id.code", string="Country code")
