@@ -41,7 +41,10 @@ var ModelFieldSelector = Widget.extend({
         "click .load_more": "_onLoadMoreClick",
 
         // Handle a direct change in the debug input
-        "change input": "_onInputChange",
+        "change .footer_input": "_onInputChange",
+
+        // Handle a search input
+        "keyup .field_search": "_onFieldSearchKeydown",
 
         // Handle keyboard and mouse navigation to build the field chain
         "mouseover li.o_field_selector_item": "_onItemHover",
@@ -108,7 +111,7 @@ var ModelFieldSelector = Widget.extend({
     start: function () {
         this.$value = this.$(".o_field_selector_value");
         this.$popover = this.$(".o_field_selector_popover");
-        this.$input = this.$popover.find("input");
+        this.$input = this.$popover.find("input.footer_input");
         this.$valid = this.$(".o_field_selector_warning");
 
         this._render();
@@ -352,6 +355,7 @@ var ModelFieldSelector = Widget.extend({
             followRelations: this.options.followRelations,
             debug: this.options.debugMode,
         }));
+        this.hasLoadMore = !!(grouped_fields['business_field'] && grouped_fields['non_business_field']);
         this.$input.val(this.chain.join("."));
     },
     /**
@@ -417,6 +421,27 @@ var ModelFieldSelector = Widget.extend({
         this._hidePopoverTimeout = _.defer(this._hidePopover.bind(this));
     },
     /**
+     * Called when the search input value is changed -> find field(s)
+     */
+    _onFieldSearchKeydown: function (ev) {
+        var inputValue = $(ev.target).val().toLowerCase();
+        var self = this;
+        var notfound = false;
+        this.$(".o_field_selector_page li").each(function (index, li) {
+            var $li = $(li);
+            var eleSearched = $li.text().trim().toLowerCase().indexOf(inputValue) === -1;
+            if (!eleSearched) {
+                notfound = true;
+            }
+            $li.toggleClass('o_hidden', eleSearched);
+        });
+        this.$(".not_found").toggleClass('o_hidden', notfound);
+        this.$('.load_more').toggleClass('o_hidden', !this.hasLoadMore || inputValue.length !== 0);
+        if (this.hasLoadMore && inputValue.length === 0) {
+            this.$('.load_more').nextAll('li').addClass('o_hidden');
+        }
+    },
+    /**
      * Called when the popover "cross" icon is clicked -> closes the popover
      */
     _onCloseClick: function () {
@@ -428,6 +453,7 @@ var ModelFieldSelector = Widget.extend({
     _onLoadMoreClick: function () {
         this.$('.o_field_selector_item.o_hidden').removeClass('o_hidden');
         this.$('.load_more').addClass('o_hidden');
+        this.hasLoadMore = false;
     },
     /**
      * Called when the popover "previous" icon is clicked -> removes last chain

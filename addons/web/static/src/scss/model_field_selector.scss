@@ -116,6 +116,10 @@
                         }
                     }
                 }
+                .not_found {
+                    padding: 6px;
+                    color: #aaa;
+                }
             }
             .o_field_selector_popover_footer {
                 background: $brand-primary;
@@ -123,6 +127,18 @@
 
                 > input {
                     width: 100%;
+                }
+            }
+            .o_field_selector_popover_search {
+                display: inline-flex;
+                width: 100%;
+                border-bottom: 1px solid #cfcfcf;
+                height: 30px;
+                span {
+                    padding: 5px 8px;
+                }
+                input {
+                    border: none;
                 }
             }
         }

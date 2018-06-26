@@ -735,11 +735,18 @@
             <div class="o_field_selector_title"/>
             <i class="fa fa-times o_field_selector_popover_option o_field_selector_close" title="Close" role="img" aria-label="Close"/>
         </div>
+        <div class="o_field_selector_popover_search">
+            <span><i class="fa fa-search"/></span>
+            <input type="text" placeholder="Search..." class="field_search"/>
+        </div>
         <div class="o_field_selector_popover_body">
             <ul class="o_field_selector_page"/>
+            <div class="text-center not_found o_hidden">
+                <span>No Fields Found</span>
+            </div>
         </div>
         <div t-if="widget.options.debugMode" class="o_field_selector_popover_footer">
-            <input type="text" class="o_input"/>
+            <input type="text" class="o_input footer_input"/>
         </div>
     </div>
 </div>

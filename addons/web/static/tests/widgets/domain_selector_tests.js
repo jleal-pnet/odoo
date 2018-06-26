@@ -142,7 +142,7 @@ QUnit.module('DomainSelector', {
         // field instead of "id" should rerender the widget and adapt the
         // widget suggestions
         domainSelector.$(".o_domain_debug_input").val('["&","&",["bar","=",True],"|",["foo","=","hello"],["id","=",1],["id","=",1]]').change();
-        assert.strictEqual(domainSelector.$(".o_field_selector").eq(1).find("input").val(), "foo",
+        assert.strictEqual(domainSelector.$(".o_field_selector").eq(1).find("input.footer_input").val(), "foo",
             "the second field selector should now contain the 'foo' value");
         assert.ok(domainSelector.$(".o_domain_leaf_operator_select").eq(1).html().indexOf("contains") >= 0,
             "the second operator selector should now contain the 'contains' operator");
@@ -257,6 +257,51 @@ QUnit.module('DomainSelector', {
 
         assert.ok(domainSelector.$('.o_field_selector_page li.load_more').hasClass('o_hidden'),
             "load more button should not visible after all field load");
+
+        domainSelector.destroy();
+    });
+
+    QUnit.test("search fields test", function (assert) {
+        assert.expect(6);
+
+        var $target = $("#qunit-fixture");
+        $target.css({ 'position': 'unset' });
+
+        // Create the domain selector and its mock environment
+        var domainSelector = new DomainSelector(null, "user", [], {
+            debugMode: true,
+            readonly: false,
+        });
+        testUtils.addMockEnvironment(domainSelector, { data: this.data });
+        domainSelector.appendTo($target);
+
+        domainSelector.$(".o_domain_add_first_node_button").click();
+
+        var $searchInput = domainSelector.$('.o_field_selector_popover_search input.field_search');
+        assert.strictEqual($searchInput.length, 1, "search field input should be visible");
+
+        $searchInput.val('mob').trigger('keyup');
+
+        var $mobileField = domainSelector.$('.o_field_selector_page li.o_field_selector_select_button').not('.o_hidden');
+        assert.strictEqual($mobileField.length, 1, "1 field should be visible after search");
+
+        assert.ok($mobileField.text().indexOf('Mobile') !== -1, 'searched field should be Mobile')
+        
+        var $loadMore = domainSelector.$('.o_field_selector_page li.load_more');
+        assert.ok($loadMore.hasClass('o_hidden'), "load more button should not visible in search result");
+        
+        $searchInput.val('').trigger('keyup');
+
+        assert.notOk($loadMore.hasClass('o_hidden'), "load more button should be visible in search result");
+
+        // Click on load more that loads all the fields then search and reset search, load more button should
+        // not visible
+        $loadMore.click();
+
+        $searchInput.val('mob').trigger('keyup');
+        $searchInput.val('').trigger('keyup');
+
+        assert.ok($loadMore.hasClass('o_hidden'), "load more button should not visible after search result");
 
         domainSelector.destroy();
     });
