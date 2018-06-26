@@ -46,6 +46,18 @@ QUnit.module('DomainSelector', {
                     display_name: "xpad",
                 }]
             },
+            user: {
+                fields: {
+                    firstname: { string: "First Name", type: "char", searchable: true, is_business_field: true },
+                    lastname: { string: "Last Name", type: "char", searchable: true },
+                    mobile: { string: "Mobile", type: "integer", searchable: true, is_business_field: true },
+                    phone: { string: "Phone", type: "integer", searchable: true },
+                },
+                records: [{
+                    id: 37,
+                    display_name: "Chagan",
+                }]
+            },
         };
     },
 }, function () {
@@ -210,6 +222,41 @@ QUnit.module('DomainSelector', {
 
         assert.strictEqual(domainSelector.$el.text(), "This domain is not supported.",
             "an error message should be displayed because of the `parent` key");
+
+        domainSelector.destroy();
+    });
+
+    QUnit.test("business and non-business field test", function (assert) {
+        assert.expect(5);
+
+        var $target = $("#qunit-fixture");
+
+        // Create the domain selector and its mock environment
+        var domainSelector = new DomainSelector(null, "user", [], {
+            debugMode: true,
+            readonly: false,
+        });
+        testUtils.addMockEnvironment(domainSelector, { data: this.data });
+        domainSelector.appendTo($target);
+
+        domainSelector.$(".o_domain_add_first_node_button").click();
+
+        assert.strictEqual(domainSelector.$('.o_field_selector_page li.o_field_selector_select_button').not('.o_hidden').length, 2,
+            "2 business field should be visible");
+
+        assert.strictEqual(domainSelector.$('.o_field_selector_page li.o_field_selector_select_button.o_hidden').length, 2,
+            "2 non business field should not visible");
+
+        assert.strictEqual(domainSelector.$('.o_field_selector_page li.load_more').not('.o_hidden').length, 1,
+            "load more button should be visible");
+
+        domainSelector.$('.load_more').click();
+
+        assert.strictEqual(domainSelector.$('.o_field_selector_page li.o_field_selector_select_button').not('.o_hidden').length, 4,
+            "4 field should be visible after click load more button");
+
+        assert.ok(domainSelector.$('.o_field_selector_page li.load_more').hasClass('o_hidden'),
+            "load more button should not visible after all field load");
 
         domainSelector.destroy();
     });

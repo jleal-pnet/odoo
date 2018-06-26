@@ -38,6 +38,7 @@ var ModelFieldSelector = Widget.extend({
         "click .o_field_selector_prev_page": "_onPrevPageClick",
         "click .o_field_selector_next_page": "_onNextPageClick",
         "click li.o_field_selector_select_button": "_onLastFieldClick",
+        "click .load_more": "_onLoadMoreClick",
 
         // Handle a direct change in the debug input
         "change input": "_onInputChange",
@@ -199,7 +200,7 @@ var ModelFieldSelector = Widget.extend({
                     method: 'fields_get',
                     args: [
                         false,
-                        ["store", "searchable", "type", "string", "relation", "selection", "related"]
+                        ["store", "searchable", "type", "string", "relation", "selection", "related", "is_business_field"]
                     ],
                     context: this.getSession().user_context,
                 })
@@ -344,8 +345,10 @@ var ModelFieldSelector = Widget.extend({
             if (prevField) title = prevField.string;
         }
         this.$(".o_field_selector_popover_header .o_field_selector_title").text(title);
+        var grouped_fields = _.groupBy(page, function(p) { return p.is_business_field ? 'business_field' : 'non_business_field' });
         this.$(".o_field_selector_page").replaceWith(core.qweb.render(this.template + ".page", {
-            lines: page,
+            business_lines: grouped_fields['business_field'],
+            non_business_lines: grouped_fields['non_business_field'],
             followRelations: this.options.followRelations,
             debug: this.options.debugMode,
         }));
@@ -418,6 +421,13 @@ var ModelFieldSelector = Widget.extend({
      */
     _onCloseClick: function () {
         this._hidePopover();
+    },
+    /**
+     * Called when the load more is clicked -> load non business fields
+     */
+    _onLoadMoreClick: function () {
+        this.$('.o_field_selector_item.o_hidden').removeClass('o_hidden');
+        this.$('.load_more').addClass('o_hidden');
     },
     /**
      * Called when the popover "previous" icon is clicked -> removes last chain

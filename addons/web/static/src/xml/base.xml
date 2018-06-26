@@ -755,16 +755,31 @@
     </t>
 </t>
 <ul t-name="ModelFieldSelector.page" class="o_field_selector_page">
-    <t t-foreach="lines" t-as="line">
-        <t t-set="relationToFollow" t-value="followRelations &amp;&amp; line.relation"/>
-        <li t-attf-class="o_field_selector_item #{relationToFollow and 'o_field_selector_next_page' or 'o_field_selector_select_button'}#{line_index == 0 and ' active' or ''}"
-            t-att-data-name="line.name">
-            <t t-esc="line.string"/>
-            <div t-if="debug" class="text-muted o_field_selector_item_title"><t t-esc="line.name"/> (<t t-esc="line.type"/>)</div>
-            <i t-if="relationToFollow" class="fa fa-chevron-right o_field_selector_relation_icon" role="img" aria-label="Relation to follow" title="Relation to follow"/>
-        </li>
+    <t t-if="business_lines">
+        <t t-set="isVisible" t-value="true"/>
+        <t t-foreach="business_lines" t-as="line">
+            <t t-call="ModelFieldSelector.lines"/>
+        </t>
+    </t>
+    <li t-if="business_lines and non_business_lines" class="o_field_selector_item load_more text-center">
+        Load More
+    </li>
+    <t t-if="non_business_lines">
+        <t t-set="isVisible" t-value="!business_lines"/>
+        <t t-foreach="non_business_lines" t-as="line">
+            <t t-call="ModelFieldSelector.lines"/>
+        </t>
     </t>
 </ul>
+<t t-name="ModelFieldSelector.lines">
+    <t t-set="relationToFollow" t-value="followRelations &amp;&amp; line.relation"/>
+    <li t-attf-class="#{isVisible ? '' : 'o_hidden'} o_field_selector_item #{relationToFollow and 'o_field_selector_next_page' or 'o_field_selector_select_button'}#{line_index == 0 and ' active' or ''}"
+        t-att-data-name="line.name">
+        <t t-esc="line.string"/>
+        <div t-if="debug" class="text-muted o_field_selector_item_title"><t t-esc="line.name"/> (<t t-esc="line.type"/>)</div>
+        <i t-if="relationToFollow" class="fa fa-chevron-right o_field_selector_relation_icon" role="img" aria-label="Relation to follow" title="Relation to follow"/>
+    </li>
+</t>
 <t t-name="web.datepicker">
     <t t-set="placeholder" t-value="widget.getParent().node and widget.getParent().node.attrs.placeholder"/>
     <div class="o_datepicker" aria-atomic="true">
