@@ -34,7 +34,7 @@ var Menu = Widget.extend({
         // Hide second level submenus
         this.$secondary_menus.find('.oe_menu_toggler').siblings('.oe_secondary_submenu').addClass('o_hidden');
         if (self.current_menu) {
-            self.open_menu(self.current_menu);
+            self.open_menu({id: self.current_menu});
         }
         this.trigger('menu_bound');
 
@@ -48,12 +48,13 @@ var Menu = Widget.extend({
      *
      * @param {Number} id database id of the terminal menu to select
      */
-    open_menu: function (id) {
+    open_menu: function (event) {
+        var id = event.data.id;
         this.current_menu = id;
         session.active_id = id;
         var $clicked_menu, $sub_menu, $main_menu;
         $clicked_menu = this.$el.add(this.$secondary_menus).find('a[data-menu=' + id + ']');
-        this.trigger('open_menu', id, $clicked_menu);
+        this.trigger('open_menu', {id: id, clicked_menu: $clicked_menu});
         if (this.$secondary_menus.has($clicked_menu).length) {
             $sub_menu = $clicked_menu.parents('.oe_secondary_menu');
             $main_menu = this.$el.find('a[data-menu=' + $sub_menu.data('menu-parent') + ']');
@@ -106,7 +107,7 @@ var Menu = Widget.extend({
             menuID = $menu.data('menu');
         }
         if (menuID) {
-            this.open_menu(menuID);
+            this.open_menu({id: menuID});
         }
     },
     /**
@@ -143,7 +144,7 @@ var Menu = Widget.extend({
         } else {
             console.log('Menu no action found web test 04 will fail');
         }
-        this.open_menu(id);
+        this.open_menu({id: id});
     },
 
     /**
