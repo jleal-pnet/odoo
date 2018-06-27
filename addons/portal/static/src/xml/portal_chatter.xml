@@ -23,7 +23,7 @@
             </t>
             <t t-if="widget.options['display_composer']">
                 <div class="media">
-                    <img alt="Avatar" class="o_portal_chatter_avatar" t-attf-src="/web/image/res.partner/#{widget.options['partner_id']}/image_small/50x50"/>
+                        <img alt="Avatar" class="o_portal_chatter_avatar" t-attf-src="/portal/image/res.partner/#{widget.options['partner_id']}/image_small/50x50"/>
                     <div class="media-body">
                         <form class="o_portal_chatter_composer_form" t-attf-action="/mail/chatter_post" method="POST">
                             <input type="hidden" name="csrf_token" t-att-value="widget.options['csrf_token']"/>
@@ -61,8 +61,8 @@
                         <t t-raw="message.body"/>
 
                         <div class="o_portal_chatter_attachments">
-                            <div class="col-lg-2 col-md-3 text-center" t-foreach='message.attachment_ids' t-as='attachment'>
-                                <a t-attf-href="/web/content/#{attachment.id}?download=true" target="_blank">
+                            <div class="col-md-2 col-sm-3 text-center" t-foreach='message.attachment_ids' t-as='attachment'>
+                                <a t-attf-href="/portal/content/#{attachment.id}?access_token=#{attachment.access_token}&amp;download=true" target="_blank">
                                     <div class='oe_attachment_embedded o_image' t-att-title="attachment.name" t-att-data-mimetype="attachment.mimetype" t-attf-data-src="/web/image/#{attachment.id}/100x80"/>
                                     <div class='oe_attachment_name'><t t-raw='attachment.name'/></div>
                                 </a>

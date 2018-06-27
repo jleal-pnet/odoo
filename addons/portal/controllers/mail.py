@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+import base64
+import werkzeug
 from werkzeug.exceptions import NotFound, Forbidden
 
-from odoo import http
+from odoo import http, tools
 from odoo.http import request
 from odoo.osv import expression
 from odoo.tools import consteq, plaintext2html
+from odoo.addons.web.controllers.main import binary_content
+from odoo.modules import get_module_resource
 
 
 def _has_token_access(res_model, res_id, token=''):
@@ -55,7 +59,7 @@ def _message_post_helper(res_model='', res_id=None, message='', token='', nosubs
 
 class PortalChatter(http.Controller):
 
-    @http.route(['/mail/chatter_post'], type='http', methods=['POST'], auth='public', website=True)
+    @http.route(['/mail/chatter_post'], type='json', methods=['POST'], auth='public', website=True)
     def portal_chatter_post(self, res_model, res_id, message, **kw):
         url = request.httprequest.referrer
         if message:
@@ -63,7 +67,7 @@ class PortalChatter(http.Controller):
             message = plaintext2html(message)
             _message_post_helper(res_model, int(res_id), message, **kw)
             url = url + "#discussion"
-        return request.redirect(url)
+        return url
 
     @http.route('/mail/chatter_init', type='json', auth='public', website=True)
     def portal_chatter_init(self, res_model, res_id, domain=False, limit=False, **kwargs):
@@ -106,3 +110,37 @@ class PortalChatter(http.Controller):
             'messages': Message.search(domain, limit=limit, offset=offset).portal_message_format(),
             'message_count': Message.search_count(domain)
         }
+
+    @http.route([
+        '/portal/image/<string:res_model>/<int:partner_id>/<string:field_name>',
+        '/portal/image/<string:res_model>/<int:partner_id>/<string:field_name>/<int:width>x<int:height>'
+        ], type='http', auth='public')
+    def avatar(self, res_model, partner_id, field_name, width=50, height=50):
+        status, headers, content = binary_content(model=res_model, id=partner_id, field=field_name)
+        if status == 304:
+            return werkzeug.wrappers.Response(status=304)
+
+        if not content:
+            img_path = get_module_resource('base', 'static/img', 'avatar.png')
+            content = tools.image_resize_image(base64.b64encode(open(img_path, 'rb').read()), (width, height))
+            headers = [('Content-Type', 'image/png')]
+
+        image_base64 = base64.b64decode(content)
+        headers.append(('Content-Length', len(image_base64)))
+        response = request.make_response(image_base64, headers)
+        response.status = str(status)
+        return response
+
+    @http.route('/portal/content/<int:attachment_id>', type='http', auth="public")
+    def attachment_access(self, attachment_id, access_token=None, download=None):
+        status, headers, content = binary_content(id=attachment_id, download=download, access_token=access_token)
+        if status == 304:
+            return werkzeug.wrappers.Response(status=304)
+
+        attachment_sudo = request.env['ir.attachment'].sudo().browse(attachment_id).exists()
+        if access_token and consteq(attachment_sudo.access_token, access_token):
+            content_base64 = base64.b64decode(content)
+            headers.append(('Content-Length', len(content_base64)))
+            return request.make_response(content_base64, headers)
+        else:
+            raise Forbidden()

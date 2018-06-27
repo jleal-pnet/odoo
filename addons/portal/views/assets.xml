@@ -4,6 +4,7 @@
         <xpath expr="//link[last()]" position="after">
             <link rel="stylesheet" type="text/scss" href="/portal/static/src/scss/bootstrap.extend.scss"/>
             <link rel="stylesheet" type="text/scss" href="/portal/static/src/scss/portal.scss"/>
+            <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/notification.scss"/>
         </xpath>
         <xpath expr="//script[last()]" position="after">
             <script type="text/javascript" src="/portal/static/src/js/portal.js"></script>
@@ -11,6 +12,8 @@
             <script type="text/javascript" src="/portal/static/src/js/portal_chatter.js"></script>
             <script type="text/javascript" src="/portal/static/src/js/portal_signature.js"></script>
             <script type="text/javascript" src="/portal/static/src/js/portal_sidebar.js"></script>
+            <script type="text/javascript" src="/web/static/src/js/services/notification_service.js"></script>
+            <script type="text/javascript" src="/web/static/src/js/widgets/notification.js"></script>
         </xpath>
     </template>
 
