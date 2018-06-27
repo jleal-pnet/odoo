@@ -102,7 +102,7 @@ var DropdownMenu = Widget.extend({
             itemId: itemId,
             groupId: item.groupId,
         };
-        this.trigger_up('menu_item_deleted', eventData);
+        this.trigger('menu_item_deleted', eventData);
     },
     /**
      * @private
@@ -176,9 +176,9 @@ var DropdownMenu = Widget.extend({
         };
         this._renderMenuItems();
         if (item.isActive !== initialState) {
-            this.trigger_up('menu_item_toggled', eventData);
+            this.trigger('menu_item_toggled', eventData);
         } else {
-            this.trigger_up('item_option_changed', eventData);
+            this.trigger('item_option_changed', eventData);
         }
     },
 
