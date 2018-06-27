@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="pos_config_view_form_inherit_l10n_in" model="ir.ui.view">
+        <field name="name">pos.config.form.view.inherit.l10n.in</field>
+        <field name="model">pos.config</field>
+        <field name="inherit_id" ref="point_of_sale.pos_config_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/div[12]" position="inside">
+                <div class="col-xs-12 col-md-6 o_setting_box">
+                    <div class="o_setting_right_pane" groups='l10n_in.group_l10n_in_multi_gstin'>
+                        <label for="l10n_in_gstin_partner_id" string="GSTIN Partner"/>
+                        <div class="text-muted">
+                            Select GSTIN Partner.
+                        </div>
+                        <div class="content-group mt16">
+                            <field name="l10n_in_gstin_partner_id"/>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>
