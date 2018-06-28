@@ -150,16 +150,16 @@
                     <templates>
                         <t t-name="kanban-box">
                             <div class="oe_kanban_global_area o_kanban_attachment">
-                                <div class="o_kanban_image">
+                                <div class="o_kanban_preview">
                                     <t t-set="webimage" t-value="new RegExp('image.*(gif|jpeg|jpg|png)').test(record.mimetype.value)"/>
-                                    <div t-if="webimage" class="o_attachment_image">
-                                        <img t-attf-src="/web/image/#{record.id.raw_value}/100x100?crop=true" width="100" height="100" alt="Document"/>
-                                    </div>
+                                    <t t-if="webimage">
+                                        <img t-attf-src="/web/image/#{record.id.raw_value}/100x100?crop=true" width="100" height="100" alt="Document" class="o_attachment_image"/>
+                                    </t>
                                     <div t-if="!webimage" class="o_image o_image_thumbnail" t-att-data-mimetype="record.mimetype.value"/>
                                 </div>
-                                <div class="oe_kanban_details">
-                                    <div class="o_kanban_title">
-                                        <field name="datas_fname"/>
+                                <div class="o_kanban_card">
+                                    <div class="o_kanban_record_title">
+                                        <field name="datas_fname" class="o_text_overflow"/>
                                     </div>
                                     <div class="o_kanban_content">
                                         <t t-if="record.res_model_name.raw_value">

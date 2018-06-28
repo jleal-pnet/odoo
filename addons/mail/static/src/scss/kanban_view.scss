@@ -1,48 +1,39 @@
 .o_kanban_view .o_kanban_record.o_kanban_attachment {
     @include o-flex-display();
-    height: 100px;
+    height: 102px;
     margin: 8px 4px;
     padding: 0;
 
-    .o_kanban_image {
+    .o_kanban_preview {
         @include o-flex-display();
-        min-width: 100px;
+        width: 100px;
         align-items: center;
         justify-content: center;
-        
+
         .o_image {
             background-repeat: no-repeat;
             transform: scale(1.8);
         }
 
-        .o_attachment_image > img {
+        .o_attachment_image {
             padding: 0;
-        }
-
-        & + div {
-            padding-left: 0;
         }
     }
 
-    .oe_kanban_details {
-        @include o-flex(1, 1, auto);
+    .o_kanban_card {
+        @include o-flex(1, 0, auto);
         @include o-flex-display();
         @include o-flex-direction(column);
-        margin-left: 12px;
+        margin: 8px 8px 4px 12px;
+        max-width: 200px;
 
-        .o_kanban_title {
-            @include o-flex(1, 1, auto);
-            margin: 8px 8px 0 0;
-
-            font-size: $font-size-h4;
-            font-weight: bold;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        .o_kanban_record_title {
+            margin-bottom: 8px;
         }
 
         .o_kanban_content {
             @include o-flex(1, 1, auto);
-            margin: 8px 8px 0 0;
+            // margin: 8px 8px 0 0;
             font-size: $font-size-small;
         }
 
@@ -50,13 +41,12 @@
             @include o-flex-display();
             justify-content: end;
             align-items: center;
-            margin: 8px 8px 8px 0;
+            margin-top: 8px;
 
             .o_bottom_left {
                 @include o-flex(1, 1, auto);
                 text-align: left;
                 color: $gray-light;
-                font-weight: bold;
             }
 
             .o_bottom_right {
@@ -69,5 +59,4 @@
             }
         }
     }
-
 }
