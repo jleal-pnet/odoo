@@ -145,7 +145,8 @@
                     <field name="create_date"/>
                     <field name="active"/>
                     <field name="name"/>
-                    <field name="res_model"/>
+                    <field name="res_model_name"/>
+                    <field name="res_name"/>
                     <templates>
                         <t t-name="kanban-box">
                             <div class="oe_kanban_global_area o_kanban_attachment">
@@ -161,7 +162,12 @@
                                         <field name="datas_fname"/>
                                     </div>
                                     <div class="o_kanban_content">
-                                        <strong>Model:</strong> something
+                                        <t t-if="record.res_model_name.raw_value">
+                                            <strong><field name="res_model_name"/></strong>
+                                            <t t-if="record.res_name.raw_value">
+                                                : <field name="res_name"/>
+                                            </t>
+                                        </t>
                                     </div>
                                     <div class="o_kanban_record_bottom">
                                         <time class="o_bottom_left">

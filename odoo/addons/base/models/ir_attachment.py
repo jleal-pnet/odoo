@@ -42,6 +42,14 @@ class IrAttachment(models.Model):
                 record = self.env[attachment.res_model].browse(attachment.res_id)
                 attachment.res_name = record.display_name
 
+    @api.depends('res_model')
+    def _compute_res_model_name(self):
+        for record in self:
+            if record.res_model:
+                model = self.env['ir.model'].search([('model', '=', record.res_model)], limit=1)
+                if model:
+                    record.res_model_name = model[0].name
+
     @api.model
     def _storage(self):
         return self.env['ir.config_parameter'].sudo().get_param('ir_attachment.location', 'file')
@@ -268,6 +276,7 @@ class IrAttachment(models.Model):
     description = fields.Text('Description')
     res_name = fields.Char('Resource Name', compute='_compute_res_name', store=True)
     res_model = fields.Char('Resource Model', readonly=True, help="The database object this attachment will be attached to.")
+    res_model_name = fields.Char(compute='_compute_res_model_name', store=True, index=True)
     res_field = fields.Char('Resource Field', readonly=True)
     res_id = fields.Integer('Resource ID', readonly=True, help="The record id this is attached to.")
     create_date = fields.Datetime('Date Created', readonly=True)
