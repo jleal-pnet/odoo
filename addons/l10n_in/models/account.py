@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import api, fields, models
+from odoo import api, fields, models, _
+from odoo.exceptions import ValidationError
 
 
 class AccountJournal(models.Model):
@@ -36,6 +37,13 @@ class AccountMove(models.Model):
         required=True,
         default=lambda self: self.env['res.company']._company_default_get('account.move').partner_id,
         domain="[('l10n_in_gstin_company_id', '=', company_id)]")
+    l10n_in_import_type = fields.Selection([
+        ('regular', 'Regular'),
+        ('import_goods', 'Import of Goods'),
+        ('import_goods_sez', 'Import of Goods from SEZ'),
+        ('import_service', 'Import of Service'),
+        ('import_service_sez', 'Import of Service from SEZ')],
+        string='Import Type', default='regular', required=True)
 
 
 class AccountMoveLine(models.Model):
@@ -48,6 +56,15 @@ class AccountMoveLine(models.Model):
     l10n_in_cess_amount = fields.Float(string="CESS Amount", compute='_compute_l10n_in_taxes_amount', store=True, readonly=True)
     l10n_in_tax_price_unit = fields.Float(string="Tax Base Amount")
     l10n_in_tax_id = fields.Many2one('account.tax', compute="_compute_l10n_in_tax_id", store=True, readonly=True)
+    l10n_in_is_eligible_for_itc = fields.Boolean(string="Is eligible for ITC", help="Check this box if this product is eligible for ITC(Input Tax Credit) under GST")
+    l10n_in_itc_percentage = fields.Float(string="ITC percentage", help="Enter percentage in case of partly eligible for ITC(Input Tax Credit) under GST.")
+
+    @api.constrains('l10n_in_itc_percentage')
+    def _check_l10n_in_itc_percentage(self):
+        for record in self:
+            if record.l10n_in_itc_percentage < 0 or record.l10n_in_itc_percentage > 100:
+                ValidationError(_("ITC percentage between 0 to 100"))
+
 
     @api.depends('l10n_in_tax_price_unit', 'tax_ids', 'quantity', 'product_id', 'partner_id', 'company_currency_id')
     def _compute_l10n_in_taxes_amount(self):

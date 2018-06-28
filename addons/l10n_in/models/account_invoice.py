@@ -38,6 +38,13 @@ class AccountInvoice(models.Model):
         readonly=True, states={'draft': [('readonly', False)]}
         )
     l10n_in_refund_reason_id = fields.Many2one('l10n_in.refund.reason', string="Refund Reason")
+    l10n_in_import_type = fields.Selection([
+        ('regular', 'Regular'),
+        ('import_goods', 'Import of Goods'),
+        ('import_goods_sez', 'Import of Goods from SEZ'),
+        ('import_service', 'Import of Service'),
+        ('import_service_sez', 'Import of Service from SEZ')],
+        string='Import Type', default='regular', required=True)
 
     @api.model
     def _get_refund_common_fields(self):
@@ -65,7 +72,9 @@ class AccountInvoice(models.Model):
         for line_res in lines_res:
             line = self.env['account.invoice.line'].browse(line_res.get('invl_id'))
             line_res.update({
-                'l10n_in_tax_price_unit': (line.price_unit * (1 - (line.discount or 0.0) / 100.0))
+                'l10n_in_tax_price_unit': (line.price_unit * (1 - (line.discount or 0.0) / 100.0)),
+                'l10n_in_is_eligible_for_itc': line.l10n_in_is_eligible_for_itc,
+                'l10n_in_itc_percentage': line.l10n_in_itc_percentage
                 })
         return lines_res
 
@@ -75,6 +84,8 @@ class AccountInvoice(models.Model):
         vals = super(AccountInvoice, self).line_get_convert(line, part)
         vals.update({
             'l10n_in_tax_price_unit': line.get('l10n_in_tax_price_unit', 0),
+            'l10n_in_is_eligible_for_itc': line.get('l10n_in_is_eligible_for_itc', False),
+            'l10n_in_itc_percentage': line.get('l10n_in_itc_percentage', 0)
             })
         return vals
 
@@ -89,7 +100,8 @@ class AccountInvoice(models.Model):
                 'l10n_in_shipping_port_code_id': inv.l10n_in_shipping_port_code_id.id,
                 'l10n_in_reseller_partner_id': inv.l10n_in_reseller_partner_id.id,
                 'l10n_in_reverse_charge': inv.l10n_in_reverse_charge,
-                'l10n_in_gstin_partner_id': inv.l10n_in_gstin_partner_id.id
+                'l10n_in_gstin_partner_id': inv.l10n_in_gstin_partner_id.id,
+                'l10n_in_import_type': inv.l10n_in_import_type
                 }
             inv.move_id.write(vals)
         return res
@@ -131,6 +143,14 @@ class AccountInvoiceLine(models.Model):
     l10n_in_cgst_amount = fields.Float(string="CGST Amount", compute='_compute_l10n_in_taxes_amount', store=True, readonly=True)
     l10n_in_sgst_amount = fields.Float(string="SGST Amount", compute='_compute_l10n_in_taxes_amount', store=True, readonly=True)
     l10n_in_cess_amount = fields.Float(string="CESS Amount", compute='_compute_l10n_in_taxes_amount', store=True, readonly=True)
+    l10n_in_is_eligible_for_itc = fields.Boolean(string="Is eligible for ITC", help="Check this box if this product is eligible for ITC(Input Tax Credit) under GST")
+    l10n_in_itc_percentage = fields.Float(string="ITC percentage", help="Enter percentage in case of partly eligible for ITC(Input Tax Credit) under GST.")
+
+    @api.constrains('l10n_in_itc_percentage')
+    def _check_l10n_in_itc_percentage(self):
+        for record in self:
+            if record.l10n_in_itc_percentage < 0 or record.l10n_in_itc_percentage > 100:
+                ValidationError(_("ITC percentage between 0 to 100"))
 
     @api.depends('price_unit', 'discount', 'invoice_line_tax_ids', 'quantity',
         'product_id', 'invoice_id.currency_id', 'invoice_id.company_id')
@@ -149,3 +169,9 @@ class AccountInvoiceLine(models.Model):
             line.l10n_in_cgst_amount = taxes_data['cgst_amount']
             line.l10n_in_sgst_amount = taxes_data['sgst_amount']
             line.l10n_in_cess_amount = taxes_data['cess_amount']
+
+    @api.onchange('product_id')
+    def _onchange_product_id(self):
+        res = super(AccountInvoiceLine, self)._onchange_product_id()
+        self.l10n_in_is_eligible_for_itc = self.product_id and self.product_id.l10n_in_is_eligible_for_itc or False
+        return res

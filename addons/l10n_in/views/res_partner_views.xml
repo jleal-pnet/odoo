@@ -18,6 +18,9 @@
             <xpath expr="//field[@name='state_id']" position="attributes">
                 <attribute name="attrs">{'required': ['|', ('country_code','=', 'IN'), ('country_code','=', False)]}</attribute>
             </xpath>
+            <xpath expr="//page[@name='sales_purchases']//field[@name='supplier']" position="after">
+                <field name="l10n_in_composition" attrs="{'invisible': [('supplier', '=', False)]}"/>
+            </xpath>
         </field>
     </record>
 </odoo>
