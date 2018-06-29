@@ -275,6 +275,14 @@ var TranslatorMenuBar = Widget.extend({
         this.$target.each(function () {
             $(this).html(self._getTranlationObject(this).value);
         });
+        this.$target_attr.each(function () {
+            var $target = $(this);
+            _.each($target.data('translation'), function (node, attr) {
+                var value = self._getTranlationObject(node).value;
+                $target.attr(attr, value);
+                $(node).html(value);
+            });
+        });
         this._unmarkTranslatableNode();
         this.trigger('cancel');
         this.$el.hide();
