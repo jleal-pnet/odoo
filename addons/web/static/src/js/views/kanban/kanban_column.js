@@ -298,7 +298,7 @@ var KanbanColumn = Widget.extend({
                 text: _t("Ok"),
                 classes: 'btn-primary',
                 close: true,
-                click: this.trigger_up.bind(this, 'kanban_column_delete'),
+                click: this.trigger.bind(this, 'kanban_column_delete'),
             },
             {text: _t("Cancel"), close: true}
         ];
@@ -320,7 +320,7 @@ var KanbanColumn = Widget.extend({
             res_model: this.relation,
             res_id: this.id,
             title: _t("Edit Column"),
-            on_saved: this.trigger_up.bind(this, 'reload'),
+            on_saved: this.trigger.bind(this, 'reload'),
         }).open();
     },
     /**
@@ -369,7 +369,7 @@ var KanbanColumn = Widget.extend({
     _onArchiveRecords: function (event) {
         event.preventDefault();
         Dialog.confirm(this, _t("Are you sure that you want to archive all the records from this column?"), {
-            confirm_callback: this.trigger_up.bind(this, 'kanban_column_records_toggle_active', {
+            confirm_callback: this.trigger.bind(this, 'kanban_column_records_toggle_active', {
                 archive: true,
             }),
         });

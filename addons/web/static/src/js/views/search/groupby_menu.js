@@ -143,7 +143,7 @@ var GroupByMenu = DropdownMenu.extend({
         this.presentedFields.splice(fieldIndex, 1);
         this._renderGeneratorMenu();
         this._renderMenuItems();
-        this.trigger_up('new_groupby', eventData);
+        this.trigger('new_groupby', eventData);
     },
     /**
      * override

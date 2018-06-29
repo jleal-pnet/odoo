@@ -134,7 +134,7 @@ var FiltersMenu = DropdownMenu.extend({
             self.items.push(filterItem);
         });
         this._renderMenuItems();
-        this.trigger_up('new_filters', data);
+        this.trigger('new_filters', data);
         _.invoke(this.propositions, 'destroy');
         this.propositions = [];
         this._toggleCustomFilterMenu();
