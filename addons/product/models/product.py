@@ -105,7 +105,7 @@ class ProductProduct(models.Model):
         'product.template', 'Product Template',
         auto_join=True, index=True, ondelete="cascade", required=True)
     barcode = fields.Char(
-        'Barcode', copy=False, oldname='ean13',
+        'Barcode', copy=False, oldname='ean13', is_business_field = True,
         help="International Article Number used for product identification.")
     attribute_value_ids = fields.Many2many(
         'product.attribute.value', string='Attributes', ondelete='restrict', is_business_field = True)

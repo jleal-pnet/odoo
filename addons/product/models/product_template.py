@@ -43,7 +43,7 @@ class ProductTemplate(models.Model):
         help="A description of the Product that you want to communicate to your vendors. "
              "This description will be copied to every Purchase Order, Receipt and Vendor Bill/Credit Note.")
     description_sale = fields.Text(
-        'Sale Description', translate=True,
+        'Sale Description', translate=True, is_business_field=True,
         help="A description of the Product that you want to communicate to your customers. "
              "This description will be copied to every Sales Order, Delivery Order and Customer Invoice/Credit Note")
     type = fields.Selection([
@@ -54,7 +54,7 @@ class ProductTemplate(models.Model):
              'A service is a non-material product you provide.\n'
              'A digital content is a non-material product you sell online. The files attached to the products are the one that are sold on '
              'the e-commerce such as e-books, music, pictures,... The "Digital Product" module has to be installed.')
-    rental = fields.Boolean('Can be Rent')
+    rental = fields.Boolean('Can be Rent', is_business_field=True)
     categ_id = fields.Many2one(
         'product.category', 'Product Category',
         change_default=True, default=_get_default_category_id, is_business_field=True,
@@ -68,7 +68,7 @@ class ProductTemplate(models.Model):
         'Price', compute='_compute_template_price', inverse='_set_template_price',
         digits=dp.get_precision('Product Price'))
     list_price = fields.Float(
-        'Sales Price', default=1.0,
+        'Sales Price', default=1.0, is_business_field=True,
         digits=dp.get_precision('Product Price'),
         help="Base price to compute the customer price. Sometimes called the catalog price.")
     lst_price = fields.Float(
@@ -94,14 +94,14 @@ class ProductTemplate(models.Model):
 
     sale_ok = fields.Boolean(
         'Can be Sold', default=True,
-        help="Specify if the product can be selected in a sales order line.")
-    purchase_ok = fields.Boolean('Can be Purchased', default=True)
+        is_business_field = True, help="Specify if the product can be selected in a sales order line.")
+    purchase_ok = fields.Boolean('Can be Purchased', default=True, is_business_field = True)
     pricelist_id = fields.Many2one(
         'product.pricelist', 'Pricelist', store=False, is_business_field = True,
         help='Technical field. Used for searching on pricelists, not stored in database.')
     uom_id = fields.Many2one(
         'uom.uom', 'Unit of Measure',
-        default=_get_default_uom_id, required=True,
+        default=_get_default_uom_id, required=True, is_business_field = True,
         help="Default Unit of Measure used for all stock operation.")
     uom_po_id = fields.Many2one(
         'uom.uom', 'Purchase Unit of Measure',
@@ -113,14 +113,14 @@ class ProductTemplate(models.Model):
     packaging_ids = fields.One2many(
         'product.packaging', string="Product Packages", compute="_compute_packaging_ids", inverse="_set_packaging_ids",
         help="Gives the different ways to package the same product.")
-    seller_ids = fields.One2many('product.supplierinfo', 'product_tmpl_id', 'Vendors')
+    seller_ids = fields.One2many('product.supplierinfo', 'product_tmpl_id', 'Vendors', is_business_field = True)
     variant_seller_ids = fields.One2many('product.supplierinfo', 'product_tmpl_id')
 
     active = fields.Boolean('Active', default=True, help="If unchecked, it will allow you to hide the product without removing it.")
     color = fields.Integer('Color Index')
 
     is_product_variant = fields.Boolean(string='Is a product variant', compute='_compute_is_product_variant')
-    attribute_line_ids = fields.One2many('product.attribute.line', 'product_tmpl_id', 'Product Attributes')
+    attribute_line_ids = fields.One2many('product.attribute.line', 'product_tmpl_id', 'Product Attributes', is_business_field = True)
     product_variant_ids = fields.One2many('product.product', 'product_tmpl_id', 'Products', required=True)
     # performance: product_variant_id provides prefetching on the first product variant only
     product_variant_id = fields.Many2one('product.product', 'Product', compute='_compute_product_variant_id')
@@ -132,7 +132,7 @@ class ProductTemplate(models.Model):
     barcode = fields.Char('Barcode', oldname='ean13', related='product_variant_ids.barcode')
     default_code = fields.Char(
         'Internal Reference', compute='_compute_default_code',
-        inverse='_set_default_code', store=True)
+        inverse='_set_default_code', store=True, is_business_field = True)
 
     item_ids = fields.One2many('product.pricelist.item', 'product_tmpl_id', 'Pricelist Items')
 

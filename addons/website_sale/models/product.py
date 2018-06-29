@@ -112,10 +112,10 @@ class ProductTemplate(models.Model):
 
     website_description = fields.Html('Description for the website', sanitize_attributes=False, translate=html_translate, is_business_field = True)
     alternative_product_ids = fields.Many2many('product.template', 'product_alternative_rel', 'src_id', 'dest_id',
-                                               string='Alternative Products', help='Suggest more expensive alternatives to '
+                                               string='Alternative Products', is_business_field = True, help='Suggest more expensive alternatives to '
                                                'your customers (upsell strategy). Those products show up on the product page.')
     accessory_product_ids = fields.Many2many('product.product', 'product_accessory_rel', 'src_id', 'dest_id',
-                                             string='Accessory Products', help='Accessories show up when the customer reviews the '
+                                             string='Accessory Products', is_business_field = True, help='Accessories show up when the customer reviews the '
                                              'cart before paying (cross-sell strategy, e.g. for computers: mouse, keyboard, etc.). '
                                              'An algorithm figures out a list of accessories based on all the products added to cart.')
     website_size_x = fields.Integer('Size X', default=1)
@@ -123,7 +123,7 @@ class ProductTemplate(models.Model):
     website_style_ids = fields.Many2many('product.style', string='Styles')
     website_sequence = fields.Integer('Website Sequence', help="Determine the display order in the Website E-commerce",
                                       default=lambda self: self._default_website_sequence())
-    public_categ_ids = fields.Many2many('product.public.category', string='Website Product Category',
+    public_categ_ids = fields.Many2many('product.public.category', string='Website Product Category', is_business_field = True,
                                         help="Categories can be published on the Shop page (online catalog grid) to help "
                                         "customers find all the items within a category. To publish them, go to the Shop page, "
                                         "hit Customize and turn *Product Categories* on. A product can belong to several categories.")

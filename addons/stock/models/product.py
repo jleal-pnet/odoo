@@ -25,7 +25,7 @@ class Product(models.Model):
     stock_move_ids = fields.One2many('stock.move', 'product_id', help='Technical: used to compute quantities.')
     qty_available = fields.Float(
         'Quantity On Hand', compute='_compute_quantities', search='_search_qty_available',
-        digits=dp.get_precision('Product Unit of Measure'),
+        digits=dp.get_precision('Product Unit of Measure'), is_business_field=True,
         help="Current quantity of products.\n"
              "In a context with a single Stock Location, this includes "
              "goods stored at this Location, or any of its children.\n"
@@ -404,7 +404,7 @@ class ProductTemplate(models.Model):
     description_pickingin = fields.Text('Description on Receptions', translate=True, is_business_field=True)
     qty_available = fields.Float(
         'Quantity On Hand', compute='_compute_quantities', search='_search_qty_available',
-        digits=dp.get_precision('Product Unit of Measure'))
+        is_business_field=True, digits=dp.get_precision('Product Unit of Measure'))
     virtual_available = fields.Float(
         'Forecasted Quantity', compute='_compute_quantities', search='_search_virtual_available',
         digits=dp.get_precision('Product Unit of Measure'))

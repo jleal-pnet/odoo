@@ -10,7 +10,7 @@ class ProductTemplate(models.Model):
     available_in_pos = fields.Boolean(string='Available in Point of Sale', is_business_field = True, help='Check if you want this product to appear in the Point of Sale', default=True)
     to_weight = fields.Boolean(string='To Weigh With Scale', help="Check if the product should be weighted using the hardware scale integration")
     pos_categ_id = fields.Many2one(
-        'pos.category', string='Point of Sale Category',
+        'pos.category', string='Point of Sale Category', is_business_field = True,
         help="Those categories are used to group similar products for point of sale.")
 
     @api.multi

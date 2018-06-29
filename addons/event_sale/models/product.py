@@ -18,7 +18,7 @@ class ProductTemplate(models.Model):
 class Product(models.Model):
     _inherit = 'product.product'
 
-    event_ticket_ids = fields.One2many('event.event.ticket', 'product_id', string='Event Tickets')
+    event_ticket_ids = fields.One2many('event.event.ticket', 'product_id', string='Event Tickets', is_business_field = True)
 
     @api.onchange('event_ok')
     def _onchange_event_ok(self):
