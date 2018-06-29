@@ -427,6 +427,8 @@ class IrAttachment(models.Model):
 
     @api.multi
     def unlink(self):
+        if not self:
+            return True
         self.check('unlink')
 
         # First delete in the database, *then* in the filesystem if the
