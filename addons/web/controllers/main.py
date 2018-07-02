@@ -1058,18 +1058,13 @@ class Binary(http.Controller):
         if crop and (width or height):
             content = crop_image(content, type='center', size=(width, height), ratio=(1, 1))
 
-        elif no_limit and (width or height):
-            content = odoo.tools.image_resize_image(base64_source=content, size=(width or None, height or None),
-                                                    encoding='base64', filetype='PNG', avoid_if_small=avoid_if_small)
-            # resize force png as filetype
-            headers = self.force_contenttype(headers, contenttype='image/png')
-
         elif content and (width or height):
-            # resize maximum 500*500
-            if width > 500:
-                width = 500
-            if height > 500:
-                height = 500
+            if not no_limit:
+                # resize maximum 500*500
+                if width > 500:
+                    width = 500
+                if height > 500:
+                    height = 500
             content = odoo.tools.image_resize_image(base64_source=content, size=(width or None, height or None), encoding='base64', filetype='PNG', avoid_if_small=avoid_if_small)
             # resize force png as filetype
             headers = self.force_contenttype(headers, contenttype='image/png')
