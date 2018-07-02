@@ -18,7 +18,7 @@ Image._initialized = 2
 # Image resizing
 # ----------------------------------------
 
-def image_resize_image(base64_source, size=(1024, 1024), encoding='base64', filetype=None, avoid_if_small=False):
+def image_resize_image(base64_source, size=(1024, 1024), encoding='base64', filetype=None, avoid_if_small=False, no_limit=False):
     """ Function to resize an image. The image will be resized to the given
         size, while keeping the aspect ratios, and holes in the image will be
         filled with transparent background. The image will not be stretched if
@@ -63,6 +63,15 @@ def image_resize_image(base64_source, size=(1024, 1024), encoding='base64', file
     }.get(filetype, filetype)
 
     asked_width, asked_height = size
+
+    if no_limit:
+        if asked_width:
+            if asked_width >= image.size[1]:
+                return base64_source
+        if asked_height:
+            if asked_height >= image.size[0]:
+                return base64_source
+
     if asked_width is None:
         asked_width = int(image.size[0] * (float(asked_height) / image.size[1]))
     if asked_height is None:

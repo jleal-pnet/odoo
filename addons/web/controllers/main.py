@@ -1065,7 +1065,9 @@ class Binary(http.Controller):
                     width = 500
                 if height > 500:
                     height = 500
-            content = odoo.tools.image_resize_image(base64_source=content, size=(width or None, height or None), encoding='base64', filetype='PNG', avoid_if_small=avoid_if_small)
+            content = odoo.tools.image_resize_image(base64_source=content, size=(width or None, height or None),
+                                                    encoding='base64', filetype='PNG', no_limit=no_limit,
+                                                    avoid_if_small=avoid_if_small)
             # resize force png as filetype
             headers = self.force_contenttype(headers, contenttype='image/png')
 
