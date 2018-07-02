@@ -6,7 +6,7 @@ import re
 
 from odoo import api, models
 
-from suds.client import Client
+from zeep import Client
 
 _logger = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ class ResPartner(models.Model):
             return False
 
         # Equivalent to stdnum_vat.check_vies(partner.vat).
-        # However, we want to add a custom timeout to the suds.client
+        # However, we want to add a custom timeout to the zeep.client
         # because by default, it's 120 seconds and this is to long.
         try:
             client = Client(stdnum_vat.vies_wsdl, timeout=5)
