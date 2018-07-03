@@ -3439,6 +3439,7 @@ var BasicModel = AbstractModel.extend({
             count: params.count || res_ids.length,
             data: data,
             domain: params.domain || [],
+            extraDomain: params.extraDomain || [],
             fields: fields,
             fieldsInfo: params.fieldsInfo,
             groupedBy: params.groupedBy || [],
@@ -3956,11 +3957,12 @@ var BasicModel = AbstractModel.extend({
         var groupByField = list.groupedBy[0];
         var rawGroupBy = groupByField.split(':')[0];
         var fields = _.uniq(list.getFieldNames().concat(rawGroupBy));
+        var domain = _.uniq(_.union(list.domain || [], list.extraDomain || []));
         return this._rpc({
                 model: list.model,
                 method: 'read_group',
                 fields: fields,
-                domain: list.domain,
+                domain: domain,
                 context: list.context,
                 groupBy: list.groupedBy,
                 orderBy: list.orderedBy,
@@ -4155,6 +4157,9 @@ var BasicModel = AbstractModel.extend({
         if (options.domain !== undefined) {
             element.domain = options.domain;
         }
+        if (options.extraDomain !== undefined) {
+            element.extraDomain = options.extraDomain;
+        }
         if (options.groupBy !== undefined) {
             element.groupedBy = options.groupBy;
         }
@@ -4214,12 +4219,13 @@ var BasicModel = AbstractModel.extend({
     _searchReadUngroupedList: function (list) {
         var self = this;
         var fieldNames = list.getFieldNames();
+        var domain = _.uniq(_.union(list.domain || [], list.extraDomain || []));
         return this._rpc({
             route: '/web/dataset/search_read',
             model: list.model,
             fields: fieldNames,
             context: list.getContext(),
-            domain: list.domain || [],
+            domain: domain,
             limit: list.limit,
             offset: list.loadMoreOffset + list.offset,
             orderBy: list.orderedBy,
