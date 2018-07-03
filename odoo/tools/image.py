@@ -83,11 +83,6 @@ def image_resize_image(base64_source, size=(1024, 1024), encoding='base64', file
     if asked_height is None:
         asked_height = int(image.size[1] * (float(asked_width) / image.size[0]))
     size = asked_width, asked_height
-    # if horizontal:
-    #     resized = asked_width, asked_height-int(float(image.size[1])/140.0)  # FIXME (this is a temporary solution)
-    # else:
-    #     resized = asked_width-int(float(image.size[0])/140.0), asked_height
-
     # check image size: do not create a thumbnail if avoiding smaller images
     if avoid_if_small and image.size[0] <= size[0] and image.size[1] <= size[1]:
         return base64_source
