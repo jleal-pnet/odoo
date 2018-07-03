@@ -1,56 +1,47 @@
+$o-kanban-attachement-image-size: 100px;
+
 .o_kanban_view .o_kanban_record.o_kanban_attachment {
-    @include o-flex-display();
-    height: 102px;
-    margin: 8px 4px;
     padding: 0;
 
-    .o_kanban_preview {
-        @include o-flex-display();
-        width: 100px;
-        align-items: center;
-        justify-content: center;
+    .o_kanban_image {
+        width: $o-kanban-attachement-image-size;
 
-        .o_image {
-            background-repeat: no-repeat;
-            transform: scale(1.8);
+        + div {
+            padding-left: $o-kanban-attachement-image-size + $o-kanban-inside-hgutter;
+            @media (max-width: $screen-xs-max) {
+                padding-left:  $o-kanban-attachement-image-size + $o-kanban-inside-hgutter-mobile;
+            }
+        }
+
+        .o_kanban_image_wrapper {
+            min-height: $o-kanban-attachement-image-size;
+            @include o-flex-display;
+            @include o-align-items(center);
+            @include o-justify-content(center);
         }
 
         .o_attachment_image {
-            padding: 0;
+            @include square($o-kanban-attachement-image-size);
+        }
+
+        .o_image {
+            @include square($o-kanban-attachement-image-size - 20px);
         }
     }
 
-    .o_kanban_card {
-        @include o-flex(1, 0, auto);
-        @include o-flex-display();
-        @include o-flex-direction(column);
-        margin: 8px 8px 4px 12px;
-        max-width: 200px;
+    .o_kanban_details {
+        .o_kanban_details_wrapper {
+            @include o-flex-display;
+            @include o-flex-direction(column);
+            min-height: $o-kanban-attachement-image-size;
+            padding: $o-kanban-inside-vgutter $o-kanban-inside-hgutter;
 
-        .o_kanban_record_title {
-            margin-bottom: 8px;
-        }
-
-        .o_kanban_content {
-            @include o-flex(1, 1, auto);
-            // margin: 8px 8px 0 0;
-            font-size: $font-size-small;
-        }
-
-        .o_kanban_record_bottom {
-            @include o-flex-display();
-            justify-content: end;
-            align-items: center;
-            margin-top: 8px;
-
-            .o_bottom_left {
-                @include o-flex(1, 1, auto);
-                text-align: left;
-                color: $gray-light;
+            .o_kanban_record_title {
+                margin-bottom: $o-kanban-inside-vgutter;
             }
 
-            .o_bottom_right {
-                text-align: right;
+            .o_kanban_record_body {
+                @include o-flex(1, 1, auto);
             }
 
             .oe_kanban_avatar {
