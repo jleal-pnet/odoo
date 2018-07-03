@@ -255,6 +255,9 @@ class Users(models.Model):
         'Access to Private Addresses', compute='_compute_groups_id', inverse='_inverse_groups_id',
         group_xml_id='base.group_private_addresses')
 
+    access_count = fields.Integer(compute='_get_access_count')
+    rules_count = fields.Integer(compute='_get_access_count')
+
     _sql_constraints = [
         ('login_key', 'UNIQUE (login)',  'You can not have two users with the same login !')
     ]
@@ -701,6 +704,42 @@ class Users(models.Model):
         return bool(self._cr.fetchone())
     # for a few places explicitly clearing the has_group cache
     has_group.clear_cache = _has_group.clear_cache
+
+    def _get_access_count(self):
+        for user in self:
+            groups = user.groups_id
+            user.access_count = len(groups.mapped('model_access'))
+            user.rules_count = len(groups.mapped('rule_groups'))
+
+    def action_show_access(self):
+        self.ensure_one()
+        self.user_has_groups('base.group_erp_manager')
+
+        return {
+            'name': _('Access Rights'),
+            'view_type': 'form',
+            'view_mode': 'tree,form',
+            'res_model': 'ir.model.access',
+            'type': 'ir.actions.act_window',
+            'context': {'create': False, 'delete': False},
+            'domain': [('id', 'in', self.mapped('groups_id.model_access').ids)],
+            'target': 'current',
+        }
+
+    def action_show_rules(self):
+        self.ensure_one()
+        self.user_has_groups('base.group_erp_manager')
+
+        return {
+            'name': _('Record Rules'),
+            'view_type': 'form',
+            'view_mode': 'tree,form',
+            'res_model': 'ir.rule',
+            'type': 'ir.actions.act_window',
+            'context': {'create': False, 'delete': False},
+            'domain': [('id', 'in', self.mapped('groups_id.rule_groups').ids)],
+            'target': 'current',
+        }
 
     @api.multi
     def _is_public(self):

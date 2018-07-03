@@ -158,6 +158,12 @@
                     <sheet>
                         <field name="id" invisible="1"/>
                         <div class="oe_button_box" name="button_box">
+                            <button name="action_show_access" type="object" groups="base.group_no_one" class="oe_stat_button" icon="fa-list">
+                                <field string="Access Rights" name="access_count" widget="statinfo"/>
+                            </button>
+                            <button name="action_show_rules" type="object" groups="base.group_no_one" class="oe_stat_button" icon="fa-list-ul">
+                                <field string="Record Rules" name="rules_count" widget="statinfo"/>
+                            </button>
                             <button name="toggle_active" type="object" class="oe_stat_button" icon="fa-check">
                                 <field name="active" widget="boolean_button" options='{"terminology": "active"}'/>
                             </button>
