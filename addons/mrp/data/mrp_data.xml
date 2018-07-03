@@ -30,7 +30,7 @@
         </record>
 
         <!--
-             Procurement rules and routes
+             Stock supply rule and routes
         -->
 
         <record id="route_warehouse0_manufacture" model='stock.location.route'>

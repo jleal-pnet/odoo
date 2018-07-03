@@ -17,10 +17,10 @@ import logging
 _logger = logging.getLogger(__name__)
 
 
-class ProcurementRule(models.Model):
+class StockSupplyRule(models.Model):
     """ A rule describe what a procurement should do; produce, buy, move, ... """
-    _name = 'procurement.rule'
-    _description = "Procurement Rule"
+    _name = 'stock.supply.rule'
+    _description = "Stock Rule"
     _order = "sequence, name"
 
     name = fields.Char(
@@ -103,7 +103,7 @@ class ProcurementRule(models.Model):
 
     def _get_message_dict(self):
         """ Return a dict with the different possible message used for the
-        rule message. It should return one message for each stock.rule action
+        rule message. It should return one message for each stock.supply.rule action
         (except push and pull). This function is override in mrp and
         purchase_stock in order to complete the dictionary.
         """
@@ -171,7 +171,7 @@ class ProcurementRule(models.Model):
 
     def _run_pull(self, product_id, product_qty, product_uom, location_id, name, origin, values):
         if not self.location_src_id:
-            msg = _('No source location defined on procurement rule: %s!') % (self.name, )
+            msg = _('No source location defined on stock rule: %s!') % (self.name, )
             raise UserError(msg)
 
         # create the move as SUPERUSER because the current user may not have the rights to do it (mto product launched by a sale for example)
@@ -190,7 +190,7 @@ class ProcurementRule(models.Model):
 
     def _get_stock_move_values(self, product_id, product_qty, product_uom, location_id, name, origin, values, group_id):
         ''' Returns a dictionary of values that will be used to create a stock move from a procurement.
-        This function assumes that the given procurement has a rule (action == 'pull' or action == 'pull_push') set on it.
+        This function assumes that the given procurement has a rule (action == 'pull' or 'pull_push') set on it.
 
         :param procurement: browse record
         :rtype: dictionary
@@ -303,8 +303,8 @@ class ProcurementGroup(models.Model):
         on the default behavior """
         if warehouse_id:
             domain = expression.AND([['|', ('warehouse_id', '=', warehouse_id.id), ('warehouse_id', '=', False)], domain])
-        Rule = self.env['procurement.rule']
-        res = self.env['procurement.rule']
+        Rule = self.env['stock.supply.rule']
+        res = self.env['stock.supply.rule']
         if route_ids:
             res = Rule.search(expression.AND([[('route_id', 'in', route_ids.ids)], domain]), order='route_sequence, sequence', limit=1)
         if not res:
@@ -339,7 +339,7 @@ class ProcurementGroup(models.Model):
 
     @api.model
     def _run_scheduler_tasks(self, use_new_cursor=False, company_id=False):
-        # Minimum stock rules
+        # Minimum Stock rule
         self.sudo()._procure_orderpoint_confirm(use_new_cursor=use_new_cursor, company_id=company_id)
 
         # Search all confirmed stock_moves and try to assign them
@@ -357,7 +357,7 @@ class ProcurementGroup(models.Model):
 
     @api.model
     def run_scheduler(self, use_new_cursor=False, company_id=False):
-        """ Call the scheduler in order to check the running procurements (super method), to check the minimum stock rules
+        """ Call the scheduler in order to check the running procurements (super method), to check the minimum Stock supply rule
         and the availability of moves. This function is intended to be run for all the companies at the same time, so
         we run functions as SUPERUSER to avoid intercompanies and access rights issues. """
         try:
@@ -467,7 +467,7 @@ class ProcurementGroup(models.Model):
                                             self.env['procurement.group'].run(orderpoint.product_id, qty_rounded, orderpoint.product_uom, orderpoint.location_id,
                                                                               orderpoint.name, orderpoint.name, values)
                                     except UserError as error:
-                                        self.env['procurement.rule']._log_next_activity(orderpoint.product_id, error.name)
+                                        self.env['stock.supply.rule']._log_next_activity(orderpoint.product_id, error.name)
                                     self._procurement_from_orderpoint_post_process([orderpoint.id])
                                 if use_new_cursor:
                                     cr.commit()
