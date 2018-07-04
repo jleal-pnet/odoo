@@ -27,6 +27,7 @@ var ListController = BasicController.extend({
         selection_changed: '_onSelectionChanged',
         toggle_column_order: '_onToggleColumnOrder',
         toggle_group: '_onToggleGroup',
+        toggle_create_button: '_onToggleCreate',
     }),
     /**
      * @constructor
@@ -224,12 +225,14 @@ var ListController = BasicController.extend({
      *
      * @todo make record creation a basic controller feature
      * @private
+     * @param {string} recordID
      */
-    _addRecord: function () {
+
+    _addRecord: function (recordID) {
         var self = this;
         this._disableButtons();
         return this.renderer.unselectRow().then(function () {
-            return self.model.addDefaultRecord(self.handle, {
+            return self.model.addDefaultRecord(recordID, {
                 position: self.editable,
             });
         }).then(function (recordID) {
@@ -238,6 +241,16 @@ var ListController = BasicController.extend({
             self.renderer.editRecord(recordID);
             self._updatePager();
         }).always(this._enableButtons.bind(this));
+    },
+    /**
+     * Add a record to the Groupby list
+     *
+     * @private
+     * @param {string} [groupID]
+     */
+    _addGroupRecord: function (groupID) {
+        this.model._setDefaultContext(groupID);
+        this._addRecord(groupID);
     },
     /**
      * Archive the current selection
@@ -281,6 +294,16 @@ var ListController = BasicController.extend({
                     break;
             }
         });
+    },
+    /**
+     * Hides the create button when groupedby list
+    */
+    _onToggleCreate: function (){
+        if (this.$buttons){
+            var state = this.model.get(this.handle);
+            var createbutton = this.$buttons.find('.o_list_button_add');
+            return state.groupedBy.length ? createbutton.addClass('o_hidden') : createbutton.removeClass('o_hidden');
+        }
     },
     /**
      * This function is the hook called by the field manager mixin to confirm
@@ -385,8 +408,9 @@ var ListController = BasicController.extend({
      */
     _onAddRecord: function (event) {
         event.stopPropagation();
+        var recordID = event.data.id || this.handle;
         if (this.activeActions.create) {
-            this._addRecord();
+            event.data.groupBy ? this._addGroupRecord(recordID) : this._addRecord(recordID);
         } else if (event.data.onFail) {
             event.data.onFail();
         }
@@ -418,7 +442,7 @@ var ListController = BasicController.extend({
         }
         var state = this.model.get(this.handle, {raw: true});
         if (this.editable && !state.groupedBy.length) {
-            this._addRecord();
+            this.trigger_up('add_record');
         } else {
             this.trigger_up('switch_view', {view_type: 'form', res_id: undefined});
         }
@@ -450,9 +474,7 @@ var ListController = BasicController.extend({
         ev.stopPropagation();
         this.trigger_up('mutexify', {
             action: function () {
-                var record = self.model.get(self.handle);
-                var editedRecord = record.data[ev.data.index];
-                self._setMode('edit', editedRecord.id)
+                self._setMode('edit', ev.data.recrodID)
                     .done(ev.data.onSuccess);
             },
         });
