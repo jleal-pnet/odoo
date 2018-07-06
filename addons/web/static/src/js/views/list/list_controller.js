@@ -220,6 +220,16 @@ var ListController = BasicController.extend({
         }
     },
     /**
+     * Add a record to the Groupby list
+     *
+     * @private
+     * @param {string} [groupID]
+     */
+    _addGroupRecord: function (groupID) {
+        this.model._setDefaultContext(groupID);
+        this._addRecord(groupID);
+    },
+    /**
      * Adds a record to the list.
      * Disables the buttons to prevent concurrent record creation or edition.
      *
@@ -241,16 +251,6 @@ var ListController = BasicController.extend({
             self.renderer.editRecord(recordID);
             self._updatePager();
         }).always(this._enableButtons.bind(this));
-    },
-    /**
-     * Add a record to the Groupby list
-     *
-     * @private
-     * @param {string} [groupID]
-     */
-    _addGroupRecord: function (groupID) {
-        this.model._setDefaultContext(groupID);
-        this._addRecord(groupID);
     },
     /**
      * Archive the current selection
@@ -294,16 +294,6 @@ var ListController = BasicController.extend({
                     break;
             }
         });
-    },
-    /**
-     * Hides the create button when groupedby list
-    */
-    _onToggleCreate: function (){
-        if (this.$buttons){
-            var state = this.model.get(this.handle);
-            var createbutton = this.$buttons.find('.o_list_button_add');
-            return state.groupedBy.length ? createbutton.addClass('o_hidden') : createbutton.removeClass('o_hidden');
-        }
     },
     /**
      * This function is the hook called by the field manager mixin to confirm
@@ -408,9 +398,9 @@ var ListController = BasicController.extend({
      */
     _onAddRecord: function (event) {
         event.stopPropagation();
-        var recordID = event.data.id || this.handle;
+        var recordID = event.data.group_id || this.handle;
         if (this.activeActions.create) {
-            event.data.groupBy ? this._addGroupRecord(recordID) : this._addRecord(recordID);
+            event.data.group_id ? this._addGroupRecord(recordID) : this._addRecord(recordID);
         } else if (event.data.onFail) {
             event.data.onFail();
         }
@@ -575,6 +565,16 @@ var ListController = BasicController.extend({
         this.model.setSort(data.id, event.data.name).then(function () {
             self.update({});
         });
+    },
+    /**
+     * Hides the create button when groupedby list
+    */
+    _onToggleCreate: function (){
+        if (this.$buttons){
+            var state = this.model.get(this.handle);
+            var createbutton = this.$buttons.find('.o_list_button_add');
+            return state.groupedBy.length ? createbutton.addClass('o_hidden') : createbutton.removeClass('o_hidden');
+        }
     },
     /**
      * In a grouped list view, each group can be clicked on to open/close them.

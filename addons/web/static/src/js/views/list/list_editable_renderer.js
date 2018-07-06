@@ -92,7 +92,7 @@ ListRenderer.include({
         // so that it means 'unlink' instead of 'remove'
         this.isMany2Many = params.isMany2Many;
 
-        // for differentiate main list view from relation field list view
+        // to differentiate main list view from relational field list view
         // it used to display add a line option
         // relation field list view and editable group by list view
         this.isX2ManyList = params.isX2ManyList;
@@ -139,57 +139,6 @@ ListRenderer.include({
             }
         }
         return this._super(recordID);
-    },
-    /**
-     * get Jquery row element of list view table by RecordID
-     *
-     * @param {string} [recordID]
-     * @returns {jQueryElement}
-     */
-    getRow: function (recordID){
-        var $row = this.$('.o_data_row').filter(function (index, el) {
-            return $(el).data('id') === recordID;
-        });
-        return $row;
-    },
-    /**
-     * When we render row we store recordId as jQuery data in row element.
-     * here get RecordID by rowIndex
-     *
-     * @param {integer} rowIndex
-     * @returns {string} recordID
-     */
-    getRecordId: function (rowIndex) {
-        var $tr = this.$('table.o_list_view > tbody tr').eq(rowIndex);
-        return $tr.data('id');
-    },
-    /**
-     * for editable group by mode record could be deep down in state tree
-     * traverse state and get record
-     *
-     *  @param {string} [recordID]
-     * @returns {object}
-     */
-    getRecord: function (recordID) {
-        var record;
-        utils.traverse_records(this.state, function (r) {
-            if (r.id === recordID) {
-                record = r;
-            }
-        });
-        return record;
-    },
-    /**
-    * get datapoint in form of flat array from state tree
-    *
-    * @returns {array}
-    */
-    getRecordList: function (){
-        var record =[];
-        utils.traverse_records(this.state, function (data) {
-            record.push(data.id);
-        });
-        return record;
     },
     /**
      * We need to override the confirmChange method from BasicRenderer to
@@ -313,6 +262,57 @@ ListRenderer.include({
             return this.getRecordId(this.currentRow);
         }
         return null;
+    },
+    /**
+     * for editable group by mode record could be deep down in state tree
+     * traverse state and get record
+     *
+     * @param {string} [recordID]
+     * @returns {object}
+     */
+    getRecord: function (recordID) {
+        var record;
+        utils.traverse_records(this.state, function (r) {
+            if (r.id === recordID) {
+                record = r;
+            }
+        });
+        return record;
+    },
+    /**
+     * When we render row we store recordId as jQuery data in row element.
+     * retrieves recordID using rowIndex
+     *
+     * @param {integer} rowIndex
+     * @returns {string} recordID
+     */
+    getRecordId: function (rowIndex) {
+        var $tr = this.$('table.o_list_view > tbody tr').eq(rowIndex);
+        return $tr.data('id');
+    },
+    /**
+     * get datapoint in form of flat array from state tree
+     *
+     * @returns {array}
+     */
+    getRecordList: function (){
+        var records =[];
+        utils.traverse_records(this.state, function (data) {
+            records.push(data.id);
+        });
+        return records;
+    },
+    /**
+     * get jQuery table row element of list view using recordID
+     *
+     * @param {string} [recordID]
+     * @returns {jQueryElement}
+     */
+    getRow: function (recordID){
+        var $row = this.$('.o_data_row').filter(function (index, el) {
+            return $(el).data('id') === recordID;
+        });
+        return $row;
     },
     /**
      * Removes the line associated to the given recordID (the index of the row
@@ -478,6 +478,29 @@ ListRenderer.include({
         }
     },
     /**
+     *
+     * @private
+     * @param {integer} index
+     * @param {object} options
+     * @param {position} [options.position] position previous and next
+     * @param {group} [options.group] length of group
+     * @returns {integer}
+     */
+    _getNavigationIndex: function (index, options) {
+        var newIndex;
+        var recordID = this.getRecordId(index);
+        var recordList = this.getRecordList();
+        var indexPos = recordList.indexOf(recordID);
+        if (options.position === 'next'){
+            newIndex = options.group ? (indexPos + 1) % recordList.length : indexPos + 1;
+        } else {
+            newIndex = options.group ? (indexPos === 0) && recordList.length - 1 || indexPos - 1 : indexPos - 1;
+        }
+        var $row = this.getRow(recordList[newIndex]);
+        var rowIndex = $row.prop('rowIndex') - 1;
+        return rowIndex;
+    },
+    /**
      * Returns the current number of columns.  The editable renderer may add a
      * trash icon on the right of a record, so we need to take this into account
      *
@@ -500,29 +523,6 @@ ListRenderer.include({
      */
     _isEditable: function () {
         return this.editable;
-    },
-    /**
-     *
-     * @private
-     * @param {integer} index
-     * @param {object} options
-     * @param {position} [options.position] position previous and next
-     * @param {group} [options.group] length of group
-     * @returns {integer}
-     */
-    _getNavigationIndex: function (index, options) {
-        var recordID = this.getRecordId(index);
-        var recordList = this.getRecordList();
-        var newIndex;
-        var indexPos = recordList.indexOf(recordID);
-        if (options.position === 'next'){
-            newIndex = options.group ? (indexPos + 1) % recordList.length : indexPos + 1;
-        } else {
-            newIndex = options.group ? (indexPos === 0) && recordList.length - 1 || indexPos - 1 : indexPos - 1;
-        }
-        var $row = this.getRow(recordList[newIndex]);
-        var rowIndex = $row.prop('rowIndex') - 1;
-        return rowIndex;
     },
     /**
      * Move the cursor on the end of the previous line, if possible.
@@ -812,10 +812,30 @@ ListRenderer.include({
     //--------------------------------------------------------------------------
 
     /**
+     * This method is called when we click on the 'Add a line' button in a groupby
+     * list view.
+     *
+     * @param {MouseEvent} ev
+     */
+    _onAddGroupRecord: function (event) {
+        event.preventDefault();
+        // we don't want the click to cause other effects, such as unselecting
+        // the row that we are creating, because it counts as a click on a tr
+        ev.stopPropagation();
+
+        var self = this;
+        var groupID = $(event.target).data('groupID');
+        this.unselectRow().then(function () {
+            self.trigger_up('add_record', {
+                group_id: groupID,
+            });
+        });
+    },
+    /**
      * This method is called when we click on the 'Add a line' button in a sub
      * list such as a one2many in a form view.
      *
-     * @param {MouseEvent} ev
+     * @param {MouseEvent} event
      */
     _onAddRecord: function (ev) {
         // we don't want the browser to navigate to a the # url
@@ -829,27 +849,6 @@ ListRenderer.include({
         var self = this;
         this.unselectRow().then(function () {
             self.trigger_up('add_record', {context: ev.currentTarget.dataset.context}); // TODO write a test, the deferred was not considered
-        });
-    },
-    /**
-     * This method is called when we click on the 'Add a line' button in a groupby
-     * list view.
-     *
-     * @param {MouseEvent} event
-     */
-    _onAddGroupRecord: function (event) {
-        event.preventDefault();
-        // we don't want the click to cause other effects, such as unselecting
-        // the row that we are creating, because it counts as a click on a tr
-        event.stopPropagation();
-
-        var self = this;
-        var groupID = $(event.target).data('groupID');
-        this.unselectRow().then(function () {
-            self.trigger_up('add_record', {
-                id: groupID,
-                groupBy: true,
-            });
         });
     },
     /**
