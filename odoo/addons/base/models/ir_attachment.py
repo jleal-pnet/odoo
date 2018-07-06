@@ -14,6 +14,7 @@ from odoo import api, fields, models, tools, SUPERUSER_ID, _
 from odoo.exceptions import AccessError
 from odoo.tools import config, human_size, ustr, html_escape
 from odoo.tools.mimetypes import guess_mimetype
+from odoo.tools import crop_image, image_resize_image
 
 _logger = logging.getLogger(__name__)
 
@@ -301,6 +302,16 @@ class IrAttachment(models.Model):
     mimetype = fields.Char('Mime Type', readonly=True)
     index_content = fields.Text('Indexed Content', readonly=True, prefetch=False)
     active = fields.Boolean(default=True, string="Active", oldname='archived')
+    thumbnail = fields.Binary(compute='_get_thumbnail')
+
+    @api.depends('mimetype', 'datas')
+    def _get_thumbnail(self):
+        for record in self:
+            if record.mimetype == 'image/jpeg' or record.mimetype == 'image/png':
+                if not record.thumbnail:
+                    temp_image = crop_image(record.datas, type='center', size=(100, 100), ratio=(1, 1))
+                    record.thumbnail = image_resize_image(base64_source=temp_image, size=(100, 100),
+                                                          encoding='base64', filetype='PNG')
 
     @api.model_cr_context
     def _auto_init(self):
