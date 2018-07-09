@@ -241,7 +241,7 @@ var Activity = AbstractActivityField.extend({
      * @param {Object} fieldsToReload
      */
     _reload: function (fieldsToReload) {
-        this.trigger_up('reload_mail_fields', fieldsToReload);
+        this.trigger('reload_mail_fields', fieldsToReload);
     },
     /**
      * @override

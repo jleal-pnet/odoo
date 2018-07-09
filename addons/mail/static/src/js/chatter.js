@@ -230,7 +230,7 @@ var Chatter = Widget.extend({
                 self._composer.focus();
             }
             self._composer.on('post_message', self, function (ev) {
-                var messageData = ev.data.message;
+                var messageData = ev.data;
                 self._discardOnReload(messageData).then(function () {
                     self.fields.thread.postMessage(messageData).then(function () {
                         self._closeComposer(true);

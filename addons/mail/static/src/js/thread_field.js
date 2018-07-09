@@ -80,8 +80,8 @@ var ThreadField = AbstractField.extend({
      * @return {$.Promise}
      */
     postMessage: function (ev) {
+        var message = ev;
         var self = this;
-        var message = ev.data.message;
         return this._documentThread.postMessage(message)
             .then(function () {
                 if (message.partner_ids.length) {
@@ -178,7 +178,7 @@ var ThreadField = AbstractField.extend({
      * @param {mail.model.Message}
      */
     _onNewMessage: function (ev) {
-        var message = ev.data.message;
+        var message = ev.data;
         if (
             message.isLinkedToDocumentThread() &&
             message.getDocumentModel() === this.model &&
@@ -218,7 +218,7 @@ var ThreadField = AbstractField.extend({
      * @param {mail.model.Message}
      */
     _onUpdateMessage: function (ev) {
-        var message = ev.data.message;
+        var message = ev.data;
         if (
             message.isLinkedToDocumentThread() &&
             message.getDocumentModel() === this.model &&
