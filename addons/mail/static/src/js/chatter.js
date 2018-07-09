@@ -232,7 +232,12 @@ var Chatter = Widget.extend({
             self._composer.on('post_message', self, function (messageData) {
                 self._discardOnReload(messageData).then(function () {
                     self.fields.thread.postMessage(messageData).then(function () {
-                        self._closeComposer(true);
+                        if (!options.keepComposerAfterPost){
+                            self._closeComposer(true);
+                        }
+                        else {
+                            self._composer.clearComposer();
+                        }
                         if (self._reloadAfterPost(messageData)) {
                             self.trigger_up('reload');
                         }
