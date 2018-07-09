@@ -112,7 +112,7 @@ tour.register('website_sale_tour', {
             content: "Select country in address",
             trigger: 'select[name="country_id"]',
             run : function (actions) {
-                var country = _.filter($('option'), function (country) {
+                var country = _.filter($('select[name="country_id"] option'), function (country) {
                     if (country.text === 'India') {
                         return country;
                     }
@@ -124,7 +124,7 @@ tour.register('website_sale_tour', {
             content: "Select state in address",
             trigger: 'select[name="state_id"]',
             run : function (actions) {
-                actions.text($('option[data-code="GJ"]'));
+                actions.text($('select[name="state_id"] option[data-code="GJ"]'));
             }
         },
         {
