@@ -974,7 +974,7 @@ var MailManager =  AbstractService.extend({
                 _t("%d Messages"),
                 this._outOfFocusUnreadMessageCounter
             );
-            this.trigger_up('set_title_part', {
+            this.trigger('set_title_part', {
                 part: '_chat',
                 title: tabTitle
             });
@@ -1320,7 +1320,7 @@ var MailManager =  AbstractService.extend({
      */
     _onWindowFocus: function () {
         this._resetOutOfFocusUnreadMessageCounter();
-        this.trigger_up('set_title_part', { part: '_chat' });
+        this.trigger('set_title_part', { part: '_chat' });
     },
 });
 

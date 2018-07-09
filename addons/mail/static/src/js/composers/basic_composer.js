@@ -638,7 +638,7 @@ var BasicComposer = Widget.extend({
                     ev.stopPropagation();
                     this._mentionManager.resetSuggestions();
                 } else {
-                    this.trigger_up('escape_pressed');
+                    this.trigger('escape_pressed');
                 }
                 break;
             // ENTER, UP, DOWN, TAB: check if navigation in mention propositions

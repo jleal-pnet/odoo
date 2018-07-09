@@ -483,7 +483,7 @@ var KanbanActivity = AbstractActivityField.extend({
      * @private
      */
     _reload: function () {
-        this.trigger_up('reload', { db_id: this.record_id });
+        this.trigger('reload', { db_id: this.record_id });
     },
     /**
      * @override
