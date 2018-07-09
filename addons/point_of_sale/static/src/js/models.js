@@ -358,7 +358,7 @@ exports.PosModel = Backbone.Model.extend({
                  'barcode', 'default_code', 'to_weight', 'uom_id', 'description_sale', 'description',
                  'product_tmpl_id','tracking'],
         order:  _.map(['sequence','default_code','name'], function (name) { return {name: name}; }),
-        domain: [['sale_ok','=',true],['available_in_pos','=',true]],
+        domain: function(self){return[['sale_ok','=',true],['available_in_pos','=',true], '|', ['company_id','=',self.company.id], ['company_id','=', false]];},
         context: function(self){ return { display_default_code: false }; },
         loaded: function(self, products){
             var using_company_currency = self.config.currency_id[0] === self.company.currency_id[0];
