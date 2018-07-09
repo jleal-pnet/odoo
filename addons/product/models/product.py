@@ -411,8 +411,11 @@ class ProductProduct(models.Model):
                     seller_variant = s.product_name and (
                         variant and "%s (%s)" % (s.product_name, variant) or s.product_name
                         ) or False
+                    product_id = product.id
+                    if self._context.get('virtual_id') and self._context.get('partner_id'):
+                        product_id = '%s-%s' % (product_id, s.id)
                     mydict = {
-                              'id': product.id,
+                              'id': product_id,
                               'name': seller_variant or name,
                               'default_code': s.product_code or product.default_code,
                               }

@@ -573,6 +573,8 @@ class PurchaseOrderLine(models.Model):
 
     @api.model
     def create(self, values):
+        if isinstance(values['product_id'], unicode):
+            values['product_id'] = int(values['product_id'].split('-')[0])
         line = super(PurchaseOrderLine, self).create(values)
         if line.order_id.state == 'purchase':
             line.order_id._create_picking()
@@ -760,12 +762,20 @@ class PurchaseOrderLine(models.Model):
             return result
 
         # Reset date, price and quantity since _onchange_quantity will provide default values
+        seller_id = False
+
+        product_id = self.product_id
+        if self._context.get('virtual_id') and self._context.get('partner_id') and not isinstance(product_id.id, int):
+            product_id, seller_id = tuple(product_id.id.split('-'))
+            product_id = self.env['product.product'].browse(int(product_id))
+
+        product_id = self._get_real_product()
         self.date_planned = datetime.today().strftime(DEFAULT_SERVER_DATETIME_FORMAT)
         self.price_unit = self.product_qty = 0.0
-        self.product_uom = self.product_id.uom_po_id or self.product_id.uom_id
-        result['domain'] = {'product_uom': [('category_id', '=', self.product_id.uom_id.category_id.id)]}
+        self.product_uom = product_id.uom_po_id or product_id.uom_id
+        result['domain'] = {'product_uom': [('category_id', '=', product_id.uom_id.category_id.id)]}
 
-        product_lang = self.product_id.with_context(
+        product_lang = product_id.with_context(
             lang=self.partner_id.lang,
             partner_id=self.partner_id.id,
         )
@@ -776,11 +786,11 @@ class PurchaseOrderLine(models.Model):
         fpos = self.order_id.fiscal_position_id
         if self.env.uid == SUPERUSER_ID:
             company_id = self.env.user.company_id.id
-            self.taxes_id = fpos.map_tax(self.product_id.supplier_taxes_id.filtered(lambda r: r.company_id.id == company_id))
+            self.taxes_id = fpos.map_tax(product_id.supplier_taxes_id.filtered(lambda r: r.company_id.id == company_id))
         else:
-            self.taxes_id = fpos.map_tax(self.product_id.supplier_taxes_id)
+            self.taxes_id = fpos.map_tax(product_id.supplier_taxes_id)
 
-        self._suggest_quantity()
+        self._suggest_quantity(int(seller_id))
         self._onchange_quantity()
 
         return result
@@ -793,7 +803,7 @@ class PurchaseOrderLine(models.Model):
         title = False
         message = False
 
-        product_info = self.product_id
+        product_info = self._get_real_product()
 
         if product_info.purchase_line_warn != 'no-message':
             title = _("Warning for %s") % product_info.name
@@ -810,7 +820,9 @@ class PurchaseOrderLine(models.Model):
         if not self.product_id:
             return
 
-        seller = self.product_id._select_seller(
+        product_id = self._get_real_product()
+
+        seller = product_id._select_seller(
             partner_id=self.partner_id,
             quantity=self.product_qty,
             date=self.order_id.date_order and self.order_id.date_order[:10],
@@ -822,7 +834,7 @@ class PurchaseOrderLine(models.Model):
         if not seller:
             return
 
-        price_unit = self.env['account.tax']._fix_tax_included_price_company(seller.price, self.product_id.supplier_taxes_id, self.taxes_id, self.company_id) if seller else 0.0
+        price_unit = self.env['account.tax']._fix_tax_included_price_company(seller.price, product_id.supplier_taxes_id, self.taxes_id, self.company_id) if seller else 0.0
         if price_unit and seller and self.order_id.currency_id and seller.currency_id != self.order_id.currency_id:
             price_unit = seller.currency_id.compute(price_unit, self.order_id.currency_id)
 
@@ -830,24 +842,33 @@ class PurchaseOrderLine(models.Model):
             price_unit = seller.product_uom._compute_price(price_unit, self.product_uom)
 
         self.price_unit = price_unit
+        self.name = seller.product_name
 
     @api.onchange('product_qty')
     def _onchange_product_qty(self):
-        if (self.state == 'purchase' or self.state == 'to approve') and self.product_id.type in ['product', 'consu'] and self.product_qty < self._origin.product_qty:
+        product_id = self._get_real_product()
+        if (self.state == 'purchase' or self.state == 'to approve') and product_id.type in ['product', 'consu'] and self.product_qty < self._origin.product_qty:
             warning_mess = {
                 'title': _('Ordered quantity decreased!'),
                 'message' : _('You are decreasing the ordered quantity!\nYou must update the quantities on the reception and/or bills.'),
             }
             return {'warning': warning_mess}
 
-    def _suggest_quantity(self):
+    def _suggest_quantity(self, seller_id=False):
         '''
         Suggest a minimal quantity based on the seller
         '''
         if not self.product_id:
             return
 
-        seller_min_qty = self.product_id.seller_ids\
+        if seller_id:
+            seller = self.env['product.supplierinfo'].browse(seller_id)
+            self.product_qty = seller.min_qty or 1.0
+            self.product_uom = seller.product_uom
+            return
+
+        product_id = self._get_real_product()
+        seller_min_qty = product_id.seller_ids\
             .filtered(lambda r: r.name == self.order_id.partner_id)\
             .sorted(key=lambda r: r.min_qty)
         if seller_min_qty:
@@ -855,6 +876,12 @@ class PurchaseOrderLine(models.Model):
             self.product_uom = seller_min_qty[0].product_uom
         else:
             self.product_qty = 1.0
+
+    def _get_real_product(self):
+        product_id = self.product_id
+        if self._context.get('virtual_id') and self._context.get('partner_id') and not isinstance(product_id.id, int):
+            product_id = self.env['product.product'].browse(int(product_id.id.split('-')[0]))
+        return product_id
 
 
 class ProcurementRule(models.Model):
@@ -1151,6 +1178,20 @@ class ProductTemplate(models.Model):
 class ProductProduct(models.Model):
     _name = 'product.product'
     _inherit = 'product.product'
+
+    def browse(self, arg=None, prefetch=None):
+        new_arg = []
+        if isinstance(arg, str) or isinstance(arg, int):
+            arg = [arg]
+        if self._context.get('virtual_id') and self._context.get('partner_id'):
+            for a in arg:
+                if not isinstance(a, str):
+                    continue
+                product_id, seller_id = a.split("-")
+                new_arg.append(int(product_id))
+        if new_arg:
+            arg = new_arg
+        return super(ProductProduct, self).browse(arg=arg, prefetch=prefetch)
 
     @api.multi
     def _purchase_count(self):
