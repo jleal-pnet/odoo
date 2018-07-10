@@ -1120,7 +1120,8 @@ class Message(models.Model):
         })
         # proceed with notification process to send notification emails and Inbox messages
         for message in self:
-            message._notify()
+            record = self.env[message.model].browse(message.res_id) if message.model and message.res_id else None
+            message._notify(record, {})
 
     @api.multi
     def _moderate_send_reject_email(self, subject, comment):

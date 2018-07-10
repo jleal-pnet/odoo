@@ -57,7 +57,18 @@ class MailResendMessage(models.TransientModel):
             to_send = wizard.partner_ids.filtered(lambda p: p.resend).mapped("partner_id")
             notif_to_cancel = wizard.notification_ids.filtered(lambda notif: notif.res_partner_id in to_cancel and notif.email_status in ('exception', 'bounce'))
             notif_to_cancel.sudo().write({'email_status': 'canceled'})
-            to_send.sudo()._notify(self.mail_message_id, force_send=True, send_after_commit=False)
+
+            if to_send:
+                message = wizard.mail_message_id
+                record = self.env[message.model].browse(message.res_id) if message.model and message.res_id else None
+                self.env['res.partner']._notify(
+                    message,
+                    [[partner.id, True, 'email', 'customer', []] for partner in to_send],  # TDE: this is temp
+                    record,
+                    force_send=True,
+                    send_after_commit=False
+                )
+
             self.mail_message_id._notify_failure_update()
         return {'type': 'ir.actions.act_window_close'}
 
