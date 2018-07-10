@@ -41,10 +41,17 @@ $o-kanban-attachement-image-size: 100px;
 
                 .o_kanban_record_title {
                     margin-bottom: $o-kanban-inside-vgutter;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                    width: 95%;
                 }
 
                 .o_kanban_record_body {
                     @include o-flex(1, 1, auto);
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
                 }
 
                 .oe_kanban_avatar {

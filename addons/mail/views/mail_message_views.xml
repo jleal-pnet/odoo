@@ -160,14 +160,14 @@
                                 </div>
                                 <div class="o_kanban_details">
                                     <div class="o_kanban_details_wrapper">
-                                        <div class="o_kanban_record_title">
+                                        <div t-att-title="record.datas_fname.raw_value" class="o_kanban_record_title">
                                             <field name="datas_fname" class="o_text_overflow"/>
                                         </div>
                                         <div class="o_kanban_record_body">
                                             <t t-if="record.res_model_name.raw_value">
                                                 <strong><field name="res_model_name"/></strong>
                                                 <t t-if="record.res_name.raw_value">
-                                                    : <field name="res_name"/>
+                                                    <span t-att-title="record.res_name.raw_value">: <field name="res_name"/></span>
                                                 </t>
                                             </t>
                                         </div>
