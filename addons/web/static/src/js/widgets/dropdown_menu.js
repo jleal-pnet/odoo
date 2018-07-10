@@ -145,7 +145,7 @@ var DropdownMenu = Widget.extend({
                 groupId: item.groupId,
             };
             this._renderMenuItems();
-            this.trigger_up('menu_item_toggled', eventData);
+            this.trigger('menu_item_toggled', eventData);
         }
         if (item.hasOptions) {
             item.isOpen = !item.isOpen;
