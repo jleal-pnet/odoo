@@ -96,7 +96,7 @@ ListRenderer.include({
         // it used to display add a line option
         // relation field list view and editable group by list view
         this.isX2ManyList = params.isX2ManyList;
-
+        this.currentRow = null;
         this.currentFieldIndex = null;
     },
     /**
@@ -330,7 +330,6 @@ ListRenderer.include({
         if ($row.prop('rowIndex') - 1 === this.currentRow) {
             this.currentRow = null;
         }
-        // TODO: RGA: when we discard first row and it replace with EmptyRow that's not we want to do.
         if (this.state.count >= 4) {
             $row.remove();
         } else {
@@ -483,7 +482,6 @@ ListRenderer.include({
      * @param {integer} index
      * @param {object} options
      * @param {position} [options.position] position previous and next
-     * @param {group} [options.group] length of group
      * @returns {integer}
      */
     _getNavigationIndex: function (index, options) {
@@ -492,9 +490,9 @@ ListRenderer.include({
         var recordList = this.getRecordList();
         var indexPos = recordList.indexOf(recordID);
         if (options.position === 'next'){
-            newIndex = options.group ? (indexPos + 1) % recordList.length : indexPos + 1;
+            newIndex = this.state.groupedBy.length ? (indexPos + 1) % recordList.length : indexPos + 1;
         } else {
-            newIndex = options.group ? (indexPos === 0) && recordList.length - 1 || indexPos - 1 : indexPos - 1;
+            newIndex = this.state.groupedBy.length ? (indexPos === 0) && recordList.length - 1 || indexPos - 1 : indexPos - 1;
         }
         var $row = this.getRow(recordList[newIndex]);
         var rowIndex = $row.prop('rowIndex') - 1;
@@ -532,8 +530,7 @@ ListRenderer.include({
      */
     _moveToPreviousLine: function () {
         var prevRowIndex = this._getNavigationIndex(this.currentRow, {
-            position: 'previous',
-            group: this.state.groupedBy.length
+            position: 'previous'
         });
         if (prevRowIndex >= 0) {
             this._selectCell(prevRowIndex, this.columns.length - 1);
@@ -557,7 +554,6 @@ ListRenderer.include({
             }
             var nextRowIndex = self._getNavigationIndex(self.currentRow, {
                 position: 'next',
-                group: self.state.groupedBy.length
             });
             if (nextRowIndex >= 0) {
                 self._selectCell(nextRowIndex, 0);
