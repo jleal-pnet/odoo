@@ -302,7 +302,7 @@ class IrAttachment(models.Model):
     mimetype = fields.Char('Mime Type', readonly=True)
     index_content = fields.Text('Indexed Content', readonly=True, prefetch=False)
     active = fields.Boolean(default=True, string="Active", oldname='archived')
-    thumbnail = fields.Binary(compute='_get_thumbnail')
+    thumbnail = fields.Binary(compute='_get_thumbnail', store=True, string="")
 
     @api.depends('mimetype', 'datas')
     def _get_thumbnail(self):
