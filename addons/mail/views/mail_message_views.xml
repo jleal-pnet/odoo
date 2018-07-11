@@ -173,7 +173,7 @@
                                         </div>
                                         <div class="o_kanban_record_bottom">
                                             <time class="oe_kanban_bottom_left">
-                                                <field name="create_date"/>
+                                                <field name="create_date" widget="date"/>
                                             </time>
                                             <div class="oe_kanban_bottom_right">
                                                 <img t-att-src="kanban_image('res.users', 'image_small', record.create_uid.raw_value)" t-att-data-member_id="record.create_uid.raw_value" t-att-alt="record.create_uid.raw_value" width="32" height="32" class="oe_kanban_avatar"/>
