@@ -6,6 +6,7 @@ from datetime import timedelta
 from odoo import api, fields, models, tools, SUPERUSER_ID, _
 from odoo.exceptions import UserError, AccessError, ValidationError
 from odoo.tools.safe_eval import safe_eval
+import uuid
 
 
 class ProjectTaskType(models.Model):
@@ -103,6 +104,11 @@ class Project(models.Model):
         for project in self:
             project.task_count = result.get(project.id, 0)
 
+    def _get_public_link(self):
+        for project in self:
+            base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+            project.public_link = base_url + project._get_share_url(redirect=True)
+
     @api.multi
     def attachment_tree_view(self):
         self.ensure_one()
@@ -173,6 +179,7 @@ class Project(models.Model):
         return [(6, 0, [self.env.uid])]
 
     name = fields.Char("Name", index=True, required=True, track_visibility='onchange')
+    access_token = fields.Char('Security Token (readonly)', copy=False, default=str(uuid.uuid4()))
     active = fields.Boolean(default=True,
         help="If the active field is set to False, it will allow you to hide the project without removing it.")
     sequence = fields.Integer(default=10, help="Gives the sequence order when displaying a list of Projects.")
@@ -202,18 +209,23 @@ class Project(models.Model):
         help="Internal email associated with this project. Incoming emails are automatically synchronized "
              "with Tasks (or optionally Issues if the Issue Tracker module is installed).")
     privacy_visibility = fields.Selection([
-            ('followers', _('On invitation only')),
-            ('employees', _('Visible by all employees')),
-            ('portal', _('Visible by following customers')),
+            ('followers', _('Invited users can edit')),
+            ('employees', _('All project users can edit')),
+            ('portal', _('Invited external people can view')),
+            ('portaledit', _('Invited external people can edit')),
         ],
         string='Privacy', required=True,
         default='portal',
         help="Holds visibility of the tasks or issues that belong to the current project:\n"
-                "- On invitation only: Employees may only see the followed project, tasks or issues\n"
-                "- Visible by all employees: Employees may see all project, tasks or issues\n"
-                "- Visible by following customers: employees see everything;\n"
-                "   if website is activated, portal users may see project, tasks or issues followed by\n"
-                "   them or by someone of their company\n")
+                "- Invited users can edit: Employees may only see the followed project, tasks or issues\n"
+                "- All project users can edit: Employees may see all project, tasks or issues\n"
+                "- Invited external people can view: employees see everything;\n"
+                "   if website is activated, invited external people may see project, tasks or issues\n"
+                "   followed by them or by someone of their company, and write in the chatter\n"
+                "- Invited external people can edit: employees see everything;\n"
+                "   if website is activated, invited external people may edit project, tasks or issues\n"
+                "   followed by them or by someone of their company, and write in the chatter\n")
+    public_link = fields.Char(compute='_get_public_link', string="Public link")
     doc_count = fields.Integer(compute='_compute_attached_docs_count', string="Number of documents attached")
     date_start = fields.Date(string='Start Date')
     date = fields.Date(string='Expiration Date', index=True, track_visibility='onchange')
@@ -248,7 +260,7 @@ class Project(models.Model):
 
     def _compute_access_warning(self):
         super(Project, self)._compute_access_warning()
-        for project in self.filtered(lambda x: x.privacy_visibility != 'portal'):
+        for project in self.filtered(lambda x: x.privacy_visibility not in ['portal', 'portaledit']):
             project.access_warning = _(
                 "The project cannot be shared with the recipient(s) because the privacy of the project is too restricted. Set the privacy to 'Visible by following customers' in order to make it accessible by the recipient(s).")
 
@@ -305,7 +317,7 @@ class Project(models.Model):
         project = super(Project, self).create(vals)
         if not vals.get('subtask_project_id'):
             project.subtask_project_id = project.id
-        if project.privacy_visibility == 'portal' and project.partner_id:
+        if project.privacy_visibility in ['portal', 'portaledit'] and project.partner_id:
             project.message_subscribe(project.partner_id.ids)
         return project
 
@@ -320,7 +332,7 @@ class Project(models.Model):
             # archiving/unarchiving a project does it on its tasks, too
             self.with_context(active_test=False).mapped('tasks').write({'active': vals['active']})
         if vals.get('partner_id') or vals.get('privacy_visibility'):
-            for project in self.filtered(lambda project: project.privacy_visibility == 'portal'):
+            for project in self.filtered(lambda project: project.privacy_visibility in ['portal', 'portaledit']):
                 project.message_subscribe(project.partner_id.ids)
         return res
 
@@ -557,7 +569,7 @@ class Task(models.Model):
 
     def _compute_access_warning(self):
         super(Task, self)._compute_access_warning()
-        for task in self.filtered(lambda x: x.project_id.privacy_visibility != 'portal'):
+        for task in self.filtered(lambda x: x.project_id.privacy_visibility not in ['portal', 'portaledit']):
             task.access_warning = _(
                 "The task cannot be shared with the recipient(s) because the privacy of the project is too restricted. Set the privacy of the project to 'Visible by following customers' in order to make it accessible by the recipient(s).")
 
@@ -774,6 +786,8 @@ class Task(models.Model):
             return 'project.mt_task_new'
         elif 'stage_id' in init_values:
             return 'project.mt_task_stage'
+        elif 'priority' in init_values:
+            return 'project.mt_task_priority'
         return super(Task, self)._track_subtype(init_values)
 
     @api.multi

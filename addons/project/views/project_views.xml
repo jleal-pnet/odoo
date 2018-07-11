@@ -138,6 +138,7 @@
                                 <field name="user_id" string="Project Manager"
                                         attrs="{'readonly':[('active','=',False)]}"/>
                                 <field name="privacy_visibility" widget="radio"/>
+                                <field name="public_link" string="Public Link" widget="CopyClipboardChar" options="{'string': 'Copy Link'}"/>
                                 <field name="partner_id" string="Customer"/>
                                 <label for="rating_status" groups="project.group_project_rating"/>
                                 <div groups="project.group_project_rating">

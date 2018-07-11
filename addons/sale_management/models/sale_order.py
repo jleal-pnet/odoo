@@ -159,7 +159,7 @@ class SaleOrder(models.Model):
             'res_id': self.id,
         }
 
-    def _get_share_url(self, redirect=False, signup_partner=False, pid=None):
+    def _get_share_url(self, redirect=False, signup_partner=False, pid=None, **kwargs):
         self.ensure_one()
         if self.state not in ['sale', 'done']:
             auth_param = url_encode(self.partner_id.signup_get_auth_param()[self.partner_id.id])

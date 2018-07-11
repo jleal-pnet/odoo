@@ -20,7 +20,7 @@ class CustomerPortal(CustomerPortal):
         Project = request.env['project.project']
         Task = request.env['project.task']
         # portal users can't view projects they don't follow
-        projects = Project.sudo().search([('privacy_visibility', '=', 'portal')])
+        projects = Project.sudo().search([('privacy_visibility', 'in', ['portal', 'portaledit'])])
         values['project_count'] = Project.search_count([('id', 'in', projects.ids)])
         values['task_count'] = Task.search_count([('project_id', 'in', projects.ids)])
         return values
@@ -39,7 +39,7 @@ class CustomerPortal(CustomerPortal):
     def portal_my_projects(self, page=1, date_begin=None, date_end=None, sortby=None, **kw):
         values = self._prepare_portal_layout_values()
         Project = request.env['project.project']
-        domain = [('privacy_visibility', '=', 'portal')]
+        domain = [('privacy_visibility', 'in', ['portal', 'portaledit'])]
 
         searchbar_sortings = {
             'date': {'label': _('Newest'), 'order': 'create_date desc'},
@@ -127,7 +127,7 @@ class CustomerPortal(CustomerPortal):
         }
         # extends filterby criteria with project (criteria name is the project id)
         # Note: portal users can't view projects they don't follow
-        projects = request.env['project.project'].sudo().search([('privacy_visibility', '=', 'portal')])
+        projects = request.env['project.project'].sudo().search([('privacy_visibility', 'in', ['portal', 'portaledit'])])
         domain = [('project_id', 'in', projects.ids)]
         for proj in projects:
             searchbar_filters.update({
@@ -206,7 +206,55 @@ class CustomerPortal(CustomerPortal):
         try:
             task_sudo = self._document_check_access('project.task', task_id, access_token)
         except (AccessError, MissingError):
-            return request.redirect('/my')
+            try:
+                # Task can be accessed with its project's access token as well
+                task_sudo = request.env['project.task'].sudo().browse(task_id)
+                self._document_check_access('project.project', task_sudo.project_id.id, access_token)
+            except (AccessError, MissingError):
+                return request.redirect('/my')
 
         values = self._task_get_page_view_values(task_sudo, access_token, **kw)
         return request.render("project.portal_my_task", values)
+
+    ### Routes for iFrame content (webclient views)
+
+    @http.route('/embed/project/<int:project_id>', auth="public")
+    def render_project(self, project_id, **kw):
+        """Render a Kanban view displaying a project's tasks.
+        The project's ID is added to the page then retrieved by JS.
+
+        Attributes:
+            project_id (int): The ID of the project to view.
+        """
+        params = {
+            'projectId': project_id,
+            'context': request.env.context,
+            'accessToken': kw.get('access_token', ''),
+            'is_website': True if kw.get('website_id') else False,
+            'viewType': 'kanban',
+        }
+        return http.request.render('project.portal_project',
+                                   {'params': params,
+                                    **kw})
+
+    @http.route('/embed/project/<int:project_id>/<int:task_id>', auth="public")
+    def render_task(self, project_id, task_id, **kw):
+        """Render a Form view displaying a task.
+        The project's and task's IDs are added to the page then
+        retrieved by JS.
+
+        Attributes:
+            project_id (int): The ID of the project to view.
+            task_id (int): The ID of the task to view.
+        """
+        params = {
+            'projectId': project_id,
+            'taskId': task_id,
+            'context': request.env.context,
+            'accessToken': kw.get('access_token', ''),
+            'is_website': True if kw.get('website_id') else False,
+            'viewType': 'form',
+        }
+        return http.request.render('project.portal_project',
+                                   {'params': params,
+                                    **kw})

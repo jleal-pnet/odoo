@@ -606,7 +606,7 @@ class MailThread(models.AbstractModel):
         return changes, tracking_value_ids
 
     @api.multi
-    def message_track(self, tracked_fields, initial_values):
+    def message_track(self, tracked_fields, initial_values, **kwargs):
         """ Track updated values. Comparing the initial and current values of
         the fields given in tracked_fields, it generates a message containing
         the updated values. This message can be linked to a mail.message.subtype
@@ -631,7 +631,7 @@ class MailThread(models.AbstractModel):
                 if not (subtype_rec and subtype_rec.exists()):
                     _logger.debug('subtype %s not found' % subtype_xmlid)
                     continue
-                record.message_post(subtype=subtype_xmlid, tracking_value_ids=tracking_value_ids)
+                record.message_post(subtype=subtype_xmlid, tracking_value_ids=tracking_value_ids, **kwargs)
             elif tracking_value_ids:
                 record._message_log(tracking_value_ids=tracking_value_ids)
 
