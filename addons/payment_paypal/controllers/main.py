@@ -20,14 +20,6 @@ class PaypalController(http.Controller):
     _return_url = '/payment/paypal/dpn/'
     _cancel_url = '/payment/paypal/cancel/'
 
-    def _get_return_url(self, **post):
-        """ Extract the return URL from the data coming from paypal. """
-        return_url = post.pop('return_url', '')
-        if not return_url:
-            custom = json.loads(urls.url_unquote_plus(post.pop('custom', False) or post.pop('cm', False) or '{}'))
-            return_url = custom.get('return_url', '/')
-        return return_url
-
     def _parse_pdt_response(self, response):
         """ Parse a text response for a PDT verification.
 
@@ -104,13 +96,11 @@ class PaypalController(http.Controller):
     def paypal_dpn(self, **post):
         """ Paypal DPN """
         _logger.info('Beginning Paypal DPN form_feedback with post data %s', pprint.pformat(post))  # debug
-        return_url = self._get_return_url(**post)
         self.paypal_validate_data(**post)
-        return werkzeug.utils.redirect(return_url)
+        return werkzeug.utils.redirect('/payment/process')
 
     @http.route('/payment/paypal/cancel', type='http', auth="none", csrf=False)
     def paypal_cancel(self, **post):
         """ When the user cancels its Paypal payment: GET on this route """
         _logger.info('Beginning Paypal cancel with post data %s', pprint.pformat(post))  # debug
-        return_url = self._get_return_url(**post)
-        return werkzeug.utils.redirect(return_url)
+        return werkzeug.utils.redirect('/payment/process')

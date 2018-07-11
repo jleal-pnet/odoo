@@ -133,9 +133,8 @@ class PaymentTransaction(models.Model):
     # Tools for payment
     # --------------------------------------------------
 
-    def render_sale_button(self, order, return_url, submit_txt=None, render_values=None):
+    def render_sale_button(self, order, submit_txt=None, render_values=None):
         values = {
-            'return_url': return_url,
             'partner_id': order.partner_shipping_id.id or order.partner_invoice_id.id,
             'billing_partner_id': order.partner_invoice_id.id,
         }

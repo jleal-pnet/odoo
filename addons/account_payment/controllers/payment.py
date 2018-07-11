@@ -31,6 +31,7 @@ class PaymentPortal(http.Controller):
             save_token = False # we avoid to create a token for the public user
         vals = {
             'acquirer_id': acquirer_id,
+            'return_url': success_url,
         }
 
         if save_token:
@@ -40,7 +41,6 @@ class PaymentPortal(http.Controller):
 
         return transaction.render_invoice_button(
             invoice_sudo,
-            success_url,
             submit_txt=_('Pay & Confirm'),
             render_values={
                 'type': 'form_save' if save_token else 'form',

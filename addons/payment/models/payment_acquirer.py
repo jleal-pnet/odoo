@@ -599,6 +599,10 @@ class PaymentTransaction(models.Model):
     callback_method = fields.Char('Callback Method', groups="base.group_system")
     callback_hash = fields.Char('Callback Hash', groups="base.group_system")
 
+    # Fields used for user redirection & payment post processing
+    return_url = fields.Char('Return URL after payment')
+    is_processed = fields.Boolean('Has the payment been post processed', default=False)
+
     # Fields used for payment.transaction traceability.
 
     payment_token_id = fields.Many2one('payment.token', 'Payment Token', readonly=True,
@@ -721,6 +725,22 @@ class PaymentTransaction(models.Model):
         if any(trans.state not in ('draft', 'authorized') for trans in self):
             raise ValidationError(_('Only draft/authorized transaction can be posted.'))
 
+        self.write({'state': 'done', 'date': datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT)})
+
+    @api.multi
+    def _set_transaction_cancel(self):
+        '''Move the transaction's payment to the cancel state(e.g. Paypal).'''
+        if any(trans.state not in ('draft', 'authorized') for trans in self):
+            raise ValidationError(_('Only draft/authorized transaction can be cancelled.'))
+
+        # Cancel the existing payments.
+        self.mapped('payment_id').cancel()
+
+        self.write({'state': 'cancel', 'date': datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT)})
+        self._log_payment_transaction_received()
+
+    @api.multi
+    def _post_process_after_done(self):
         # Validate invoices automatically upon the transaction is posted.
         invoices = self.mapped('invoice_ids').filtered(lambda inv: inv.state == 'draft')
         invoices.action_invoice_open()
@@ -739,21 +759,23 @@ class PaymentTransaction(models.Model):
             # Track the payment to make a one2one.
             trans.payment_id = payment
         payments.post()
-
-        self.write({'state': 'done', 'date': datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT)})
         self._log_payment_transaction_received()
+        self.write({'is_processed': True})
+        return True
 
     @api.multi
-    def _set_transaction_cancel(self):
-        '''Move the transaction's payment to the cancel state(e.g. Paypal).'''
-        if any(trans.state not in ('draft', 'authorized') for trans in self):
-            raise ValidationError(_('Only draft/authorized transaction can be cancelled.'))
-
-        # Cancel the existing payments.
-        self.mapped('payment_id').cancel()
-
-        self.write({'state': 'cancel', 'date': datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT)})
-        self._log_payment_transaction_received()
+    def _cron_post_process_after_done(self):
+        if not self:
+            # we retrieve all the payment tx that need to be post processed
+            self = self.search([('state', '=', 'done'),
+                                ('is_processed', '=', False)
+                            ])
+        for tx in self:
+            try:
+                tx._post_process_after_done()                
+                self.env.cr.commit()
+            except Exception as e:
+                _logger.error("Transaction post processing failed, reason \"%s\"", e)
 
     @api.model
     def _compute_reference_prefix(self, values):
@@ -905,10 +927,6 @@ class PaymentTransaction(models.Model):
         if hasattr(self, feedback_method_name):
             return getattr(tx, feedback_method_name)(data)
 
-        return True
-
-    @api.multi
-    def _post_process_after_done(self, **kwargs):
         return True
 
     # --------------------------------------------------

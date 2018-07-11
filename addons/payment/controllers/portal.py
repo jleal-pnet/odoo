@@ -1,9 +1,99 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+import logging
+
 from odoo import http, _
 from odoo.http import request
 
+
+_logger = logging.getLogger(__name__)
+
+class PaymentProcessing(http.Controller):
+
+    @staticmethod
+    def remove_payment_transaction(transactions):
+        tx_ids_list = request.session.get("__payment_tx_ids__", [])
+        if transactions:
+            for tx in transactions:
+                if tx.id in tx_ids_list:
+                    tx_ids_list.remove(tx.id)
+        else:
+            return False
+        request.session["__payment_tx_ids__"] = tx_ids_list
+        return True
+
+    @staticmethod
+    def add_payment_transaction(transactions):
+        if not transactions:
+            return False
+        tx_ids_list = set(request.session.get("__payment_tx_ids__", [])) | set(transactions.ids)
+        request.session["__payment_tx_ids__"] = tx_ids_list
+        return True
+
+    @staticmethod
+    def get_payment_transaction_ids():
+        # return the ids and not the recordset, since we might need to
+        # sudo the browse to access all the record
+        # I prefer to let the controller chose when to access to payment.transaction using sudo
+        return request.session.get("__payment_tx_ids__", [])
+
+    @http.route(['/payment/process'], type="http", auth="public", website=True)
+    def payment_status_page(self, **kwargs):
+        # When the customer is redirect to this website page,
+        # we retrieve the payment transaction list from his session
+        tx_ids_list = self.get_payment_transaction_ids()
+        payment_transaction_ids = request.env['payment.transaction'].sudo().browse(tx_ids_list).exists()
+
+        render_ctx = {
+            'payment_tx_ids': payment_transaction_ids.ids,
+        }
+        return request.render("payment.payment_process_page", render_ctx)
+
+    @http.route(['/payment/process/poll'], type="json", auth="public")
+    def payment_status_poll(self):
+        # retrieve the transactions
+        tx_ids_list = self.get_payment_transaction_ids()
+        payment_transaction_ids = request.env['payment.transaction'].sudo().browse(tx_ids_list).exists()
+        if not payment_transaction_ids:
+            return {
+                'success': False,
+                'error': 'no_tx_found',
+            }
+        # create the returned dictionnary
+        result = {
+            'success': True,
+            'transactions': [],
+        }
+        # populate the returned dictionnary with the transactions data
+        for tx in payment_transaction_ids:
+            message_to_display = tx.acquirer_id[tx.state + '_msg'] if tx.state in ['done', 'pending', 'cancel', 'error'] else None
+            result['transactions'].append({
+                'reference': tx.reference,
+                'state': tx.state,
+                'return_url': tx.return_url,
+                'is_processed': tx.is_processed,
+                'state_message': tx.state_message,
+                'message_to_display': message_to_display,
+                'amount': tx.amount,
+                'currency': tx.currency_id.name,
+                'acquirer_provider': tx.acquirer_id.provider,
+            })
+
+        tx_to_process = payment_transaction_ids.filtered(lambda x: x.state == 'done' and x.is_processed is False)
+        try:
+            tx_to_process._post_process_after_done()
+            # if tx_to_process._post_process_after_done():
+                # update the tx list in the session to remove the already processed one
+                # self.remove_payment_transaction(tx_to_process.filtered(lambda x: x.is_processed))
+            pass
+        except Exception as e:
+            request.env.cr.rollback()
+            result['success'] = False
+            result['error'] = str(e)
+            _logger.error("Error while processing transaction(s) %s, exception \"%s\"", tx_to_process.ids, str(e))
+
+        return result
 
 class WebsitePayment(http.Controller):
     @http.route(['/my/payment_method'], type='http', auth="user", website=True)
@@ -90,12 +180,15 @@ class WebsitePayment(http.Controller):
 
         return request.render('payment.pay', values)
 
-    @http.route(['/website_payment/transaction/<string:reference>/<string:amount>/<string:currency_id>',
-                '/website_payment/transaction/v2/<string:amount>/<string:currency_id>/<path:reference>',], type='json', auth='public')
+    @http.route(['/payment/tx/<string:amount>/<string:currency_id>/<path:reference>',
+                '/payment/tx_w_order/<int:order_id>/<string:amount>/<string:currency_id>/<path:reference>',], type='json', auth='public')
     def transaction(self, acquirer_id, reference, amount, currency_id, **kwargs):
         partner_id = request.env.user.partner_id.id if not request.env.user._is_public() else False
         acquirer = request.env['payment.acquirer'].browse(acquirer_id)
         order_id = kwargs.get('order_id')
+
+        reference_values = order_id and {'sale_order_ids': [(4, order_id)]} or {}
+        reference = request.env['payment.transaction']._compute_reference(values=reference_values, prefix=reference)
 
         values = {
             'acquirer_id': int(acquirer_id),
@@ -110,16 +203,18 @@ class WebsitePayment(http.Controller):
             values['sale_order_ids'] = [(6, 0, [order_id])]
 
         tx = request.env['payment.transaction'].sudo().with_context(lang=None).create(values)
+        tx.return_url = '/website_payment/confirm?tx_id=%d' % tx.id
+
+        PaymentProcessing.add_payment_transaction(tx)
 
         render_values = {
-            'return_url': '/website_payment/confirm?tx_id=%d' % tx.id,
             'partner_id': partner_id,
         }
 
         return acquirer.sudo().render(reference, float(amount), int(currency_id), values=render_values)
 
-    @http.route(['/website_payment/token/<string:reference>/<string:amount>/<string:currency_id>',
-                '/website_payment/token/v2/<string:amount>/<string:currency_id>/<path:reference>'], type='http', auth='public', website=True)
+    @http.route(['/payment/token/<string:amount>/<string:currency_id>/<path:reference>',
+                '/payment/token_w_order/<int:order_id>/<string:amount>/<string:currency_id>/<path:reference>',], type='http', auth='public', website=True)
     def payment_token(self, pm_id, reference, amount, currency_id, return_url=None, **kwargs):
         token = request.env['payment.token'].browse(int(pm_id))
         order_id = kwargs.get('order_id')
@@ -137,6 +232,7 @@ class WebsitePayment(http.Controller):
             'partner_id': partner_id,
             'payment_token_id': pm_id,
             'type': 'form_save' if token.acquirer_id.save_token != 'none' and partner_id else 'form',
+            'return_url': return_url,
         }
 
         if order_id:
