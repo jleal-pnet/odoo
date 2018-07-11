@@ -527,7 +527,7 @@ class ProductTemplate(models.Model):
     def action_view_routes(self):
         routes = self.mapped('route_ids') | self.mapped('categ_id').mapped('total_route_ids') | self.env['stock.location.route'].search([('warehouse_selectable', '=', True)])
         action = self.env.ref('stock.action_routes_form').read()[0]
-        action['domain'] = [('id', 'in', routes.ids)]
+        action['domain'] = ['|', ('id', 'in', routes.ids), ('route_id', '=', False)]
         return action
 
     def action_update_quantity_on_hand(self):

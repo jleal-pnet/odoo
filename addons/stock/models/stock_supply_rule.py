@@ -42,7 +42,7 @@ class StockSupplyRule(models.Model):
         default=lambda self: self.env.user.company_id)
     location_id = fields.Many2one('stock.location', 'Destination Location', required=True)
     location_src_id = fields.Many2one('stock.location', 'Source Location')
-    route_id = fields.Many2one('stock.location.route', 'Route', required=True, ondelete='cascade')
+    route_id = fields.Many2one('stock.location.route', 'Route', ondelete='cascade')
     procure_method = fields.Selection([
         ('make_to_stock', 'Take From Stock'),
         ('make_to_order', 'Trigger Another Rule')], string='Move Supply Method',
@@ -315,6 +315,8 @@ class ProcurementGroup(models.Model):
             warehouse_routes = warehouse_id.route_ids
             if warehouse_routes:
                 res = Rule.search(expression.AND([[('route_id', 'in', warehouse_routes.ids)], domain]), order='route_sequence, sequence', limit=1)
+        if not res:
+            res = Rule.search(expression.AND([[('route_id', '=', False)], domain]), order='route_sequence, sequence', limit=1)
         return res
 
     @api.model
