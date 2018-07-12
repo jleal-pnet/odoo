@@ -365,9 +365,23 @@ var BasicView = AbstractView.extend({
             var viewType = fv.type;
             var fieldsInfo = fv.fieldsInfo[viewType];
             var fields = fv.viewFields;
-            fieldsInfo[node.attrs.name] = this._processField(viewType,
-                fields[node.attrs.name], node.attrs ? _.clone(node.attrs) : {});
 
+            // do not overwrite fieldsInfo because there are some cases where, in
+            // xml view there are fields decelared two times based on condition any one field will displayed.
+            // For example here:- https://github.com/odoo/odoo/blob/master/odoo/addons/base/views/res_partner_views.xml#L531https://github.com/odoo/odoo/blob/master/odoo/addons/base/views/res_partner_views.xml#L531
+            // In res.partner.kanban view 'city' field and 'country_id' field decelared two times
+            // and if we apply bold='true' on any of these two field from studio it will apply bold='true' any one of these
+            // so at the time of parsing it is making two different field in fieldsInfo object
+            // so here it is overwriteing all attributes,
+            // like in our example bold is available in only one field so don't overwrite them
+
+            if (fieldsInfo[node.attrs.name]) {
+                _.extend(fieldsInfo[node.attrs.name], this._processField(viewType, fields[node.attrs.name], node.attrs ? _.clone(node.attrs) : {}));
+            }
+            else {
+                fieldsInfo[node.attrs.name] = this._processField(viewType,
+                    fields[node.attrs.name], node.attrs ? _.clone(node.attrs) : {});
+            }
             if (fieldsInfo[node.attrs.name].fieldDependencies) {
                 var deps = fieldsInfo[node.attrs.name].fieldDependencies;
                 for (var dependency_name in deps) {
