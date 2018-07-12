@@ -9,6 +9,7 @@ odoo.define('web.KanbanRecord', function (require) {
 var config = require('web.config');
 var core = require('web.core');
 var Domain = require('web.Domain');
+var Dialog = require('web.Dialog');
 var field_utils = require('web.field_utils');
 var utils = require('web.utils');
 var Widget = require('web.Widget');
@@ -344,6 +345,9 @@ var KanbanRecord = Widget.extend({
         this._setupColor();
         this._setupColorPicker();
         this._attachTooltip();
+        if (this.editable) {
+            this._setupCoverImageSetter();
+        }
 
         // We use boostrap tooltips for better and faster display
         this.$('span.o_tag').tooltip({delay: {'show': 50}});
@@ -409,6 +413,33 @@ var KanbanRecord = Widget.extend({
             this.$el.addClass(colorClass);
             this.$el.prepend('<span title="' + colorHelp + '" aria-label="' + colorHelp +'" role="img" class="oe_kanban_color_help"/>');
         }
+    },
+    _setupCoverImageSetter: function () {
+        var $dropDown = this.$('.o_dropdown_kanban .dropdown-menu');
+        var $setCover = $dropDown.find("a[data-type='set_cover']");
+        var f = _.pick(this.fieldsInfo, function (e) {
+            return e.widget === "attachment_image";
+        });
+        var field_name = _.keys(f)[0];
+        // this conditions are very confusing need to check it again
+        if (!$dropDown.length || _.isEmpty(f) || $setCover.length) {
+            // checked isEmpty in project case
+            if (_.isEmpty(f)) {
+                $setCover.remove();
+            }
+            if (field_name !== this.$el.find("li a[data-type='set_cover']").data("field")) {
+                // reset both from attr and data because
+                // jQuery .data() is initially populated with values from the data- attributes,
+                // but setting it only stores the associated new value in memory.
+                // It doesn't change the attribute in the DOM.
+                this.$el.find("li a[data-type='set_cover']").data("field", field_name);
+                this.$el.find("li a[data-type='set_cover']").attr("data-field", field_name);
+            }
+            return;
+        }
+        $dropDown.prepend(QWeb.render('KanbanView.CoverImageSetter', {
+            set_cover_field: field_name,
+        }));
     },
     /**
      * Renders the color picker in the kanban record, and binds the event handler
@@ -555,9 +586,90 @@ var KanbanRecord = Widget.extend({
                     record: this.state,
                 });
                 break;
+            case 'set_cover':
+                this.field_name = $action.data('field');
+                if (this.field_name) {
+                    this._set_cover_image();
+                }
+                break;
             default:
                 this.do_warn("Kanban: no action for type : " + type);
         }
+    },
+    _set_cover_image: function () {
+        var self = this;
+        var domain = [['res_model', '=', this.modelName], ['res_id', '=', this.id], ['mimetype', 'ilike', 'image']];
+        this._rpc({
+                model: 'ir.attachment',
+                method: 'search_read',
+                domain: domain,
+                fields: ['id', 'name'],
+            })
+            .then(function (attachment_ids) {
+                self._open_cover_images_dialog(attachment_ids);
+            });
+    },
+    _open_cover_images_dialog: function (attachment_ids) {
+        var self = this;
+        var passDict = {};
+        self.imageUploadID = _.uniqueId('o_cover_image_upload');
+        self.image_only = true;  // prevent uploading of other file types
+        var coverID = self.record[self.field_name] && self.record[self.field_name].raw_value;
+        var $content = $(QWeb.render("KanbanView.SetCoverModal", {
+            cover_id: coverID,
+            attachment_ids: attachment_ids,
+            widget: self
+        }));
+        var $imgs = $content.find('.o_kanban_task_cover_image');
+        var dialog = new Dialog(self, {
+            title: _t("Set a Cover Image"),
+            buttons: [{text: _t("Select"), classes: attachment_ids.length ? 'btn-primary' : 'd-none', close: true, disabled: !coverID, click: function () {
+                var $img = $imgs.filter('.o_selected').find('img');
+                var data = {
+                    id: $img.data('id'),
+                    display_name: $img.data('name')
+                };
+                passDict[self.field_name] = data;
+                self._updateRecord(passDict);
+            }}, {text: _t('Upload and Set'), classes: attachment_ids.length ? '' : 'btn-primary', close: false, click: function () {
+                $content.find('input.o_input_file').click();
+            }}, {text: _t("Remove Cover Image"), classes: coverID ? '' : 'd-none', close: true, click: function () {
+                passDict[self.field_name] = false;
+                self._updateRecord(passDict);
+            }}, {text: _t("Discard"), close: true}],
+            $content: $content,
+        });
+        dialog.opened().then(function () {
+            var $selectBtn = dialog.$footer.find('.btn-primary');
+            $content.on('click', '.o_kanban_task_cover_image', function (ev) {
+                $imgs.not(ev.currentTarget).removeClass('o_selected');
+                $selectBtn.prop('disabled', !$(ev.currentTarget).toggleClass('o_selected').hasClass('o_selected'));
+            });
+
+            $content.on('dblclick', '.o_kanban_task_cover_image', function (ev) {
+                var $img  = $(ev.currentTarget).find('img');
+                var data = {
+                    id: $img.data('id'),
+                    display_name: $img.data('name')
+                };
+                passDict[self.field_name] = data;
+                self._updateRecord(passDict);
+                dialog.close();
+            });
+            $content.on('change', 'input.o_input_file', function (event) {
+                $content.find('form.o_form_binary_form').submit();
+            });
+            $(window).on(self.imageUploadID, function () {
+                var images = Array.prototype.slice.call(arguments, 1);
+                passDict[self.field_name] = {
+                    id: images[0].id,
+                    display_name: images[0].filename
+                };
+                self._updateRecord(passDict);
+                dialog.close();
+            });
+        });
+        dialog.open();
     },
     /**
      * This event is linked to the kanban card when there is a global_click

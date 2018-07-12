@@ -23,6 +23,23 @@ QUnit.module('Views', {
     },
     beforeEach: function () {
         this.data = {
+            'ir.attachment': {
+                fields: {
+                    name: {
+                        string: "Name",
+                        type: "char"
+                    },
+                },
+                records: [{
+                        id: 1,
+                        name: "1.png"
+                    },
+                    {
+                        id: 2,
+                        name: "2.png"
+                    },
+                ]
+            },
             partner: {
                 fields: {
                     foo: {string: "Foo", type: "char"},
@@ -35,6 +52,7 @@ QUnit.module('Views', {
                     date: {string: "Date Field", type: 'date'},
                     datetime: {string: "Datetime Field", type: 'datetime'},
                     image: {string: "Image", type: "binary"},
+                    displayed_image_id: {string: "cover", type: "many2one", relation: "ir.attachment", domain: "[('res_model', '=', 'partner'), ('res_id', '=', id), ('mimetype', 'ilike', 'image')]"},
                 },
                 records: [
                     {id: 1, bar: true, foo: "yop", int_field: 10, qux: 0.4, product_id: 3, state: "abc", category_ids: [], 'image': 'R0lGODlhAQABAAD/ACwAAAAAAQABAAACAA=='},
@@ -3963,6 +3981,66 @@ QUnit.module('Views', {
 
         kanbanController.destroy();
         delete fieldRegistry.map.asyncWidget;
+    });
+
+    QUnit.test('cover_image_test', function (assert) {
+        assert.expect(6);
+        var kanban = createView({
+            View: KanbanView,
+            model: 'partner',
+            data: this.data,
+            arch: '<kanban class="o_kanban_test">' +
+                    '<templates>' +
+                        '<t t-name="kanban-box">' +
+                            '<div>' +
+                                '<field name="name"/>' +
+                                '<div class="o_dropdown_kanban dropdown">' +
+                                    '<a class="dropdown-toggle btn" data-toggle="dropdown" href="#">' +
+                                        '<span class="fa fa-bars fa-lg"/>' +
+                                    '</a>' +
+                                    '<ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">' +
+                                        '<li>' +
+                                            '<a type="set_cover" data-field="displayed_image_id">Set Cover Image</a>'+
+                                        '</li>' +
+                                    '</ul>' +
+                                '</div>' +
+                                '<div>'+
+                                    '<field name="displayed_image_id" widget="attachment_image"/>'+
+                                '</div>'+
+                            '</div>' +
+                        '</t>' +
+                    '</templates>' +
+                '</kanban>',
+            mockRPC: function(route, args) {
+                if (args.model === 'ir.attachment' && args.method === 'search_read') {
+                    return $.when([{
+                        id: 1,
+                        name: "1.png"
+                    },{
+                        id: 2,
+                        name: "2.png"
+                    }]);
+                }
+                if (args.model === 'partner' && args.method === 'write') {
+                    assert.step(args.args[0][0]);
+                    return this._super(route, args);
+                }
+                return this._super(route, args);
+            },
+        });
+        assert.strictEqual(kanban.$('img').length, 0, "Initially there is no image.");
+        kanban.$('.o_dropdown_kanban [data-type=set_cover]').eq(0).click();
+        // single click on image
+        $('.modal').find("img[data-id='1']").click();
+        $('.modal-footer .btn-primary').click();
+        assert.strictEqual(kanban.$('img[data-src*="/web/image/1"]').length, 1, "Image inserted in record");
+        $('.o_dropdown_kanban [data-type=set_cover]').eq(1).click();
+        // double click on image
+        $('.modal').find("img[data-id='2']").dblclick();
+        assert.strictEqual(kanban.$('img[data-src*="/web/image/2"]').length, 1, "Image inserted after double click");
+        // varify write on both kanban record
+        assert.verifySteps([1,2]);
+        kanban.destroy();
     });
 
 });
