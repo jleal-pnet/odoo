@@ -5,6 +5,16 @@
         <xpath expr="//span[@t-field='ml.product_id.description_picking']" position="after">
             <t t-if="ml.product_id and ml.product_id.l10n_in_hsn_code and o.company_id.country_id.code == 'IN'"><h6><strong class="ml16">HSN/SAC Code:</strong> <span t-field="ml.product_id.l10n_in_hsn_code"/></h6></t>
         </xpath>
+        <xpath expr="//t[@t-call='web.external_layout']" position="attributes">
+            <t t-if="o.company_id.country_id.code == 'IN'">
+                <attribute name="t-call">l10n_in.l10n_in_external_layout</attribute>
+            </t>
+        </xpath>
+        <xpath expr="//div[contains(@t-if,'o.picking_type_id.warehouse_id.partner_id')]" position="attributes">
+            <t t-if="o.company_id.country_id.code == 'IN'">
+                <attribute name="groups">base.group_no_one</attribute>
+            </t>
+        </xpath>
     </template>
 
 </odoo>

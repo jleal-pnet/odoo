@@ -11,6 +11,7 @@
         'stock',
     ],
     'data': [
+        'views/report_template.xml',
         'views/report_stockpicking_operations.xml',
     ],
     'installable': True,
