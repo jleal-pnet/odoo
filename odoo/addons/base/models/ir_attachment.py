@@ -307,7 +307,7 @@ class IrAttachment(models.Model):
     @api.depends('mimetype', 'file_size', 'checksum')
     def _get_thumbnail(self):
         for record in self:
-            if record.mimetype == 'image/jpeg' or record.mimetype == 'image/png':
+            if re.match('image.*(gif|jpeg|jpg|png)', record.mimetype):
                 if not record.thumbnail:
                     temp_image = crop_image(record.datas, type='center', size=(100, 100), ratio=(1, 1))
                     record.thumbnail = image_resize_image(base64_source=temp_image, size=(100, 100),
