@@ -2,8 +2,11 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import json
-
+import jwt
 import requests
+import werkzeug.urls
+
+from odoo.http import request
 
 from odoo import api, fields, models
 from odoo.exceptions import AccessDenied, UserError
@@ -37,6 +40,36 @@ class ResUsers(models.Model):
         if oauth_provider.data_endpoint:
             data = self._auth_oauth_rpc(oauth_provider.data_endpoint, access_token)
             validation.update(data)
+        return validation
+
+    @api.model
+    def _auth_oauth_code_validate(self, provider, code):
+        """ return the validation data corresponding to the access token """
+        oauth_provider = self.env['auth.oauth.provider'].browse(provider)
+        req_params = dict(
+            client_id=oauth_provider.client_id,
+            client_secret=oauth_provider.client_secret,
+            grant_type='authorization_code',
+            code=code,
+            redirect_uri=request.httprequest.url_root + 'auth_oauth/signin',
+        )
+
+        req = requests.post(oauth_provider.validation_endpoint, data=werkzeug.url_encode(req_params))
+        response = req.json()
+        validation = {}
+
+        if response.get("error"):
+            raise Exception(response['error'])
+
+        # Use for Azure oauth
+        if response.get('id_token'):
+            validation = jwt.decode(response['id_token'], verify=False)
+            validation['user_id'] = validation.get('sub') or validation.get('oid')  # unique Id
+            validation['oauth_uid'] = validation.get('sub') or validation.get('oid')  # unique Id
+            validation['access_token'] = response.get('access_token') or response.get('refresh_token')
+            if not validation.get('email'):
+                validation['email'] = validation.get('preferred_username')
+
         return validation
 
     @api.model
@@ -92,8 +125,13 @@ class ResUsers(models.Model):
         #   abort()
         # else:
         #   continue with the process
-        access_token = params.get('access_token')
-        validation = self._auth_oauth_validate(provider, access_token)
+        if params.get('code'):
+            validation = self._auth_oauth_code_validate(provider, params['code'])
+            access_token = validation.get('access_token')
+            params['access_token'] = access_token
+        else:
+            access_token = params.get('access_token')
+            validation = self._auth_oauth_validate(provider, access_token)
         # required check
         if not validation.get('user_id'):
             # Workaround: facebook does not send 'user_id' in Open Graph Api

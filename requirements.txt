@@ -33,6 +33,7 @@ pytz==2016.7
 pyusb==1.0.0
 PyYAML==3.12 ; python_version < '3.7'
 PyYAML==3.13 ; python_version >= '3.7'
+PyJWT==1.6.*
 qrcode==5.3
 reportlab==3.3.0
 requests==2.11.1

@@ -20,4 +20,6 @@ class AuthOAuthProvider(models.Model):
     enabled = fields.Boolean(string='Allowed')
     css_class = fields.Char(string='CSS class', default='zocial')
     body = fields.Char(required=True)
+    response_type = fields.Selection([('token', 'Token'), ('code', 'Code')], default='token', required=True)
+    client_secret = fields.Char(string='Client Secret Password')
     sequence = fields.Integer()

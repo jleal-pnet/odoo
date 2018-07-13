@@ -31,6 +31,26 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-xs-12 col-md-6 o_setting_box" attrs="{'invisible': [('module_auth_oauth','=',False)]}">
+                        <div class="o_setting_left_pane">
+                            <field name="auth_oauth_azure_enabled"/>
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label string="Azure Authentication" for="auth_oauth_azure_enabled"/>
+                            <div class="text-muted">
+                                Allow users to sign in with their Azure account
+                            </div>
+                            <div class="content-group" attrs="{'invisible': [('auth_oauth_azure_enabled','=',False)]}">
+                                <div class="row mt16">
+                                    <label for="auth_oauth_azure_client_id" string="Client ID:" class="col-md-3 o_light_label"/>
+                                    <field name="auth_oauth_azure_client_id"/>
+                                    <label for="auth_oauth_azure_client_password" string="Client Password:" class="col-md-3 o_light_label"/>                                    
+                                    <field name="auth_oauth_azure_client_password"/>
+                                </div>
+                                <a href="#" target="_blank"><i class="fa fa-fw fa-arrow-right"/>Tutorial</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </field>
         </record>

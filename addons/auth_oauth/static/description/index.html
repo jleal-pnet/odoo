@@ -1,0 +1,41 @@
+<section id="how-to-allow-users-to-sign-in-with-their-azure-account">
+    <ul>
+        <li>Connect to your azure account and go to
+            <a class="reference external" href="https://apps.dev.microsoft.com/">Microsoft Application Registration Portal</a>.</li>
+        <li>Click on
+            <strong> Add an app</strong>.</li>
+    </ul>
+    <img class="center-block img-responsive" src="1add_app.png">
+    <ul>
+        <li>Name your new app and click:
+            <strong> Create</strong>.</li>
+    </ul>
+    <img class="center-block img-responsive" src="2create_app.png">
+    <ul>
+        <li>On the Registration page that follows, copy the 
+            <strong>Application Id</strong>. This is your <strong> client_id</strong>.</li>
+    </ul>
+    <img class="center-block img-responsive" src="3application_id.png">
+    <ul>
+        <li>Click <strong> Generate New Password</strong>.</li>
+    </ul>
+    <ul>
+        <li>Copy your password. This is your <strong>client_secret</strong>.</li>
+    </ul>
+    <img class="center-block img-responsive" src="4password.png">
+    <ul>
+        <li>Click <strong>Add Platform</strong>, then select <strong>Web</strong></li>
+    </ul>
+    <img class="center-block img-responsive" src="5addplatform.png">
+    <ul>
+        <li>Enter the following under <string>Redirect URLs</string></li>
+        <li><strong>https://mydomain.odoo.com/auth_oauth/signin</strong></li>
+    </ul>
+    <img class="center-block img-responsive" src="6return_url.png">
+    <ul>
+        <li>Click <string>Save</string></li>
+    </ul>
+    <ul>
+        <li> Once done, you receive two information (your Client ID and Client Password). You have to insert your Client ID and Client Password in the General Settings.</li>
+    </ul>
+</section>
