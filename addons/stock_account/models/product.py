@@ -19,15 +19,7 @@ class ProductTemplate(models.Model):
         help="""Manual: The accounting entries to value the inventory are not posted automatically.
         Automated: An accounting entry is automatically created to value the inventory when a product enters or leaves the company.""")
     valuation = fields.Char(compute='_compute_valuation_type', inverse='_set_valuation_type')
-    property_cost_method = fields.Selection([
-        ('standard', 'Standard Price'),
-        ('fifo', 'First In First Out (FIFO)'),
-        ('average', 'Average Cost (AVCO)')], string='Costing Method',
-        company_dependent=True, copy=True,
-        help="""Standard Price: The products are valued at their standard cost defined on the product.
-        Average Cost (AVCO): The products are valued at weighted average cost.
-        First In First Out (FIFO): The products are valued supposing those that enter the company first will also leave it first.""")
-    cost_method = fields.Char(compute='_compute_cost_method', inverse='_set_cost_method')
+    cost_method = fields.Char(compute='_compute_cost_method')
     property_stock_account_input = fields.Many2one(
         'account.account', 'Stock Input Account',
         company_dependent=True, domain=[('deprecated', '=', False)],
@@ -49,25 +41,12 @@ class ProductTemplate(models.Model):
         return self.write({'property_valuation': self.valuation})
 
     @api.one
-    @api.depends('property_cost_method', 'categ_id.property_cost_method')
+    @api.depends('categ_id.property_cost_method')
     def _compute_cost_method(self):
-        self.cost_method = self.property_cost_method or self.categ_id.property_cost_method
+        self.cost_method = self.categ_id.property_cost_method
 
     def _is_cost_method_standard(self):
-        return self.property_cost_method == 'standard'
-
-    @api.one
-    def _set_cost_method(self):
-        # When going from FIFO to AVCO or to standard, we update the standard price with the
-        # average value in stock.
-        if self.property_cost_method == 'fifo' and self.cost_method in ['average', 'standard']:
-            # Cannot use the `stock_value` computed field as it's already invalidated when
-            # entering this method.
-            valuation = sum([variant._sum_remaining_values()[0] for variant in self.product_variant_ids])
-            qty_available = self.with_context(company_owned=True).qty_available
-            if qty_available:
-                self.standard_price = valuation / qty_available
-        return self.write({'property_cost_method': self.cost_method})
+        return self.categ_id.property_cost_method == 'standard'
 
     @api.multi
     def _get_product_accounts(self):
@@ -394,6 +373,15 @@ class ProductCategory(models.Model):
         domain=[('deprecated', '=', False)],
         help="When real-time inventory valuation is enabled on a product, this account will hold the current value of the products.",)
 
+    @api.multi
+    def write(self, vals):
+        # When going from FIFO to AVCO or to standard, we update the standard price with the
+        # average value in stock.
+        cost_method = vals.get('property_cost_method')
+        if cost_method and cost_method in ['average', 'standard']:
+            self._update_standard_price()
+        return super(ProductCategory, self).write(vals)
+
     @api.onchange('property_cost_method')
     def onchange_property_valuation(self):
         if not self._origin:
@@ -405,3 +393,12 @@ class ProductCategory(models.Model):
                 'message': _("Changing your cost method is an important change that will impact your inventory valuation. Are you sure you want to make that change?"),
             }
         }
+
+    def _update_standard_price(self):
+        updated_categories = self.filtered(lambda x: x.property_cost_method == 'fifo')
+        templates = self.env['product.template'].search([('categ_id', 'in', updated_categories.ids)])
+        for t in templates:
+            valuation = sum([variant._sum_remaining_values()[0] for variant in t.product_variant_ids])
+            qty_available = t.with_context(company_owned=True).qty_available
+            if qty_available:
+                t.standard_price = valuation / qty_available

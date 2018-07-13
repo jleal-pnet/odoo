@@ -47,21 +47,21 @@ class TestStockLandedCostsCommon(AccountingTestCase):
         self.product_refrigerator = self.Product.create({
             'name': 'Refrigerator',
             'type': 'product',
-            'cost_method': 'fifo',
             'valuation': 'real_time',
             'standard_price': 1.0,
             'weight': 10,
             'volume': 1,
             'categ_id': self.categ_all.id})
+        self.product_refrigerator.categ_id.property_cost_method = 'fifo'
         self.product_oven = self.Product.create({
             'name': 'Microwave Oven',
             'type': 'product',
-            'cost_method': 'fifo',
             'valuation': 'real_time',
             'standard_price': 1.0,
             'weight': 20,
             'volume': 1.5,
             'categ_id': self.categ_all.id})
+        self.product_oven.categ_id.property_cost_method = 'fifo'
         # Create service type product 1.Labour 2.Brokerage 3.Transportation 4.Packaging
         self.landed_cost = self._create_services('Landed Cost')
         self.brokerage_quantity = self._create_services('Brokerage Cost')
