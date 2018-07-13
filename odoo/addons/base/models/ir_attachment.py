@@ -304,7 +304,7 @@ class IrAttachment(models.Model):
     active = fields.Boolean(default=True, string="Active", oldname='archived')
     thumbnail = fields.Binary(compute='_get_thumbnail', store=True, string="")
 
-    @api.depends('mimetype', 'datas')
+    @api.depends('mimetype', 'file_size', 'checksum')
     def _get_thumbnail(self):
         for record in self:
             if record.mimetype == 'image/jpeg' or record.mimetype == 'image/png':
