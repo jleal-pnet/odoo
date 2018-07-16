@@ -312,6 +312,9 @@ class Users(models.Model):
             [self.env.user.id]
         )
         [hashed] = self.env.cr.fetchone()
+        # raise access denied, passoword not found when login with oauth
+        if not hashed:
+            raise AccessDenied()
         valid, replacement = self._crypt_context()\
             .verify_and_update(password, hashed)
         if replacement is not None:
