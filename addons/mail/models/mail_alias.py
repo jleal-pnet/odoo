@@ -30,7 +30,7 @@ class Alias(models.Model):
     _rec_name = 'alias_name'
     _order = 'alias_model_id, alias_name'
 
-    alias_name = fields.Char('Alias Name', help="The name of the email alias, e.g. 'jobs' if you want to catch emails for <jobs@example.odoo.com>")
+    alias_name = fields.Char('Alias Name', help="Email alias name to catch emails, e.g. 'jobs' if you want to catch emails for <jobs@example.odoo.com>")
     alias_model_id = fields.Many2one('ir.model', 'Aliased Model', required=True, ondelete="cascade",
                                      help="The model (Odoo Document Kind) to which this alias "
                                           "corresponds. Any incoming email that does not reply to an "
@@ -68,6 +68,7 @@ class Alias(models.Model):
              "- everyone: everyone can post\n"
              "- partners: only authenticated partners\n"
              "- followers: only followers of the related document or members of following channels\n")
+    incoming_email = fields.Boolean('Incoming Email', help="If checked, You can enable email alias.")
 
     _sql_constraints = [
         ('alias_unique', 'UNIQUE(alias_name)', 'Unfortunately this email alias is already used, please choose a unique one')
@@ -125,7 +126,7 @@ class Alias(models.Model):
             if record.alias_name and record.alias_domain:
                 res.append((record['id'], "%s@%s" % (record.alias_name, record.alias_domain)))
             elif record.alias_name:
-                res.append((record['id'], "%s" % (record.alias_name)))
+                res.append((record['id'], "%s@" % (record.alias_name)))
             else:
                 res.append((record['id'], _("Inactive Alias")))
         return res
@@ -187,7 +188,7 @@ class AliasMixin(models.AbstractModel):
     _name = 'mail.alias.mixin'
     _inherits = {'mail.alias': 'alias_id'}
 
-    alias_id = fields.Many2one('mail.alias', string='Alias', ondelete="restrict", required=True)
+    alias_id = fields.Many2one('mail.alias', string='Alias', ondelete="restrict", required=True, help="Email alias name to catch emails, e.g. 'jobs' if you want to catch emails for <jobs@example.odoo.com>")
 
     def get_alias_model_name(self, vals):
         """ Return the model name for the alias. Incoming emails that are not
@@ -206,12 +207,21 @@ class AliasMixin(models.AbstractModel):
     @api.model
     def create(self, vals):
         """ Create a record with ``vals``, and create a corresponding alias. """
+        if 'incoming_email' in vals and not vals.get('incoming_email'):
+            vals['alias_name'] = False
         record = super(AliasMixin, self.with_context(
             alias_model_name=self.get_alias_model_name(vals),
             alias_parent_model_name=self._name,
         )).create(vals)
         record.alias_id.sudo().write(record.get_alias_values())
         return record
+
+    @api.multi
+    def write(self, vals):
+        # if make incoming_email False set the alias as inactive
+        if 'incoming_email' in vals and not vals.get('incoming_email'):
+            vals['alias_name'] = False
+        return super(AliasMixin, self).write(vals)
 
     @api.multi
     def unlink(self):

@@ -108,14 +108,15 @@
                             <field name="moderation" attrs="{'invisible': [('email_send', '=', False)]}"/>
                             <field name="description" placeholder="Topics discussed in this group..."/>
                         </group>
-                        <group name="group_alias" attrs="{'invisible': [('alias_domain', '=', False)]}">
+                        <group name="group_alias">
                             <label for="alias_id" string=" " class="fa fa-envelope-o" style="min-width: 20px;" aria-label="Email" title="Email" role="img"/>
                             <div name="alias_def">
                                 <field name="alias_id" class="oe_read_only oe_inline"
-                                        string="Email Alias" required="0"/>
+                                        string="Email Alias" required="0" attrs="{'invisible': [('alias_name', '=', False), ('alias_domain', '=', False)]}"/>
                                 <div class="oe_edit_only oe_inline" name="edit_alias" style="display: inline;" >
                                     <field name="alias_name" class="oe_inline"/>@<field name="alias_domain" class="oe_inline" readonly="1"/>
                                 </div>
+                                <a type='action' name='%(base_setup.action_general_configuration)d' class="o_form_uri o_field_widget btn-sm btn-link" role="button" attrs="{'invisible': [('alias_domain', '!=', False)]}"><i class="fa fa-fw o_button_icon fa-arrow-right"/>Set Alias Domain</a>
                             </div>
                             <field name="alias_contact" class="oe_inline" invisible="1"/>
                         </group>
