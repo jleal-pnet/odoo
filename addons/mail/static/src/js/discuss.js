@@ -1141,12 +1141,12 @@ var Discuss = AbstractAction.extend(ControlPanelMixin, {
      * @private
      * @param {integer|string} channelID
      */
-    _onChannelLeft: function (ev) {
-        if (this._thread.getID() === ev.data.channelID) {
+    _onChannelLeft: function (channelID) {
+        if (this._thread.getID() === channelID) {
             this._setThread('mailbox_inbox');
         }
         this._updateThreads();
-        delete this._threadsScrolltop[ev.data.channelID];
+        delete this._threadsScrolltop[channelID];
     },
     /**
      * @private
@@ -1285,10 +1285,10 @@ var Discuss = AbstractAction.extend(ControlPanelMixin, {
      * @private
      * @param {mail.model.Channel} channel
      */
-    _onNewChannel: function (ev) {
+    _onNewChannel: function (channel) {
         this._updateThreads();
-        if (ev.data.isAutoswitch()) {
-            this._setThread(ev.data.getID());
+        if (channel.isAutoswitch()) {
+            this._setThread(channel.getID());
         }
     },
     /**
