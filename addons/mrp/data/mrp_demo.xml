@@ -633,7 +633,7 @@
         <function model="stock.inventory" name="action_validate" eval="[[ref('stock_inventory_product_laptop_keypad')]]"/>
 
         <!-- Run Scheduler -->
-        <function model="procurement.group" name="run_scheduler"/>
+        <function model="stock.supply.group" name="run_scheduler"/>
 
 
         <!-- OEE -->

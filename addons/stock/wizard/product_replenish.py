@@ -50,7 +50,7 @@ class ProductReplenish(models.TransientModel):
         uom_reference = self.product_id.uom_id
         self.quantity = self.product_uom_id._compute_quantity(self.quantity, uom_reference)
         try:
-            self.env['procurement.group'].run(
+            self.env['stock.supply.group'].run(
                 self.product_id,
                 self.quantity,
                 uom_reference,
@@ -63,7 +63,7 @@ class ProductReplenish(models.TransientModel):
             raise UserError(error)
 
     def _prepare_run_values(self):
-        replenishment = self.env['procurement.group'].create({
+        replenishment = self.env['stock.supply.group'].create({
             'partner_id': self.product_id.responsible_id.partner_id.id,
         })
 

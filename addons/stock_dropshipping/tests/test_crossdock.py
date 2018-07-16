@@ -52,7 +52,7 @@ class TestCrossdock(common.TransactionCase):
         sale_order_crossdock.action_confirm()
 
         # Run the scheduler
-        self.env['procurement.group'].run_scheduler()
+        self.env['stock.supply.group'].run_scheduler()
 
         # Check a quotation was created for the created supplier and confirm it
         po = self.env['purchase.order'].search([

@@ -122,7 +122,7 @@ class StockMove(models.Model):
              "this second option should be chosen.")
     scrapped = fields.Boolean('Scrapped', related='location_dest_id.scrap_location', readonly=True, store=True)
     scrap_ids = fields.One2many('stock.scrap', 'move_id')
-    group_id = fields.Many2one('procurement.group', 'Procurement Group', default=_default_group_id)
+    group_id = fields.Many2one('stock.supply.group', 'Stock Supply Group', default=_default_group_id)
     rule_id = fields.Many2one('stock.supply.rule', 'Stock Rule', ondelete='restrict', help='The stock rule that created this stock move')
     propagate = fields.Boolean(
         'Propagate cancel and split', default=True,
@@ -513,7 +513,7 @@ class StockMove(models.Model):
             domain = [('location_src_id', '=', move.location_dest_id.id), ('action', 'in', ('push', 'pull_push'))]
             # first priority goes to the preferred routes defined on the move itself (e.g. coming from a SO line)
             warehouse_id = move.warehouse_id and move.warehouse_id or move.picking_id.picking_type_id.warehouse_id
-            rules = self.env['procurement.group']._search_rule(move.route_ids, move.product_id, warehouse_id, domain)
+            rules = self.env['stock.supply.group']._search_rule(move.route_ids, move.product_id, warehouse_id, domain)
 
             # Make sure it is not returning the return
             if rules and (not move.origin_returned_move_id or move.origin_returned_move_id.location_dest_id.id != rules.location_dest_id.id):
@@ -681,7 +681,7 @@ class StockMove(models.Model):
 
     def _assign_picking(self):
         """ Try to assign the moves to an existing picking that has not been
-        reserved yet and has the same procurement group, locations and picking
+        reserved yet and has the same stock supply group, locations and picking
         type (moves should already have them identical). Otherwise, create a new
         picking to assign them to. """
         Picking = self.env['stock.picking']
@@ -753,7 +753,7 @@ class StockMove(models.Model):
         for move in move_create_proc:
             values = move._prepare_procurement_values()
             origin = (move.group_id and move.group_id.name or (move.rule_id and move.rule_id.name or move.origin or move.picking_id.name or "/"))
-            self.env['procurement.group'].run(move.product_id, move.product_uom_qty, move.product_uom, move.location_id, move.rule_id and move.rule_id.name or "/", origin,
+            self.env['stock.supply.group'].run(move.product_id, move.product_uom_qty, move.product_uom, move.location_id, move.rule_id and move.rule_id.name or "/", origin,
                                               values)
 
         move_to_confirm.write({'state': 'confirmed'})

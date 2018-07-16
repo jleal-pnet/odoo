@@ -116,7 +116,7 @@ class MrpProductProduce(models.TransientModel):
                                     'location_id': order.location_src_id.id,
                                     'location_dest_id': self.product_id.property_stock_production.id,
                                     'raw_material_production_id': order.id,
-                                    'group_id': order.procurement_group_id.id,
+                                    'group_id': order.stock_supply_group_id.id,
                                     'origin': order.name,
                                     'state': 'confirmed'})
                 pl.move_id._generate_consumed_move_line(pl.qty_done, self.lot_id, lot=pl.lot_id)

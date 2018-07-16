@@ -377,7 +377,7 @@
                         <filter string="Expected Date" name="expected_date" domain="[]" context="{'group_by':'scheduled_date'}"/>
                         <filter string="Origin" name="origin" domain="[]" context="{'group_by':'origin'}"/>
                         <filter name="picking_type" string="Operation Type" domain="[]" context="{'group_by':'picking_type_id'}"/>
-                        <filter string="Procurement Group" name="procurement_group" domain="[]" context="{'group_by':'group_id'}"/>
+                        <filter string="Stock Supply Group" name="stock_supply_group" domain="[]" context="{'group_by':'group_id'}"/>
                     </group>
                 </search>
             </field>

@@ -36,8 +36,8 @@ class StockMove(models.Model):
         #rslt += invoices.mapped('refund_invoice_ids')
         return rslt
 
-class ProcurementGroup(models.Model):
-    _inherit = 'procurement.group'
+class StockSupplyGroup(models.Model):
+    _inherit = 'stock.supply.group'
 
     sale_id = fields.Many2one('sale.order', 'Sale Order')
 

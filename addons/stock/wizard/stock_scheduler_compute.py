@@ -35,7 +35,7 @@ class StockSchedulerCompute(models.TransientModel):
                 return {}
 
             for company in self.env.user.company_ids:
-                self.env['procurement.group'].run_scheduler(
+                self.env['stock.supply.group'].run_scheduler(
                     use_new_cursor=self._cr.dbname,
                     company_id=company.id)
             new_cr.close()

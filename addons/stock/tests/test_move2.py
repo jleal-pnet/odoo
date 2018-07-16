@@ -222,7 +222,7 @@ class TestPickShip(TestStockCommon):
         picking_ship.action_cancel()
         picking_ship.move_lines.write({'procure_method': 'make_to_order'})
 
-        self.env['procurement.group'].run_scheduler()
+        self.env['stock.supply.group'].run_scheduler()
         next_activity = self.env['mail.activity'].search([('res_model', '=', 'product.template'), ('res_id', '=', self.productA.product_tmpl_id.id)])
         self.assertEqual(picking_ship.state, 'cancel')
         self.assertFalse(next_activity, 'If a next activity has been created if means that scheduler failed\
@@ -1829,19 +1829,19 @@ class TestRoutes(TestStockCommon):
         
         self.pick_ship_route = self.wh.route_ids.filtered(lambda r: '(pick + ship)' in r.name)
     def test_pick_ship_1(self):
-        """ Enable the pick ship route, force a procurement group on the
+        """ Enable the pick ship route, force a stock supply group on the
         pick. When a second move is added, make sure the `partner_id` and
         `origin` fields are erased.
         """
         self._enable_pick_ship()
 
-        # create a procurement group and set in on the pick stock rule
-        procurement_group0 = self.env['procurement.group'].create({})
+        # create a stock supply group and set in on the pick stock rule
+        stock_supply_group0 = self.env['stock.supply.group'].create({})
         pick_rule = self.pick_ship_route.rule_ids.filtered(lambda rule: 'Stock → Output' in rule.name)
         push_rule = self.pick_ship_route.rule_ids - pick_rule
         pick_rule.write({
             'group_propagation_option': 'fixed',
-            'group_id': procurement_group0.id,
+            'group_id': stock_supply_group0.id,
         })
 
         ship_location = pick_rule.location_id
@@ -1849,8 +1849,8 @@ class TestRoutes(TestStockCommon):
         partners = self.env['res.partner'].search([], limit=2)
         partner0 = partners[0]
         partner1 = partners[1]
-        procurement_group1 = self.env['procurement.group'].create({'partner_id': partner0.id})
-        procurement_group2 = self.env['procurement.group'].create({'partner_id': partner1.id})
+        stock_supply_group1 = self.env['stock.supply.group'].create({'partner_id': partner0.id})
+        stock_supply_group2 = self.env['stock.supply.group'].create({'partner_id': partner1.id})
 
         move1 = self.env['stock.move'].create({
             'name': 'first out move',
@@ -1861,7 +1861,7 @@ class TestRoutes(TestStockCommon):
             'product_uom': self.uom_unit.id,
             'product_uom_qty': 1.0,
             'warehouse_id': self.wh.id,
-            'group_id': procurement_group1.id,
+            'group_id': stock_supply_group1.id,
             'origin': 'origin1',
         })
 
@@ -1874,14 +1874,14 @@ class TestRoutes(TestStockCommon):
             'product_uom': self.uom_unit.id,
             'product_uom_qty': 1.0,
             'warehouse_id': self.wh.id,
-            'group_id': procurement_group2.id,
+            'group_id': stock_supply_group2.id,
             'origin': 'origin2',
         })
 
         # first out move, the "pick" picking should have a partner and an origin
         move1._action_confirm()
         picking_pick = move1.move_orig_ids.picking_id
-        self.assertEqual(picking_pick.partner_id.id, procurement_group1.partner_id.id)
+        self.assertEqual(picking_pick.partner_id.id, stock_supply_group1.partner_id.id)
         self.assertEqual(picking_pick.origin, move1.group_id.name)
 
         # second out move, the "pick" picking should have lost its partner and origin

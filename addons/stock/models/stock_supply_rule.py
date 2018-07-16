@@ -25,8 +25,8 @@ class StockSupplyRule(models.Model):
     group_propagation_option = fields.Selection([
         ('none', 'Leave Empty'),
         ('propagate', 'Propagate'),
-        ('fixed', 'Fixed')], string="Propagation of Procurement Group", default='propagate')
-    group_id = fields.Many2one('procurement.group', 'Fixed Procurement Group')
+        ('fixed', 'Fixed')], string="Propagation of Stock Supply Group", default='propagate')
+    group_id = fields.Many2one('stock.supply.group', 'Fixed Stock Supply Group')
     action = fields.Selection(
         selection=[('pull', 'Pull From'), ('push', 'Push To'), ('pull_push', 'Pull & Push')], string='Action',
         required=True)
@@ -176,7 +176,7 @@ class StockSupplyRule(models.Model):
             group_id = self.group_id.id
 
         data = self._get_stock_move_values(product_id, product_qty, product_uom, location_id, name, origin, values, group_id)
-        # Since action_confirm launch following procurement_group we should activate it.
+        # Since action_confirm launch following stock_supply_group we should activate it.
         move = self.env['stock.move'].sudo().with_context(force_company=data.get('company_id', False)).create(data)
         move._action_confirm()
         return True

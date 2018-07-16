@@ -57,7 +57,7 @@ class TestProcRule(TransactionCase):
         # method won't be an attribute of stock.procurement at this moment. For that reason
         # we mute the logger when running the scheduler.
         with mute_logger('odoo.addons.stock.models.procurement'):
-            self.env['procurement.group'].run_scheduler()
+            self.env['stock.supply.group'].run_scheduler()
 
         # Check that a picking was created from stock to output.
         moves = self.env['stock.move'].search([

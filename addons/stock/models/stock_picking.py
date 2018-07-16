@@ -209,7 +209,7 @@ class Picking(models.Model):
              " * Cancelled: has been cancelled, can't be confirmed anymore.")
 
     group_id = fields.Many2one(
-        'procurement.group', 'Procurement Group',
+        'stock.supply.group', 'Stock Supply Group',
         readonly=True, related='move_lines.group_id', store=True)
 
     priority = fields.Selection(

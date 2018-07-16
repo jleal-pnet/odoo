@@ -5,11 +5,11 @@
         Procurement
         -->
 
-        <record id="procurement_group_form_view" model="ir.ui.view">
-            <field name="name">procurement.group.form</field>
-            <field name="model">procurement.group</field>
+        <record id="stock_supply_group_form_view" model="ir.ui.view">
+            <field name="name">stock.supply.group.form</field>
+            <field name="model">stock.supply.group</field>
             <field name="arch" type="xml">
-                <form string="Procurement group">
+                <form string="Stock supply group">
                     <sheet>
                         <div class="oe_button_box" name="button_box">
                             <button name="%(do_view_pickings)d" string="Pickings" type="action" class="oe_stat_button" icon="fa-truck"/>

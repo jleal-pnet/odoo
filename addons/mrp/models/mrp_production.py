@@ -149,8 +149,8 @@ class MrpProduction(models.Model):
     check_to_done = fields.Boolean(compute="_get_produced_qty", string="Check Produced Qty", 
         help="Technical Field to see if we can show 'Mark as Done' button")
     qty_produced = fields.Float(compute="_get_produced_qty", string="Quantity Produced")
-    procurement_group_id = fields.Many2one(
-        'procurement.group', 'Procurement Group',
+    stock_supply_group_id = fields.Many2one(
+        'stock.supply.group', 'Stock Supply Group',
         copy=False)
     propagate = fields.Boolean(
         'Propagate cancel and split',
@@ -323,8 +323,8 @@ class MrpProduction(models.Model):
                 values['name'] = self.env['stock.picking.type'].browse(values['picking_type_id']).sequence_id.next_by_id()
             else:
                 values['name'] = self.env['ir.sequence'].next_by_code('mrp.production') or _('New')
-        if not values.get('procurement_group_id'):
-            values['procurement_group_id'] = self.env["procurement.group"].create({'name': values['name']}).id
+        if not values.get('stock_supply_group_id'):
+            values['stock_supply_group_id'] = self.env["stock.supply.group"].create({'name': values['name']}).id
         production = super(MrpProduction, self).create(values)
         production._generate_moves()
         return production
@@ -365,7 +365,7 @@ class MrpProduction(models.Model):
             'company_id': self.company_id.id,
             'production_id': self.id,
             'origin': self.name,
-            'group_id': self.procurement_group_id.id,
+            'group_id': self.stock_supply_group_id.id,
             'propagate': self.propagate,
             'move_dest_ids': [(4, x.id) for x in self.move_dest_ids],
         })
@@ -414,7 +414,7 @@ class MrpProduction(models.Model):
             'procure_method': 'make_to_stock',
             'origin': self.name,
             'warehouse_id': source_location.get_warehouse().id,
-            'group_id': self.procurement_group_id.id,
+            'group_id': self.stock_supply_group_id.id,
             'propagate': self.propagate,
             'unit_factor': quantity / original_quantity,
         }

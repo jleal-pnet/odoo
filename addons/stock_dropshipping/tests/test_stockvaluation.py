@@ -54,7 +54,7 @@ class TestStockValuation(AccountingTestCase):
         sale_order1.action_confirm()
 
         # confirm the purchase order
-        purchase_order1 = self.env['purchase.order'].search([('group_id', '=', sale_order1.procurement_group_id.id)])
+        purchase_order1 = self.env['purchase.order'].search([('group_id', '=', sale_order1.stock_supply_group_id.id)])
         purchase_order1.button_confirm()
 
         # validate the dropshipping picking

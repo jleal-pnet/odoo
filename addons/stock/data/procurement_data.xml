@@ -3,8 +3,8 @@
     <data noupdate="1">
 
         <record id="sequence_proc_group" model="ir.sequence">
-            <field name="name">Procurement Group</field>
-            <field name="code">procurement.group</field>
+            <field name="name">Stock Supply Group</field>
+            <field name="code">stock.supply.group</field>
             <field name="prefix">PG/</field>
             <field name="padding">6</field>
             <field name="number_next">1</field>

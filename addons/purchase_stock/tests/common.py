@@ -10,14 +10,14 @@ from odoo.modules.module import get_module_resource
 class TestPurchase(TestStockCommon):
 
     def _create_make_procurement(self, product, product_qty, date_planned=False):
-        ProcurementGroup = self.env['procurement.group']
+        StockSupplyGroup = self.env['stock.supply.group']
         order_values = {
             'warehouse_id': self.warehouse_1,
             'action': 'pull_push',
             'date_planned': date_planned or fields.Datetime.to_string(fields.datetime.now() + timedelta(days=10)),  # 10 days added to current date of procurement to get future schedule date and order date of purchase order.
-            'group_id': self.env['procurement.group'],
+            'group_id': self.env['stock.supply.group'],
         }
-        return ProcurementGroup.run(product, product_qty, self.uom_unit, self.warehouse_1.lot_stock_id, product.name, '/', order_values)
+        return StockSupplyGroup.run(product, product_qty, self.uom_unit, self.warehouse_1.lot_stock_id, product.name, '/', order_values)
 
     def _load(self, module, *args):
         tools.convert_file(self.cr, 'purchase',

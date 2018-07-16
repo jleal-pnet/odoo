@@ -14,9 +14,9 @@ from odoo.exceptions import UserError
 import logging
 _logger = logging.getLogger(__name__)
 
-class ProcurementGroup(models.Model):
+class StockSupplyGroup(models.Model):
     """
-    The procurement group class is used to group products together
+    The stock supply group class is used to group products together
     when computing procurements. (tasks, physical products, ...)
 
     The goal is that when you have one sales order of several products
@@ -37,14 +37,14 @@ class ProcurementGroup(models.Model):
     The name is usually the name of the original document (sales order) or a
     sequence computed if created manually.
     """
-    _name = 'procurement.group'
-    _description = 'Procurement Requisition'
+    _name = 'stock.supply.group'
+    _description = 'Stock Supply Group'
     _order = "id desc"
 
     partner_id = fields.Many2one('res.partner', 'Partner')
     name = fields.Char(
         'Reference',
-        default=lambda self: self.env['ir.sequence'].next_by_code('procurement.group') or '',
+        default=lambda self: self.env['ir.sequence'].next_by_code('stock.supply.group') or '',
         required=True)
     move_type = fields.Selection([
         ('direct', 'Partial'),
@@ -53,7 +53,7 @@ class ProcurementGroup(models.Model):
 
     @api.model
     def run(self, product_id, product_qty, product_uom, location_id, name, origin, values):
-        values.setdefault('company_id', self.env['res.company']._company_default_get('procurement.group'))
+        values.setdefault('company_id', self.env['res.company']._company_default_get('stock.supply.group'))
         values.setdefault('priority', '1')
         values.setdefault('date_planned', fields.Datetime.now())
         rule = self._get_rule(product_id, location_id, values)
@@ -69,8 +69,8 @@ class ProcurementGroup(models.Model):
 
     @api.model
     def _search_rule(self, route_ids, product_id, warehouse_id, domain):
-        """ First find a rule among the ones defined on the procurement
-        group; then try on the routes defined for the product; finally fallback
+        """ First find a rule among the ones defined on the stock supply
+        group. then try on the routes defined for the product; finally fallback
         on the default behavior """
         if warehouse_id:
             domain = expression.AND([['|', ('warehouse_id', '=', warehouse_id.id), ('warehouse_id', '=', False)], domain])
@@ -237,7 +237,7 @@ class ProcurementGroup(models.Model):
                                     values = orderpoint._prepare_procurement_values(qty_rounded, **group['procurement_values'])
                                     try:
                                         with self._cr.savepoint():
-                                            self.env['procurement.group'].run(orderpoint.product_id, qty_rounded, orderpoint.product_uom, orderpoint.location_id,
+                                            self.env['stock.supply.group'].run(orderpoint.product_id, qty_rounded, orderpoint.product_uom, orderpoint.location_id,
                                                                               orderpoint.name, orderpoint.name, values)
                                     except UserError as error:
                                         self.env['stock.supply.rule']._log_next_activity(orderpoint.product_id, error.name)

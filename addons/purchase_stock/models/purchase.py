@@ -30,7 +30,7 @@ class PurchaseOrder(models.Model):
         help="This will determine operation type of incoming shipment")
     default_location_dest_id_usage = fields.Selection(related='picking_type_id.default_location_dest_id.usage', string='Destination Location Type',
         help="Technical field used to display the Drop Ship Address", readonly=True)
-    group_id = fields.Many2one('procurement.group', string="Procurement Group", copy=False)
+    group_id = fields.Many2one('stock.supply.group', string="Stock Supply Group", copy=False)
     is_shipped = fields.Boolean(compute="_compute_is_shipped")
 
     @api.depends('order_line.move_ids.returned_move_ids',

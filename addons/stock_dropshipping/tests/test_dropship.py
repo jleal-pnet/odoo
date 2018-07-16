@@ -45,8 +45,8 @@ class TestDropship(common.TransactionCase):
         # Confirm sales order
         sale_order_drp_shpng.action_confirm()
 
-        # Check the sales order created a procurement group which has a procurement of 200 pieces
-        self.assertTrue(sale_order_drp_shpng.procurement_group_id, 'SO should have procurement group')
+        # Check the sales order created a stock supply group which has a procurement of 200 pieces
+        self.assertTrue(sale_order_drp_shpng.stock_supply_group_id, 'SO should have stock supply group')
 
         # Check a quotation was created to a certain vendor and confirm so it becomes a confirmed purchase order
         purchase = self.env['purchase.order'].search([('partner_id', '=', supplier_dropship.id)])
