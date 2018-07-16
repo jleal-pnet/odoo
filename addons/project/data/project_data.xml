@@ -106,6 +106,7 @@
             <field name="user_id" ref="base.user_root"/>
             <field name="active" eval="False"/>
             <field name="alias_name">discover</field>
+            <field name="incoming_email">True</field>
             <field name="alias_model_id" ref="model_project_task"/>
             <field name="alias_contact">everyone</field>
             <field name="alias_defaults">{'project_id': 1}</field>

@@ -200,8 +200,7 @@ class Project(models.Model):
     color = fields.Integer(string='Color Index')
     user_id = fields.Many2one('res.users', string='Project Manager', default=lambda self: self.env.user, track_visibility="onchange")
     alias_id = fields.Many2one('mail.alias', string='Alias', ondelete="restrict", required=True,
-        help="Internal email associated with this project. Incoming emails are automatically synchronized "
-             "with Tasks (or optionally Issues if the Issue Tracker module is installed).")
+        help="Internal email associated with this project. Incoming emails are automatically synchronized with Tasks")
     privacy_visibility = fields.Selection([
             ('followers', _('On invitation only')),
             ('employees', _('Visible by all employees')),

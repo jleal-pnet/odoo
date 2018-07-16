@@ -147,6 +147,20 @@
                                 <field name="portal_show_rating" attrs="{'invisible': [('rating_status','==','no')]}" groups="project.group_project_rating"/>
                                 <field name="subtask_project_id" groups="project.group_subtask_project"/>
                             </group>
+                            <group name="group_alias">
+                                <field name="incoming_email"/>
+                                <label for="alias_name" string="Email Alias" attrs="{'invisible': [('incoming_email', '=', False)]}"/>
+                                <div name="alias_def" attrs="{'invisible': [('incoming_email', '=', False)]}">
+                                    <field name="alias_id" class="oe_read_only oe_inline"
+                                            string="Email Alias" required="0" attrs="{'invisible': [('alias_name', '=', False), ('alias_domain', '=', False)]}"/>
+                                    <div class="oe_edit_only oe_inline" name="edit_alias" style="display: inline;">
+                                        <field name="alias_name" class="oe_inline"/>@<field name="alias_domain" class="oe_inline" readonly="1"/>
+                                    </div>
+                                    <a type='action' name='%(base_setup.action_general_configuration)d' class="o_form_uri o_field_widget btn-sm btn-link" role="button" attrs="{'invisible': [('alias_domain', '!=', False)]}"><i class="fa fa-fw o_button_icon fa-arrow-right"/>Set Alias Domain</a>
+                                </div>
+                                <field name="alias_contact" class="oe_inline"
+                                        string="Accept Emails From" attrs="{'invisible': [('incoming_email', '=', False)]}"/>
+                            </group>
                             <group name="misc">
                                 <group string="Configuration" groups="base.group_no_one" name="configuration">
                                     <field name="sequence" groups="base.group_no_one"/>
@@ -155,20 +169,6 @@
                                 <group string="Time Scheduling" groups="base.group_no_one">
                                     <field name="resource_calendar_id" groups="base.group_no_one"/>
                                 </group>
-                            </group>
-                        </page>
-                        <page name="emails" string="Emails" attrs="{'invisible': [('alias_domain', '=', False)]}">
-                            <group name="group_alias">
-                                <label for="alias_name" string="Email Alias"/>
-                                <div name="alias_def">
-                                    <field name="alias_id" class="oe_read_only oe_inline"
-                                            string="Email Alias" required="0"/>
-                                    <div class="oe_edit_only oe_inline" name="edit_alias" style="display: inline;" >
-                                        <field name="alias_name" class="oe_inline"/>@<field name="alias_domain" class="oe_inline" readonly="1"/>
-                                    </div>
-                                </div>
-                                <field name="alias_contact" class="oe_inline oe_edit_only"
-                                        string="Accept Emails From"/>
                             </group>
                         </page>
                     </notebook>
