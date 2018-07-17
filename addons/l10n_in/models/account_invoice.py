@@ -134,6 +134,10 @@ class AccountInvoice(models.Model):
     def _onchange_l10n_in_company(self):
         self.l10n_in_gstin_partner_id = self.company_id.partner_id
 
+    @api.onchange('partner_id', 'company_id', 'l10n_in_gstin_partner_id')
+    def _onchange_partner_id(self):
+        return super(AccountInvoice, self.with_context(l10n_in_gstin_partner_id=self.l10n_in_gstin_partner_id.id))._onchange_partner_id()
+
 
 class AccountInvoiceLine(models.Model):
     _inherit = "account.invoice.line"

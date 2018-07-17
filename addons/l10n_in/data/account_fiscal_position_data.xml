@@ -5,11 +5,15 @@
     <record model="account.fiscal.position.template" id="fiscal_position_in_inter_state">
         <field name="chart_template_id" ref="indian_chart_template_standard"/>
         <field name="name">Inter State</field>
+        <field name="l10n_in_supply_type">inter_state</field>
+        <field name="auto_apply" eval="True" />
     </record>
 
     <record model="account.fiscal.position.template" id="fiscal_position_in_export">
         <field name="chart_template_id" ref="indian_chart_template_standard"/>
         <field name="name">Export</field>
+        <field name="l10n_in_supply_type">export_import</field>
+        <field name="auto_apply" eval="True" />
     </record>
 
     <!-- Fiscal Position Tax Templates -->
