@@ -95,20 +95,22 @@
                         </div>
                     </xpath>
                    <xpath expr="//field[@name='user_id']" position="after">
+                        <field name="incoming_email" attrs="{'invisible': [('use_leads', '=', False), ('use_opportunities', '=', False)]}"/>
                         <label for="alias_name" string="Email Alias"
-                            attrs="{'invisible': [('use_leads', '=', False), ('use_opportunities', '=', False)]}"/>
+                            attrs="{'invisible': [('incoming_email', '=', False)]}"/>
                         <div name="alias_def"
-                            attrs="{'invisible': [('use_leads', '=', False), ('use_opportunities', '=', False)]}">
+                            attrs="{'invisible': [('incoming_email', '=', False)]}">
                             <field name="alias_id" class="oe_read_only oe_inline"
-                                string="Email Alias" required="0"/>
+                                string="Email Alias" required="0" attrs="{'invisible': [('alias_name', '=', False), ('alias_domain', '=', False)]}"/>
                             <div class="oe_edit_only oe_inline" name="edit_alias" style="display: inline;" >
                                 <field name="alias_name" class="oe_inline"/>@<field name="alias_domain" class="oe_inline" readonly="1"/>
                             </div>
+                            <a type='action' name='%(base_setup.action_general_configuration)d' class="o_form_uri o_field_widget btn-sm btn-link" role="button" attrs="{'invisible': [('alias_domain', '!=', False)]}"><i class="fa fa-fw o_button_icon fa-arrow-right"/>Set Alias Domain</a>
                         </div>
                         <field name="alias_contact" class="oe_inline"
                             groups="base.group_no_one"
                             string="Accept Emails From"
-                            attrs="{'invisible': [('use_leads', '=', False), ('use_opportunities', '=', False)]}"/>
+                            attrs="{'invisible': [('incoming_email', '=', False)]}"/>
                    </xpath>
                     <field name="dashboard_graph_period" position="attributes">
                         <attribute name="attrs">{'invisible': [('dashboard_graph_model', '=', 'crm.lead')]}</attribute>

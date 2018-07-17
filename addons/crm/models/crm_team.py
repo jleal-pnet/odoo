@@ -84,6 +84,7 @@ class Team(models.Model):
     def _onchange_use_leads_opportunities(self):
         if not self.use_leads and not self.use_opportunities:
             self.alias_name = False
+            self.incoming_email = False
         if not self.use_opportunities and self.use_leads:
             self.use_leads = False
 
@@ -91,6 +92,7 @@ class Team(models.Model):
     def _onchange_team_type(self):
         if self.team_type == 'sales':
             self.use_opportunities = True
+            self.incoming_email = True
             self.use_leads = lambda self: self.user_has_groups('crm.group_use_lead')
             self.dashboard_graph_model = 'crm.lead'
         else:
