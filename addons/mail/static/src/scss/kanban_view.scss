@@ -1,4 +1,4 @@
-$o-kanban-attachement-image-size: 100px;
+$o-kanban-attachement-image-size: 80px;
 
 .o_kanban_view {
     @include o-align-items(flex-start);
@@ -28,7 +28,7 @@ $o-kanban-attachement-image-size: 100px;
             }
 
             .o_image {
-                @include square($o-kanban-attachement-image-size - 20px);
+                @include square($o-kanban-attachement-image-size - 14px);
             }
         }
 
@@ -40,7 +40,7 @@ $o-kanban-attachement-image-size: 100px;
                 padding: $o-kanban-inside-vgutter $o-kanban-inside-hgutter;
 
                 .o_kanban_record_title {
-                    margin-bottom: $o-kanban-inside-vgutter;
+                    margin-bottom: $o-kanban-inside-vgutter*0.5;
                     white-space: nowrap;
                     text-overflow: ellipsis;
                     overflow: hidden;
@@ -52,12 +52,12 @@ $o-kanban-attachement-image-size: 100px;
                     white-space: nowrap;
                     text-overflow: ellipsis;
                     overflow: hidden;
-                    margin-top: 7px;
+                    font-size: smaller;
                 }
 
                 .oe_kanban_avatar {
                     border-radius: 4px;
-                    border: 1px solid $gray-lighter;
+                    border: 1px solid $gray-lighter-darker;
                 }
             }
         }
