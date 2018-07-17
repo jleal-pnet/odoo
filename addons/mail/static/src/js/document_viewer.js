@@ -23,6 +23,7 @@ var DocumentViewer = Widget.extend({
         'click .o_zoom_reset': '_onZoomReset',
         'click .o_close_btn, .o_viewer_img_wrapper': '_onClose',
         'click .o_print_btn': '_onPrint',
+        'click .o_split_pdf': '_onSplitPDF',
         'DOMMouseScroll .o_viewer_content': '_onScroll',    // Firefox
         'mousewheel .o_viewer_content': '_onScroll',        // Chrome, Safari, IE
         'keydown': '_onKeydown',
@@ -326,6 +327,18 @@ var DocumentViewer = Widget.extend({
         } else {
             videoElement.pause();
         }
+    },
+    _onSplitPDF: function(e, start, end) {
+//        var self = this;
+//        var start = start;
+//        var end = end;
+//        return self._rpc({
+//            model: 'ir.attachment',
+//            method: 'split_pdf',
+//            args: [res_id, this.start, this.end],
+//        }).then(function () {
+//                self.reload();
+//        });
     },
     /**
      * @private
