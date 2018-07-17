@@ -599,13 +599,16 @@
                     <field name="technician_user_id" class="oe_inline"/>
                     <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}" class="oe_inline"/>
                 </group>
-                <group name="group_alias" attrs="{'invisible': [('alias_domain', '=', False)]}" groups="base.group_no_one">
-                    <label for="alias_name" string="Email Alias"/>
-                    <div name="alias_def">
-                        <field name="alias_id" class="oe_read_only oe_inline" string="Email Alias" required="0"/>
+                <group name="group_alias" groups="base.group_no_one">
+                    <field name="incoming_email"/>
+                    <label for="alias_name" string="Email Alias" attrs="{'invisible': [('incoming_email', '=', False)]}"/>
+                    <div name="alias_def" attrs="{'invisible': [('incoming_email', '=', False)]}">
+                        <field name="alias_id" class="oe_read_only oe_inline"
+                                string="Email Alias" required="0" attrs="{'invisible': [('alias_name', '=', False), ('alias_domain', '=', False)]}"/>
                         <div class="oe_edit_only oe_inline" name="edit_alias" style="display: inline;">
                             <field name="alias_name" class="oe_inline"/>@<field name="alias_domain" class="oe_inline" readonly="1"/>
                         </div>
+                        <a type='action' name='%(base_setup.action_general_configuration)d' class="o_form_uri o_field_widget btn-sm btn-link" role="button" attrs="{'invisible': [('alias_domain', '!=', False)]}"><i class="fa fa-fw o_button_icon fa-arrow-right"/>Set Alias Domain</a>
                     </div>
                 </group>
                 <field name="note" nolabel="1"/>
