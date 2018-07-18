@@ -75,6 +75,7 @@ return AbstractModel.extend({
             measure: params.context.graph_measure || params.measure,
             mode: params.context.graph_mode || params.mode,
             timeRange: params.timeRange,
+            title: params.title,
             domain: params.domain,
             context: params.context,
         };

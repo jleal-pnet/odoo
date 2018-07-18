@@ -17,14 +17,16 @@ return Widget.extend({
      * @constructor
      * @param {Widget} parent
      * @param {any} state
-     * @param {Object} params
-     * @param {string} [params.noContentHelp]
+     * @param {Object} params (optional)
+     * @param {string} [params.noContentHelp] (optional)
      */
     init: function (parent, state, params) {
         this._super(parent);
         this.state = state;
-        this.arch = params.arch;
-        this.noContentHelp = params.noContentHelp;
+        if (params) {
+            this.arch = params.arch;
+            this.noContentHelp = params.noContentHelp;
+        }
     },
     /**
      * The rendering can be asynchronous (but it is not encouraged). The start
@@ -33,7 +35,9 @@ return Widget.extend({
      * @returns {Deferred}
      */
     start: function () {
-        this.$el.addClass(this.arch.attrs.class);
+        if (this.arch && this.arch.attrs) {
+            this.$el.addClass(this.arch.attrs.class);
+        }
         return $.when(this._render(), this._super());
     },
     /**

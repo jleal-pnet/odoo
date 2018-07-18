@@ -84,6 +84,7 @@ var GraphView = AbstractView.extend({
 
         this.loadParams.mode = this.arch.attrs.type || 'bar';
         this.loadParams.measure = measure || '__count__';
+        this.loadParams.title = params.title;
         this.loadParams.groupBys = groupBys || [];
         this.loadParams.intervalMapping = intervalMapping;
         this.loadParams.fields = this.fields;

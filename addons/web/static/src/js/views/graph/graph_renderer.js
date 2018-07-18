@@ -34,7 +34,9 @@ return AbstractRenderer.extend({
     init: function (parent, state, params) {
         this._super.apply(this, arguments);
         this.isComparison = !!state.comparisonData;
-        this.stacked = this.isComparison ? false : params.stacked;
+        if (params && params.stacked) {
+            this.stacked = this.isComparison ? false : params.stacked;
+        }
     },
     /**
      * @override
@@ -431,6 +433,7 @@ return AbstractRenderer.extend({
     _renderGraph: function () {
         var self = this;
 
+        var title = this.state.title || '';
         this.$el.empty();
 
         var chartResize = function (chart){
@@ -441,12 +444,27 @@ return AbstractRenderer.extend({
             }
         }
         var chart1 = this['_render' + _.str.capitalize(this.state.mode) + 'Chart'](this.state.data);
+
+        if (title) {
+            title = title + ' (' + this.state.context.timeRangeMenuData.timeRangeDescription + ')';
+            this._renderTitle(title);
+        }
         chartResize(chart1);
         if (this.state.mode === 'pie' && this.isComparison) {
             var chart2 = this['_render' + _.str.capitalize(this.state.mode) + 'Chart'](this.state.comparisonData);
+            title = title + ' (' + this.state.context.timeRangeMenuData.comparisonTimeRangeDescription + ')';
+            this._renderTitle(title);
             chartResize(chart2);
             chart1.update();
         }
+    },
+    /**
+     *
+     * @param  {String} title
+     */
+    _renderTitle: function (title) {
+        var $label = $('<label/>', {text: title});
+        this.$('.o_graph_svg_container').last().prepend($label);
     },
     /**
      * Helper function, turns label value into a usable string form if it is
