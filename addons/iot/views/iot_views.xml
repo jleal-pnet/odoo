@@ -79,6 +79,7 @@
                     <group>
                         <group>
                             <field name="identifier" readonly="True"/>
+                            <field name="ip"/>
                         </group>
                     </group>
                     <notebook>
@@ -146,4 +147,11 @@
         parent="iot_menu_root"
         sequence="2"/>
 
+    <!-- JS stuff -->
+    <template id="assets_backend" inherit_id="web.assets_backend" name="IoT assets">
+        <xpath expr="." position="inside">
+            <link rel="stylesheet" href="/iot/static/src/css/iot.css"/>
+            <script type="text/javascript" src="/iot/static/src/js/iot.js"></script>
+        </xpath>
+    </template>
 </odoo>

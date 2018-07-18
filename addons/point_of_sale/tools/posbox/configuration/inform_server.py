@@ -24,8 +24,9 @@ if server:
         iface_obj = ni.ifaddresses(iface_id)
         ifconfigs = iface_obj.get(ni.AF_INET, [])
         for conf in ifconfigs:
-            if conf.get('addr'):
-                ips.append(conf.get('addr'))
+            if conf.get('addr') and conf.get('addr') != '127.0.0.1':
+                ips = conf.get('addr')
+                break
 
     values = {'name': "IoT-on-laptop", 'identifier': mac, 'ip': ips}
     data = parse.urlencode(values).encode()
