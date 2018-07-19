@@ -8,7 +8,6 @@ var Widget = require('web.Widget');
 var rpc = require('web.rpc');
 var time = require('web.time');
 
-var ServiceProviderMixin = require('web.ServiceProviderMixin');
 var qweb = core.qweb;
 var _t = core._t;
 
@@ -19,7 +18,7 @@ var _t = core._t;
  * - Display chatter: pager, total message, composer (according to access right)
  * - Provider API to filter displayed messages
  */
-var PortalChatter = Widget.extend(ServiceProviderMixin, {
+var PortalChatter = Widget.extend({
     events: {
         "click .o_portal_chatter_pager_btn": '_onClickPager',
         "submit .o_portal_chatter_composer_form": '_onChatterFormSubmit',
@@ -27,7 +26,6 @@ var PortalChatter = Widget.extend(ServiceProviderMixin, {
 
     init: function(parent, options){
         this._super.apply(this, arguments);
-        ServiceProviderMixin.init.call(this);
         this.options = _.defaults(options || {}, {
             'allow_composer': true,
             'display_composer': false,
@@ -153,9 +151,7 @@ var PortalChatter = Widget.extend(ServiceProviderMixin, {
      * @returns {Deferred}
      */
     _loadTemplates: function(){
-        return $.when(
-            ajax.loadXML('/portal/static/src/xml/portal_chatter.xml', qweb),
-            ajax.loadXML('/web/static/src/xml/notification.xml', qweb));
+        return ajax.loadXML('/portal/static/src/xml/portal_chatter.xml', qweb);
     },
     _messageFetchPrepareParams: function(){
         var self = this;
@@ -252,7 +248,7 @@ var PortalChatter = Widget.extend(ServiceProviderMixin, {
         });
     },
     /**
-     * Submits form data manually and genereate Notification when message is published from chatter
+     * Submits form data manually when message is published from chatter
      * also re-render widget once message is posted
      *
      * @private
@@ -264,13 +260,8 @@ var PortalChatter = Widget.extend(ServiceProviderMixin, {
         var message = this.$el.find('textarea[name="message"]').val();
         if (message) {
             ajax.jsonRpc(ev.currentTarget.action, 'call', {'res_model': this.options.res_model, 'res_id': this.options.res_id, 'message': message, 'token': this.options.token})
-                .done(function (res) {
-                    // hide modal after messaged is posted, if chatter widget is opened in bootstrap modal
-                    var $modal = $(ev.target).closest('[role="dialog"]');
-                    if ($modal.length) {
-                        $modal.modal('hide');
-                    }
-                    self.do_notify(_t('Message'), _t('Thank you! Your message has been posted.'));
+                .done(function () {
+                    // re-render widget after message post
                     self.reinitialize();
                 });
         }
