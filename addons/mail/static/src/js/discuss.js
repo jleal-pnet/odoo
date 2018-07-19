@@ -538,12 +538,12 @@ var Discuss = AbstractAction.extend(ControlPanelMixin, {
         if (type === 'public') {
             $input.autocomplete({
                 source: function (request, response) {
-                    self._lastSearchVal = _.escape(request.term);
+                    self._lastSearchVal = request.term;
                     self._searchChannel(self._lastSearchVal).done(function (result){
                         result.push({
                             'label':  _.str.sprintf(
                                         '<strong>' + _t("Create %s") + '</strong>',
-                                        '<em>"#' + self._lastSearchVal + '"</em>'
+                                        '<em>"#' + _.escape(self._lastSearchVal) + '"</em>'
                             ),
                             'value': '_create',
                         });

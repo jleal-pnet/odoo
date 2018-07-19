@@ -142,13 +142,14 @@ var MentionManager = Widget.extend({
         var mentionLink = "<a " + linkParams + " >" +
                                 "%s%s" +
                             "</a>";
-        _.each(this._listeners, function (listener) {
+        var input = s.replace(/&amp;/g, "&");
+        _.each(this._listeners, function (listener) {    
             if (!listener.generateLinks) {
                 return;
             }
             var selection = listener.selection;
             if (selection.length) {
-                var matches = self._getMatch(s, listener);
+                var matches = self._getMatch(input, listener);
                 var substrings = [];
                 var startIndex = 0;
                 for (var i = 0; i < matches.length; i++) {
@@ -168,12 +169,12 @@ var MentionManager = Widget.extend({
                                                       listener.model,
                                                       listener.delimiter,
                                                       matchName);
-                    var subtext = s.substring(startIndex, endIndex)
+                    var subtext = input.substring(startIndex, endIndex)
                                    .replace(match[0], processedText);
                     substrings.push(subtext);
                     startIndex = endIndex;
                 }
-                substrings.push(s.substring(startIndex, s.length));
+                substrings.push(input.substring(startIndex, s.length));
                 s = substrings.join('');
             }
         });

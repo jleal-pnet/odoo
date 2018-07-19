@@ -357,10 +357,12 @@ var BasicComposer = Widget.extend({
         var commands = this.options.commandsEnabled ?
                         this._mentionManager.getListenerSelection('/') :
                         [];
+        var channels = _.uniq(_.pluck(this._mentionManager.getListenerSelection('#'), 'id'));
         return $.when({
             content: this._mentionManager.generateLinks(value),
             attachment_ids: _.pluck(this.get('attachment_ids'), 'id'),
             partner_ids: _.uniq(_.pluck(this._mentionManager.getListenerSelection('@'), 'id')),
+            channel_ids: channels,
             command: commands.length > 0 ? commands[0].name : undefined,
         });
     },

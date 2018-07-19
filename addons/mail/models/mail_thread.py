@@ -1918,7 +1918,6 @@ class MailThread(models.AbstractModel):
                     to the related document. Should only be set by Chatter.
             :return int: ID of newly created mail.message
         """
-
         if attachments is None:
             attachments = {}
         if self.ids and not self.ensure_one():
@@ -1995,6 +1994,7 @@ class MailThread(models.AbstractModel):
                     message = message.parent_id
                 parent_id = message.id
 
+        kwargs_channel_ids = set(kwargs.pop('channel_ids', []))
         values = kwargs
         values.update({
             'author_id': author_id,
@@ -2006,7 +2006,8 @@ class MailThread(models.AbstractModel):
             'parent_id': parent_id,
             'subtype_id': subtype_id,
             'partner_ids': [(4, pid) for pid in partner_ids],
-            'add_sign': add_sign
+            'add_sign': add_sign,
+            'channel_ids': [(4, cid) for cid in kwargs_channel_ids]
         })
         if notif_layout:
             values['layout'] = notif_layout

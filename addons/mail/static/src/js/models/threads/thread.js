@@ -327,6 +327,7 @@ var Thread = AbstractThread.extend(Mixins.EventDispatcherMixin, ServicesMixin, {
         body = this._generateEmojis(body);
         var messageData = {
             partner_ids: data.partner_ids,
+            channel_ids: data.channel_ids,
             body: body,
             attachment_ids: data.attachment_ids,
         };
