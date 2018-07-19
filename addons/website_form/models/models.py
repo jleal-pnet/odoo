@@ -7,10 +7,19 @@ from odoo import models, fields, api
 from odoo.http import request
 
 
+class MailMail(models.Model):
+    _inherit = 'mail.mail'
+
+    def website_form_input_filter(self, request, values):
+        values['email_to'] = values.get('email_to') or request.website.contact_form_recipient_email
+        return values
+
+
 class website_form_config(models.Model):
     _inherit = 'website'
 
     website_form_enable_metadata = fields.Boolean('Write metadata', help="Enable writing metadata on form submit.")
+    contact_form_recipient_email = fields.Char(default=lambda self: self.get_current_website().company_id.email)
 
     def _website_form_last_record(self):
         if request and request.session.form_builder_model_model:
@@ -21,6 +30,7 @@ class website_form_config(models.Model):
 class ResConfigSettings(models.TransientModel):
     _inherit = 'res.config.settings'
     website_form_enable_metadata = fields.Boolean(related="website_id.website_form_enable_metadata")
+    contact_form_recipient_email = fields.Char(related='website_id.contact_form_recipient_email')
 
 
 class website_form_model(models.Model):
