@@ -337,16 +337,15 @@
                                         <field name="loss_account_id"/>
                                     </group>
                                     <group name="group_alias" string="Email your Vendor Bills" attrs="{'invisible': [('type', '!=',  'purchase')]}">
-                                        <label string="Email Alias" attrs="{'invisible': [('alias_domain', '=', False)]}" for="alias_id"/>
-                                        <div name="alias_def" attrs="{'invisible': [('alias_domain', '=', False)]}">
-                                            <field name="alias_id" class="oe_read_only oe_inline"/>
+                                        <field name="incoming_email"/>
+                                        <label string="Email Alias" attrs="{'invisible': [('incoming_email', '=', False)]}" for="alias_id"/>
+                                        <div name="alias_def" attrs="{'invisible': [('incoming_email', '=', False)]}">
+                                            <field name="alias_id" class="oe_read_only oe_inline" attrs="{'invisible': [('alias_name', '=', False), ('alias_domain', '=', False)]}"/>
                                             <div class="oe_edit_only oe_inline" name="edit_alias" style="display: inline;" >
                                                 <field name="alias_name" class="oe_inline"/>@<field name="alias_domain" class="oe_inline" readonly="1"/>
                                             </div>
+                                            <a type='action' name='%(base_setup.action_general_configuration)d' class="o_form_uri o_field_widget btn-sm btn-link" role="button" attrs="{'invisible': [('alias_domain', '!=', False)]}"><i class="fa fa-fw o_button_icon fa-arrow-right"/> Configure Email Servers</a>
                                         </div>
-                                        <div class="content-group" attrs="{'invisible': [('alias_domain', '!=', False)]}">
-                                            <a type='action' name='%(action_open_settings)d' class="btn btn-sm btn-link" role="button"><i class="fa fa-fw o_button_icon fa-arrow-right"/> Configure Email Servers</a>
-                                    </div>
                                     </group>
                                 </group>
                             </page>
