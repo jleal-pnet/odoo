@@ -179,8 +179,8 @@ class PosboxHomepage(odoo.addons.web.controllers.main.Home):
         return "configuration cleared"
 
     @http.route('/server_connect', type='http', auth='none', cors='*', csrf=False)
-    def connect_to_server(self, url):
-        subprocess.call(['/home/pi/odoo/addons/point_of_sale/tools/posbox/configuration/connect_to_server.sh', url])
+    def connect_to_server(self, url, iotname):
+        subprocess.call(['/home/pi/odoo/addons/point_of_sale/tools/posbox/configuration/connect_to_server.sh', url, iotname])
         return "connecting to server"
 
     # Set server address
@@ -201,6 +201,14 @@ class PosboxHomepage(odoo.addons.web.controllers.main.Home):
             </p>
             <form action='/server_connect' method='POST'>
                 <table>
+                    <tr>
+                        <td>
+                            Server IoT Name:
+                        </td>
+                        <td>
+                            <input type="text" name="iotname">
+                        </td>
+                    </tr>
                     <tr>
                         <td>
                             Server URL:

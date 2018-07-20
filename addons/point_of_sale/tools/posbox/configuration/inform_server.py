@@ -3,6 +3,7 @@
 # Part that sends stuff to the internet
 from urllib import request, parse
 from uuid import getnode as get_mac
+import subprocess
 import netifaces as ni
 mac = get_mac()
 server = "" # read from file
@@ -26,8 +27,9 @@ if server:
             if conf.get('addr') and conf.get('addr') != '127.0.0.1':
                 ips = conf.get('addr')
                 break
-
-    values = {'name': "IoT-on-laptop", 'identifier': mac, 'ip': ips}
+                
+    hostname = subprocess.check_output('hostname')
+    values = {'name': hostname, 'identifier': mac, 'ip': ips}
     data = parse.urlencode(values).encode()
     req =  request.Request(url, data=data)
     try:
