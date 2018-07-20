@@ -20,3 +20,8 @@ class SaleOrder(models.Model):
         invoice_vals = super(SaleOrder, self)._prepare_invoice()
         invoice_vals['l10n_in_gstin_partner_id'] = self.l10n_in_gstin_partner_id.id
         return invoice_vals
+
+    @api.multi
+    @api.onchange('partner_shipping_id', 'partner_id', 'l10n_in_gstin_partner_id')
+    def onchange_partner_shipping_id(self):
+        return super(SaleOrder, self.with_context(l10n_in_gstin_partner_id=self.l10n_in_gstin_partner_id.id)).onchange_partner_shipping_id()
