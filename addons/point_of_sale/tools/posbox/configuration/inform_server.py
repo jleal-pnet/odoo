@@ -19,7 +19,6 @@ if server:
     server = server.split('\n')[0]
     url = server + "/iot3/"#/check_box"
     interfaces = ni.interfaces()
-    ips = []
     for iface_id in interfaces:
         iface_obj = ni.ifaddresses(iface_id)
         ifconfigs = iface_obj.get(ni.AF_INET, [])
@@ -34,6 +33,7 @@ if server:
     try:
         response = request.urlopen(req)
     except:
+        _logger.warning('Could not reach configured server')
         response = ''
 
 

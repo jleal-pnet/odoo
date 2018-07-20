@@ -8,6 +8,8 @@ import gatt
 import evdev
 import subprocess
 from odoo import http
+from urllib import request, parse
+from uuid import getnode as get_mac
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(name)s: %(message)s')
 _logger = logging.getLogger('dispatcher')
@@ -202,43 +204,16 @@ class USBDeviceManager(Thread):
                         d.start()
             time.sleep(3)
 
-# Part that sends stuff to the internet
-from urllib import request, parse
-from uuid import getnode as get_mac
-import netifaces as ni
-mac = get_mac()
-server = "" # read from file
-url = ""
-try:
+subprocess.call("/home/pi/odoo/addons/point_of_sale/tools/posbox/configuration/inform_server.py")
+
+def send_device(name, identifier):
+    mac = get_mac()
+    server = "" # read from file
     f = open('/home/pi/odoo-remote-server.conf', 'r')
     for line in f:
         server += line
     f.close()
-except:
-    pass
-
-if server: #TODO: Needs try catches too, because server might not be available e.g.
     server = server.split('\n')[0]
-    url = server + "/iot3/"#/check_box"
-    interfaces = ni.interfaces()
-    ips = []
-    for iface_id in interfaces:
-        iface_obj = ni.ifaddresses(iface_id)
-        ifconfigs = iface_obj.get(ni.AF_INET, [])
-        for conf in ifconfigs:
-            if conf.get('addr'):
-                ips.append(conf.get('addr'))
-    values = {'name': "IoT-on-laptop", 'identifier': mac, 'ip': ips}
-
-    data = parse.urlencode(values).encode()
-    req =  request.Request(url, data=data)
-    try:
-        response = request.urlopen(req)
-    except:
-        _logger.warning('Could not reach configured server')
-
-
-def send_device(name, identifier):
     if server:
         url = server + "/iot2/"  # /check_device"
         values = {'iot_identifier': mac,
