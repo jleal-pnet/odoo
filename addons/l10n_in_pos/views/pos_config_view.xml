@@ -13,7 +13,7 @@
                             Select GSTIN Partner.
                         </div>
                         <div class="content-group mt16">
-                            <field name="l10n_in_gstin_partner_id"/>
+                            <field name="l10n_in_gstin_partner_id" options="{'no_create': True, 'always_reload': True}" context="{'show_vat':True}"/>
                         </div>
                     </div>
                 </div>

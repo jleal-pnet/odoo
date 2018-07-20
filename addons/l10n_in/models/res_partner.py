@@ -49,3 +49,17 @@ class ResPartner(models.Model):
     country_code = fields.Char(related="country_id.code", string="Country code")
     #In GSTR-2 report We need to specify that vendor is under composition scheme or not.
     l10n_in_composition = fields.Boolean(string="Is Composition", help="Check this box if this vendor is under composition scheme")
+
+    @api.multi
+    def name_get(self):
+        res = super(ResPartner, self).name_get()
+        if not self._context.get('show_vat'):
+            return res
+        new_res = []
+        for partner in res:
+            name = partner[1]
+            vat = self.browse(partner[0]).vat
+            if vat:
+                name = "%s (%s)" % (name, vat)
+            new_res.append((partner[0], name))
+        return new_res
