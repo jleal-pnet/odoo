@@ -303,6 +303,10 @@ var SelectCreateDialog = ViewDialog.extend({
             this.list_controller.reload(searchData);
         },
         get_controller_context: '_onGetControllerContext',
+        closed: function (ev) {
+            ev.stopPropagation();
+            this.close();
+        },
     }),
 
     /**
