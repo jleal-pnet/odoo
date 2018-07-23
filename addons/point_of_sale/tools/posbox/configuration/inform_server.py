@@ -5,6 +5,10 @@ from urllib import request, parse
 from uuid import getnode as get_mac
 import subprocess
 import netifaces as ni
+import logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(name)s: %(message)s')
+_logger = logging.getLogger('dispatcher')
+
 mac = get_mac()
 server = "" # read from file
 url = ""
@@ -27,7 +31,7 @@ if server:
             if conf.get('addr') and conf.get('addr') != '127.0.0.1':
                 ips = conf.get('addr')
                 break
-                
+
     hostname = subprocess.check_output('hostname')
     values = {'name': hostname, 'identifier': mac, 'ip': ips}
     data = parse.urlencode(values).encode()
@@ -36,10 +40,3 @@ if server:
         response = request.urlopen(req)
     except:
         _logger.warning('Could not reach configured server')
-        response = ''
-
-
-
-
-
-
