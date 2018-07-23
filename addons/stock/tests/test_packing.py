@@ -2,6 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo.tests.common import TransactionCase
+from odoo.tests import Form
 
 
 class TestPacking(TransactionCase):
@@ -180,3 +181,38 @@ class TestPacking(TransactionCase):
         self.assertEqual(package_level_reserved.location_id.id, shelf1_location.id, 'The reserved package level must be reserved in shelf1')
         self.assertEqual(package_level_confirmed.location_id.id, self.stock_location.id, 'The not reserved package should keep its location')
         self.assertEqual(picking.package_level_ids.mapped('is_done'), [True, True], 'Both package should still done')
+
+    def create_picking(self, partner, picking_type, owner):
+        picking_form = Form(self.env['stock.picking'])
+        picking_form.partner_id = partner
+        picking_form.picking_type_id = picking_type
+        picking_form.owner_id = owner
+        with picking_form.move_ids_without_package.new() as move:
+            move.product_id = self.productA
+            move.product_uom_qty = 5.00
+        picking = picking_form.save()
+        return picking
+
+    def test_check_owner_stock_picking(self):
+        """incoming picking should be assign the owner on all the lines of the pickings
+        outgoing picking check the product owner and picking owner both are same.
+        """
+        self.warehouse.write({'delivery_steps': 'ship_only'})
+        owner = self.env.ref('base.res_partner_1')
+
+        incoming_picking = self.create_picking(self.env.ref('base.res_partner_2'), self.env.ref('stock.picking_type_in'), owner)
+        incoming_picking.onchange_picking_type()
+        incoming_picking.action_confirm()
+        wizard = incoming_picking.button_validate()
+        immediate_transfer = self.env[wizard['res_model']].browse(wizard['res_id'])
+        immediate_transfer.process()
+
+        outgoing_picking = self.create_picking(self.env.ref('base.res_partner_3'), self.env.ref('stock.picking_type_out'), owner)
+        incoming_picking.onchange_picking_type()
+        outgoing_picking.action_confirm()
+        outgoing_picking.action_assign()
+        wizard = outgoing_picking.button_validate()
+        immediate_transfer = self.env[wizard['res_model']].browse(wizard['res_id'])
+        immediate_transfer.process()
+
+        self.assertEqual(outgoing_picking.move_line_ids.mapped('owner_id').id, outgoing_picking.owner_id.id, "Outgoing picking and product owner both are same.")
