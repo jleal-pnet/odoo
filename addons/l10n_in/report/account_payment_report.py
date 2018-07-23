@@ -16,6 +16,7 @@ class L10nInPaymentReport(models.AbstractModel):
     gstin_partner_id = fields.Many2one('res.partner', string="GSTIN Partner")
     payment_type = fields.Selection([('outbound', 'Send Money'), ('inbound', 'Receive Money')], string='Payment Type')
     journal_id = fields.Many2one('account.journal', string="Journal")
+    company_id = fields.Many2one(related="journal_id.company_id", string="Company")
     partner_state_id = fields.Many2one('res.country.state', string="Partner State")
     place_of_supply = fields.Char(string="Place of Supply")
     supply_type = fields.Char(string="Supply Type")
