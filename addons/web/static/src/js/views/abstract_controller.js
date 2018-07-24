@@ -487,7 +487,7 @@ var AbstractController = AbstractAction.extend(ControlPanelMixin, {
             var options = {};
             if ($target.data('reload-on-close')) {
                 options.on_close = function () {
-                    self.trigger_up('reload');
+                    self.trigger('reload');
                 };
             }
             this.dp.add(this._rpc({
