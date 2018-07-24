@@ -12,7 +12,7 @@ class PosConfig(models.Model):
         string="GSTIN Partner",
         required=True,
         default=lambda self: self.env['res.company']._company_default_get('pos.config').partner_id,
-        domain="[('l10n_in_company_id', '=', company_id)]"
+        domain="[('l10n_in_gstin_company_id', '=', company_id)]"
         )
 
     @api.onchange('stock_location_id', 'company_id')
