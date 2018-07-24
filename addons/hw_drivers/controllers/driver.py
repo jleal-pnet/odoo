@@ -207,7 +207,8 @@ class USBDeviceManager(Thread):
 subprocess.call("/home/pi/odoo/addons/point_of_sale/tools/posbox/configuration/inform_server.py")
 
 def send_device(name, identifier):
-    mac = get_mac()
+    macline = subprocess.check_output("/sbin/ifconfig eth0 |grep 'ether '", shell=True).decode('utf-8')
+    mac = macline.split(' ')
     server = "" # read from file
     f = open('/home/pi/odoo-remote-server.conf', 'r')
     for line in f:
@@ -216,7 +217,7 @@ def send_device(name, identifier):
     server = server.split('\n')[0]
     if server:
         url = server + "/iot2/"  # /check_device"
-        values = {'iot_identifier': mac,
+        values = {'iot_identifier': mac[9],
                   'name': name,
                   'identifier': identifier}
         data = parse.urlencode(values).encode()

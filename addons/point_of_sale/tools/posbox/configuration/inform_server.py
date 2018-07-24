@@ -9,7 +9,8 @@ import logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(name)s: %(message)s')
 _logger = logging.getLogger('dispatcher')
 
-mac = get_mac()
+macline = subprocess.check_output("/sbin/ifconfig eth0 |grep 'ether '", shell=True).decode('utf-8')
+mac = macline.split(' ')
 server = "" # read from file
 url = ""
 try:
@@ -33,7 +34,9 @@ if server:
                 break
 
     hostname = subprocess.check_output('hostname')
-    values = {'name': hostname, 'identifier': mac, 'ip': ips}
+    values = {'name': hostname,
+                'identifier': mac[9],
+                'ip': ips}
     data = parse.urlencode(values).encode()
     req =  request.Request(url, data=data)
     try:
