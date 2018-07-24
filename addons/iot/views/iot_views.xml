@@ -80,6 +80,7 @@
                         <group>
                             <field name="identifier" readonly="True"/>
                             <field name="ip"/>
+                            <field name="url"/>
                         </group>
                     </group>
                     <notebook>

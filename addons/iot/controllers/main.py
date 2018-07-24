@@ -11,6 +11,14 @@ from odoo.http import request
 
 class IoTController(http.Controller):
 
+    @http.route('/get_url/<string:identifier>', type='http', auth='public')
+    def get_url(self, identifier):
+        iotbox = request.env['iot.box'].sudo().search([], limit=1) #('identifier', '=', identifier)
+        if iotbox:
+            return iotbox.url
+        else:
+            return '' # Can not we throw 404?
+
     @http.route('/iot2', type='http', auth='public', csrf=False)
     def update_device(self, iot_identifier, name, identifier):
         # Search id of iotbox that corresponds to this identifier
