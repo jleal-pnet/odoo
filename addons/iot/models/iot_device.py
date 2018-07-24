@@ -16,3 +16,7 @@ class IotDevice(models.Model):
         for device in self:
             self.last_message_date = self.env['iot.message'].search([('device_id', '=', device.id)],
                                                                     order='create_date desc', limit=1).create_date
+
+    @api.depends('iot_id.name', 'name')
+    def name_get(self):
+        return [(i.id, i.iot_id.name + " " + i.name) for i in self]
