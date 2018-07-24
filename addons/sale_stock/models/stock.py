@@ -105,7 +105,7 @@ class StockPicking(models.Model):
 class ProductionLot(models.Model):
     _inherit = 'stock.production.lot'
 
-    sale_order_ids = fields.Many2many('sale.order', string="Sales Orders", compute='_compute_sale_order_ids')
+    sale_order_ids = fields.Many2many('sale.order', string="Sales", compute='_compute_sale_order_ids')
 
     @api.depends('name')
     def _compute_sale_order_ids(self):
