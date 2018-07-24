@@ -13,7 +13,7 @@ class L10nInPaymentReport(models.AbstractModel):
     amount = fields.Float(string="Amount")
     payment_amount = fields.Float(string="Payment Amount")
     partner_id = fields.Many2one('res.partner', string="Customer")
-    gstin_partner_id = fields.Many2one('res.partner', string="GSTIN Partner")
+    gstin_partner_id = fields.Many2one('res.partner', string="GSTIN")
     payment_type = fields.Selection([('outbound', 'Send Money'), ('inbound', 'Receive Money')], string='Payment Type')
     journal_id = fields.Many2one('account.journal', string="Journal")
     company_id = fields.Many2one(related="journal_id.company_id", string="Company")

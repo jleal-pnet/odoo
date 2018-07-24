@@ -15,7 +15,7 @@ class L10nInAccountInvoiceReport(models.Model):
     account_move_line_id = fields.Many2one('account.move.line', string="Account Move Line")
     invoice_id = fields.Many2one('account.invoice', string="Invoice")
     company_id = fields.Many2one('res.company', string="Company")
-    gstin_partner_id = fields.Many2one('res.partner', string="GSTIN Partner")
+    gstin_partner_id = fields.Many2one('res.partner', string="GSTIN")
     date = fields.Date(string="Accounting Date")
     name = fields.Char(string="Invoice Number")
     partner_id = fields.Many2one('res.partner', string="Customer")

@@ -18,7 +18,7 @@ class L10nInExemptedReport(models.Model):
     non_gst_supplies = fields.Float("Non GST Supplies")
     date = fields.Date("Date")
     company_id = fields.Many2one('res.company', string="Company")
-    gstin_partner_id = fields.Many2one('res.partner', string="GSTIN Partner")
+    gstin_partner_id = fields.Many2one('res.partner', string="GSTIN")
     journal_id = fields.Many2one('account.journal', string="Journal")
 
     @api.model_cr

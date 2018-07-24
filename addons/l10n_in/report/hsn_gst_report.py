@@ -23,7 +23,7 @@ class L10nInProductHsnReport(models.Model):
     sgst_amount = fields.Float(string="State/UT Tax Amount")
     cess_amount = fields.Float(string="Cess Amount")
     company_id = fields.Many2one('res.company', string="Company")
-    gstin_partner_id = fields.Many2one('res.partner', string="GSTIN Partner")
+    gstin_partner_id = fields.Many2one('res.partner', string="GSTIN")
     journal_id = fields.Many2one('account.journal', string="Journal")
 
     hsn_code = fields.Char(string="HSN")

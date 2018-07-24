@@ -9,7 +9,7 @@ class PosConfig(models.Model):
 
     l10n_in_gstin_partner_id = fields.Many2one(
         'res.partner',
-        string="GSTIN Partner",
+        string="GSTIN",
         required=True,
         default=lambda self: self.env['res.company']._company_default_get('pos.config').partner_id,
         domain="[('l10n_in_gstin_company_id', '=', company_id)]"

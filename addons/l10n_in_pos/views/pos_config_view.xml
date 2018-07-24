@@ -8,9 +8,9 @@
             <xpath expr="//sheet/div[12]" position="inside">
                 <div class="col-xs-12 col-md-6 o_setting_box">
                     <div class="o_setting_right_pane" groups='l10n_in.group_l10n_in_multi_gstin'>
-                        <label for="l10n_in_gstin_partner_id" string="GSTIN Partner"/>
+                        <label for="l10n_in_gstin_partner_id" string="GSTIN"/>
                         <div class="text-muted">
-                            Select GSTIN Partner.
+                            Select GSTIN.
                         </div>
                         <div class="content-group mt16">
                             <field name="l10n_in_gstin_partner_id" options="{'no_create': True, 'always_reload': True}" context="{'show_vat':True}"/>
