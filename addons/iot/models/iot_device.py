@@ -7,7 +7,7 @@ from odoo import api, fields, models, exceptions
 class IotDevice(models.Model):
     _name = 'iot.device'
 
-    iot_id = fields.Many2one('iot.box')
+    iot_id = fields.Many2one('iot.box', required = True)
     name = fields.Char('Name')
     identifier = fields.Char(string='Serial Number')
     last_message_date = fields.Datetime('Last Message', compute="_compute_last_message")

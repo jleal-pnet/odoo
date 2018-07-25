@@ -79,7 +79,7 @@ function connect () {
 		if [ ${WIFI_WAS_LOST} -eq 0 ] ; then
 			touch "${LOST_WIFI_FILE}"
 		fi
-		/home/pi/odoo/addons/point_of_sale/tools/posbox/configuration/inform_server.py
+		wget -q "http://localhost:8069/send_iot_box" -O /dev/null
 
 		logger -t posbox_connect_to_wifi "Starting wifi keep alive script"
 		/home/pi/odoo/addons/point_of_sale/tools/posbox/configuration/keep_wifi_alive.sh &

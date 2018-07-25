@@ -7,6 +7,8 @@ import serial
 import gatt
 import evdev
 import subprocess
+import netifaces as ni
+import json
 from odoo import http
 from urllib import request, parse
 from uuid import getnode as get_mac
@@ -27,7 +29,6 @@ class StatusController(http.Controller):
         result +=" </body></html>"
         return result
 
-
     @http.route('/driverdetails/<string:identifier>', type='http', auth='none', cors='*')
     def statusdetail(self, identifier):
         for path in drivers:
@@ -36,6 +37,12 @@ class StatusController(http.Controller):
             else:
                 result = 'device not found'
         return result
+
+    @http.route('/send_iot_box', type='http', auth='none', cors='*')
+    def send_iot_box(self):
+        send_iot_box_device()
+        return 'ok'
+
 
 #----------------------------------------------------------
 # Driver common interface
@@ -186,6 +193,7 @@ class USBDeviceManager(Thread):
                 for path in list(drivers):
                     if (path in removed):
                         del drivers[path]
+                        send_iot_box_device()
             for path in added:
                 dev = updated_devices[path]
                 for driverclass in usbdrivers:
@@ -193,20 +201,14 @@ class USBDeviceManager(Thread):
                     d = driverclass(updated_devices[path])
                     if d.supported():
                         _logger.info('For device %s will be driven', path)
-                        lsusb = str(subprocess.check_output('lsusb')).split("\\n")
-                        for usbtre in lsusb:
-                            if "%04x:%04x" % (dev.idVendor, dev.idProduct) in usbtre:
-                                name = usbtre.split("%04x:%04x" % (dev.idVendor, dev.idProduct))
-                        send_device("%s" % (name[1]), "%04x:%04x" % (dev.idVendor, dev.idProduct))
                         drivers[path] = d
                         # launch thread
                         d.daemon = True
                         d.start()
+                send_iot_box_device()
             time.sleep(3)
 
-subprocess.call("/home/pi/odoo/addons/point_of_sale/tools/posbox/configuration/inform_server.py")
-
-def send_device(name, identifier):
+def send_iot_box_device():
     macline = subprocess.check_output("/sbin/ifconfig eth0 |grep 'ether '", shell=True).decode('utf-8')
     mac = macline.split(' ')
     server = "" # read from file
@@ -216,12 +218,32 @@ def send_device(name, identifier):
     f.close()
     server = server.split('\n')[0]
     if server:
-        url = server + "/iot2/"  # /check_device"
-        values = {'iot_identifier': mac[9],
-                  'name': name,
-                  'identifier': identifier}
-        data = parse.urlencode(values).encode()
-        req = request.Request(url, data=data)
+        url = server + "/iotbox_conf/"  # /check_device"
+        interfaces = ni.interfaces()
+        for iface_id in interfaces:
+            iface_obj = ni.ifaddresses(iface_id)
+            ifconfigs = iface_obj.get(ni.AF_INET, [])
+            for conf in ifconfigs:
+                if conf.get('addr') and conf.get('addr') != '127.0.0.1':
+                    ips = conf.get('addr')
+                    break
+
+        data = {}
+        devicesList = {}
+        for path in drivers:
+            lsusb = str(subprocess.check_output('lsusb')).split("\\n")
+            for usbtre in lsusb:
+                device = drivers[path].dev
+                if "%04x:%04x" % (device.idVendor, device.idProduct) in usbtre:
+                    name = usbtre.split("%04x:%04x" % (device.idVendor, device.idProduct))
+                    devicesList["%04x:%04x" % (device.idVendor, device.idProduct)] = name[1]
+
+        hostname = subprocess.check_output('hostname').decode('utf-8')
+        data['iotbox'] = {'name': hostname,'identifier': mac[9], 'ip': ips}
+        data['devices'] = devicesList
+        data_json = json.dumps(data).encode('utf8')
+        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        req = request.Request(url, data_json, headers)
         try:
             response = request.urlopen(req)
         except:
