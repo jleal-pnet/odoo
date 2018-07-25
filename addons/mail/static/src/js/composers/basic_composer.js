@@ -32,6 +32,8 @@ var BasicComposer = Widget.extend({
         'keydown .o_composer_input textarea': '_onKeydown',
         'keyup .o_composer_input': '_onKeyup',
         'click .o_composer_button_send': '_sendMessage',
+        'drop .o_file_drop_zone_container': '_onFileDragDropped',
+        'paste .o_composer_input': '_onPasteImage',
     },
     // RPCs done to fetch the mention suggestions are throttled with the
     // following value
@@ -124,9 +126,39 @@ var BasicComposer = Widget.extend({
         // Mention
         this._mentionManager.prependTo(this.$('.o_composer'));
 
+        // Drag-Drop files
+        // Allowing body to detect dragenter and dragleave for display
+        var $root = $('body');
+        this._dropZoneNS = _.uniqueId('.o_dz_');  // For event namespace used when multiple chat window is open
+        $root.on("dragleave" + this._dropZoneNS, function (ev) {
+            // On every dragenter chain created with parent child element
+            // That's why dragleave is fired every time when a child elemnt is hovered
+            // so here we hide dropzone based on mouse position
+            if (ev.originalEvent.clientX <= 0
+                || ev.originalEvent.clientY <= 0
+                || ev.originalEvent.clientX >= window.innerWidth
+                || ev.originalEvent.clientY >= window.innerHeight
+            ) {
+                self.$(".o_file_drop_zone_container").addClass("d-none");
+            }
+        });
+        $root.on("dragover" + this._dropZoneNS, this._onFileDragEnter.bind(this));
+        $root.on("drop" + this._dropZoneNS, function(ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            self.$(".o_file_drop_zone_container").addClass("d-none");
+        });
+        // Setting drop Effect to copy so when mouse pointer on dropzone
+        // cursor icon changed to copy ('+')
+        this.$(".o_file_drop_zone_container").on("dragover", function(ev) {
+            ev.originalEvent.dataTransfer.dropEffect = "copy";
+        });
         return this._super();
     },
     destroy: function () {
+        $("body").off('dragover' + this._dropZoneNS);
+        $("body").off('dragleave' + this._dropZoneNS);
+        $("body").off('drop' + this._dropZoneNS);
         $(window).off(this.fileuploadID);
         return this._super.apply(this, arguments);
     },
@@ -253,6 +285,23 @@ var BasicComposer = Widget.extend({
         this._$emojisContainer.remove();
     },
     /**
+     * Making sure that dragging content is external files.
+     * Ignoring other content draging like text.
+     *
+     * @private
+     * @param {DataTransfer} dataTransfer
+     */
+    _isDragSourceExternalFile: function (dataTransfer) {
+        var DragDataType = dataTransfer.types;
+        if (DragDataType.constructor === DOMStringList) {
+            return DragDataType.contains('Files');
+        }
+        if (DragDataType.constructor === Array) {
+            return DragDataType.indexOf('Files') !== -1;
+        }
+        return false;
+    },
+    /**
      * @private
      * @param {string} search
      * @returns {$.Deferred<Object[]>}
@@ -375,6 +424,66 @@ var BasicComposer = Widget.extend({
         });
     },
     /**
+     * Allowing to upload attachment with file selector as well drag drop feature.
+     *
+     * @private
+     * @param {Array<File>} params.files
+     * @param {boolean} params.submitForm [optional]
+     */
+    _processAttachmentChange: function (params) {
+        var self = this, 
+        attachments = this.get('attachment_ids'),
+        files = params.files,
+        submitForm = params.submitForm;
+        _.each(files, function (file) {
+            var attachment = _.findWhere(attachments, {name: file.name, size: file.size});
+            // if the files already exits, delete the file before upload
+            if (attachment) {
+                self._attachmentDataSet.unlink([attachment.id]);
+                attachments = _.without(attachments, attachment);
+            }
+        });
+        var $form = this.$('form.o_form_binary_form');
+        if (submitForm) {
+            $form.submit();
+            this._$attachmentButton.prop('disabled', true);
+        } else {
+            var action = $form.attr("action");
+            var data = new FormData($form[0]);
+            _.each(files, function (file) {
+                // removing existing key with blank data and appending again with file info
+                // In safari, existing key will not be updated when append with new file.
+                data.delete("ufile")
+                data.append("ufile", file, file.name);
+                $.ajax({
+                    url: action,
+                    type: "POST",
+                    enctype: 'multipart/form-data',
+                    processData: false,
+                    contentType: false,
+                    data: data,
+                    success: function (result) {
+                        var $el = $(result);
+                        self._uploadingInProgress = false;
+                        $.globalEval($el.contents().text());
+                    }
+                });
+            });
+        }
+        var uploadAttachments = _.map(files, function (file){
+            return {
+                id: 0,
+                name: file.name,
+                filename: file.name,
+                url: '',
+                upload: true,
+                mimetype: '',
+            };
+        });
+        attachments = attachments.concat(uploadAttachments);
+        this.set('attachment_ids', attachments);
+    },
+    /**
      * @private
      */
     _renderAttachments: function () {
@@ -416,33 +525,7 @@ var BasicComposer = Widget.extend({
      * @param {jQuery.Event} ev
      */
     _onAttachmentChange: function (ev) {
-        var self = this;
-        var files = ev.target.files;
-        var attachments = this.get('attachment_ids');
-
-        _.each(files, function (file){
-            var attachment = _.findWhere(attachments, {name: file.name});
-            // if the files already exits, delete the file before upload
-            if (attachment){
-                self._attachmentDataSet.unlink([attachment.id]);
-                attachments = _.without(attachments, attachment);
-            }
-        });
-
-        this.$('form.o_form_binary_form').submit();
-        this._$attachmentButton.prop('disabled', true);
-        var uploadAttachments = _.map(files, function (file){
-            return {
-                id: 0,
-                name: file.name,
-                filename: file.name,
-                url: '',
-                upload: true,
-                mimetype: '',
-            };
-        });
-        attachments = attachments.concat(uploadAttachments);
-        this.set('attachment_ids', attachments);
+        this._processAttachmentChange({files: ev.target.files, submitForm: true});
     },
     /**
      * @private
@@ -478,7 +561,6 @@ var BasicComposer = Widget.extend({
     _onAttachmentLoaded: function () {
         var attachments = this.get('attachment_ids');
         var files = Array.prototype.slice.call(arguments, 1);
-
         _.each(files, function (file) {
             if (file.error || !file.id){
                 this.do_warn(file.error);
@@ -494,6 +576,7 @@ var BasicComposer = Widget.extend({
                         name: file.name || file.filename,
                         filename: file.filename,
                         mimetype: file.mimetype,
+                        size: file.size,
                         url: session.url('/web/content', { id: file.id, download: true }),
                     });
                 }
@@ -582,6 +665,34 @@ var BasicComposer = Widget.extend({
         }
     },
     /**
+     * Called when user drop selected files on drop area
+     *
+     * @private
+     * @param {MouseEvent} ev
+     */
+    _onFileDragDropped: function (ev) {
+        ev.preventDefault();
+        // FIX: In case multiple chat windows are opened, and file droped in one of them
+        // at that time, other chat windows are still displaing drop areas so here hide them all with $ selector
+        $(".o_file_drop_zone_container").addClass("d-none");
+        if (this._isDragSourceExternalFile(ev.originalEvent.dataTransfer)) {
+            var files = ev.originalEvent.dataTransfer.files;
+            this._processAttachmentChange({files: files});
+        }
+    },
+    /**
+     * When user start dragging on element drop area will be visible to drop selected files.
+     *
+     * @private
+     * @param {MouseEvent} ev
+     */
+    _onFileDragEnter: function (ev) {
+        ev.preventDefault();
+        if (this._isDragSourceExternalFile(ev.originalEvent.dataTransfer)) {
+            this.$(".o_file_drop_zone_container").removeClass("d-none");
+        }
+    },
+    /**
      * _onKeydown event is triggered when is key is pressed
      *      - on UP and DOWN arrow is pressed then event prevents it's default
      *              behaviour if mention manager is open else it break it.
@@ -653,6 +764,24 @@ var BasicComposer = Widget.extend({
             // Otherwise, check if a mention is typed
             default:
                 this._mentionManager.detectDelimiter();
+        }
+    },
+    /**
+     * _onPasteImage event is triggered when image type attachment is pasted
+     * from any webpage and it is uploaded as an attachment
+     *
+     * @private
+     * @param {ClipboardEvent} ev
+     */
+    _onPasteImage: function (ev) {
+        ev.preventDefault();
+        var files = ev.originalEvent.clipboardData.files;
+        if (ev.originalEvent.clipboardData.items) {
+            // Waiting for file to finish upload when user try to multiple paste.
+            if (!this._uploadingInProgress) {
+                this._uploadingInProgress = true;
+                this._processAttachmentChange({files: files});
+            }
         }
     },
 });
