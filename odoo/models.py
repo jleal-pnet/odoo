@@ -603,6 +603,47 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
         cls._onchange_methods = methods
         return methods
 
+    @classmethod
+    def _init_preupdate_postupdate(cls):
+        cls._preupdate_methods = BaseModel._preupdate_methods
+        cls._postupdate_methods = BaseModel._postupdate_methods
+
+    @property
+    def _preupdate_methods(self):
+        """ Return a list of methods implementing preupdate method to update records before super call. """
+        def is_preupdate(func):
+            return callable(func) and hasattr(func, '_preupdate')
+
+        cls = type(self)
+        methods = []
+        for attr, func in getmembers(cls, is_preupdate):
+            for name in func._preupdate:
+                field = cls._fields.get(name)
+                if not field:
+                    _logger.warning("method %s.%s: @preupdate parameter %r is not a field name", cls._name, attr, name)
+            methods.append(func)
+
+        cls._preupdate_methods = methods
+        return methods
+
+    @property
+    def _postupdate_methods(self):
+        """ Return a list of methods implementing postupdate method to update records. """
+        def is_postupdate(func):
+            return callable(func) and hasattr(func, '_postupdate')
+
+        cls = type(self)
+        methods = []
+        for attr, func in getmembers(cls, is_postupdate):
+            for name in func._postupdate:
+                field = cls._fields.get(name)
+                if not field:
+                    _logger.warning("method %s.%s: @postupdate parameter %r is not a field name", cls._name, attr, name)
+            methods.append(func)
+
+        cls._postupdate_methods = methods
+        return methods
+
     def __new__(cls):
         # In the past, this method was registering the model class in the server.
         # This job is now done entirely by the metaclass MetaModel.
@@ -1054,6 +1095,20 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             converted = convert(record, functools.partial(_log, extras, stream.index))
 
             yield dbid, xid, converted, dict(extras, record=stream.index)
+
+    @api.multi
+    def _preupdate_fields(self, vals):
+        field_names = set(vals)
+        for func in self._preupdate_methods:
+            if set(func._preupdate) or field_names:
+                func(self, vals)
+
+    @api.multi
+    def _postupdate_fields(self, vals):
+        field_names = set(vals)
+        for func in self._postupdate_methods:
+            if set(func._postupdate) or field_names:
+                func(self, vals)
 
     @api.multi
     def _validate_fields(self, field_names):
@@ -1750,7 +1805,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
     def _read_group_prepare(self, orderby, aggregated_fields, annotated_groupbys, query):
         """
         Prepares the GROUP BY and ORDER BY terms for the read_group method. Adds the missing JOIN clause
-        to the query if order should be computed against m2o field. 
+        to the query if order should be computed against m2o field.
         :param orderby: the orderby definition in the form "%(field)s %(order)s"
         :param aggregated_fields: list of aggregated fields in the query
         :param annotated_groupbys: list of dictionaries returned by _read_group_process_groupby
@@ -1842,9 +1897,9 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
         return {
             'field': split[0],
             'groupby': gb,
-            'type': field_type, 
+            'type': field_type,
             'display_format': display_formats[gb_function or 'month'] if temporal else None,
-            'interval': time_intervals[gb_function or 'month'] if temporal else None,                
+            'interval': time_intervals[gb_function or 'month'] if temporal else None,
             'tz_convert': tz_convert,
             'qualified_field': qualified_field
         }
@@ -1869,8 +1924,8 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
     @api.model
     def _read_group_format_result(self, data, annotated_groupbys, groupby, domain):
         """
-            Helper method to format the data contained in the dictionary data by 
-            adding the domain corresponding to its values, the groupbys in the 
+            Helper method to format the data contained in the dictionary data by
+            adding the domain corresponding to its values, the groupbys in the
             context and by properly formatting the date/datetime values.
 
         :param data: a single group
@@ -1947,10 +2002,10 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                 The possible aggregation functions are the ones provided by PostgreSQL
                 (https://www.postgresql.org/docs/current/static/functions-aggregate.html)
                 and 'count_distinct', with the expected meaning.
-        :param list groupby: list of groupby descriptions by which the records will be grouped.  
+        :param list groupby: list of groupby descriptions by which the records will be grouped.
                 A groupby description is either a field (then it will be grouped by that field)
                 or a string 'field:groupby_function'.  Right now, the only functions supported
-                are 'day', 'week', 'month', 'quarter' or 'year', and they only make sense for 
+                are 'day', 'week', 'month', 'quarter' or 'year', and they only make sense for
                 date/datetime fields.
         :param int offset: optional number of records to skip
         :param int limit: optional max number of records to return
@@ -1958,7 +2013,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                              overriding the natural sort ordering of the
                              groups, see also :py:meth:`~osv.osv.osv.search`
                              (supported only for many2one fields currently)
-        :param bool lazy: if true, the results are only grouped by the first groupby and the 
+        :param bool lazy: if true, the results are only grouped by the first groupby and the
                 remaining groupbys are put in the __context key.  If false, all the groupbys are
                 done in one call.
         :return: list of dictionaries(one dictionary for each record) containing:
@@ -2097,7 +2152,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             # Right now, read_group only fill results in lazy mode (by default).
             # If you need to have the empty groups in 'eager' mode, then the
             # method _read_group_fill_results need to be completely reimplemented
-            # in a sane way 
+            # in a sane way
             result = self._read_group_fill_results(
                 domain, groupby_fields[0], groupby[len(annotated_groupbys):],
                 aggregated_fields, count_field, result, read_group_order=order,
@@ -3136,6 +3191,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
         if self._log_access:
             bad_names.update(LOG_ACCESS_COLUMNS)
 
+        self._preupdate_fields(vals)
         # distribute fields into sets for various purposes
         store_vals = {}
         inverse_vals = {}
@@ -3209,6 +3265,8 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
 
                 # check Python constraints for inversed fields
                 self._validate_fields(set(inverse_vals) - set(store_vals))
+            # check Python postupdate decorator for stored fields
+            self._postupdate_fields(store_vals)
 
             # recompute fields
             if self.env.recompute and self._context.get('recompute', True):
@@ -3366,6 +3424,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             # add missing defaults
             vals = self._add_missing_default_values(vals)
 
+            self._preupdate_fields(vals)
             # distribute fields into sets for various purposes
             data = {}
             data['stored'] = stored = {}
@@ -3414,7 +3473,6 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
 
         # create records with stored fields
         records = self._create(data_list)
-
         # determine which fields to protect on which records
         protected = [(data['protected'], data['record']) for data in data_list]
         with self.env.protecting(protected):
@@ -3455,8 +3513,12 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                 # to the transitive closure made over non-stored dependencies
 
         # check Python constraints for non-stored inversed fields
+
         for data in data_list:
             data['record']._validate_fields(set(data['inversed']) - set(data['stored']))
+
+            #postupdate for stored fields
+            data['record']._postupdate_fields(data['stored'])
 
         # recompute fields
         if self.env.recompute and self._context.get('recompute', True):

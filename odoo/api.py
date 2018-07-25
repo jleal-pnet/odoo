@@ -42,7 +42,7 @@ __all__ = [
     'cr_uid_ids', 'cr_uid_ids_context',
     'cr_uid_records', 'cr_uid_records_context',
     'constrains', 'depends', 'onchange', 'returns',
-    'call_kw',
+    'call_kw', 'prewrite', 'postupdate'
 ]
 
 import logging
@@ -66,6 +66,8 @@ _logger = logging.getLogger(__name__)
 #  - method._returns: set by @returns, specifies return model
 #  - method._onchange: set by @onchange, specifies onchange fields
 #  - method.clear_cache: set by @ormcache, used to clear the cache
+#  - method._preupdate: set by @preupdate, specifies preupdate fields
+#  - method._postupdate: set by @postupdate, specifies postupdate fields
 #
 # On wrapping method only:
 #  - method._api: decorator function, used for re-applying decorator
@@ -73,7 +75,7 @@ _logger = logging.getLogger(__name__)
 #
 
 WRAPPED_ATTRS = ('__module__', '__name__', '__doc__', '_constrains',
-                 '_depends', '_onchange', '_returns', 'clear_cache')
+                 '_depends', '_onchange', '_returns', 'clear_cache', '_preupdate', '_postupdate')
 
 INHERITED_ATTRS = ('_returns',)
 
@@ -197,6 +199,54 @@ def onchange(*args):
             supported and will be ignored
     """
     return attrsetter('_onchange', args)
+
+def preupdate(*args):
+    """ Return a decorator to decorate an preupdate method for given fields.
+        Each argument must be a field name:
+
+        Invoked on the records on which one of the named fields has been modified.
+
+        .. warning::
+
+            ``@preupdate`` only supports simple field names, dotted names
+            (fields of relational fields e.g. ``partner_id.customer``) are not
+            supported and will be ignored
+
+            ``@preupdate`` will be triggered only if the declared fields in the
+            decorated method are included in the ``create`` or ``write`` call.
+            It implies that fields not present in a view will not trigger a call
+            during a record creation. A override of ``create`` is necessary to make
+            sure a preupdate will always be triggered (e.g. to test the absence of
+            value).
+    """
+    return attrsetter('_preupdate', args)
+
+def postupdate(*args):
+    """ Return a decorator to decorate an postupdate method for given fields.
+        Each argument must be a field name:
+
+            @api.postupdate('parent_id')
+            def _postupdate_parent_id(self, vals):
+                for record in self:
+                    if record.parent_id.customer:
+                        record.customer = True
+
+        Invoked on the records on which one of the named fields has been modified.
+
+        .. warning::
+
+            ``@postupdate`` only supports simple field names, dotted names
+            (fields of relational fields e.g. ``partner_id.customer``) are not
+            supported and will be ignored
+
+            ``@postupdate`` will be triggered only if the declared fields in the
+            decorated method are included in the ``create`` or ``write`` call.
+            It implies that fields not present in a view will not trigger a call
+            during a record creation. A override of ``create`` is necessary to make
+            sure a postupdate will always be triggered (e.g. to test the absence of
+            value).
+    """
+    return attrsetter('_postupdate', args)
 
 
 def depends(*args):
