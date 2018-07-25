@@ -75,10 +75,10 @@ class AccountMoveLine(models.Model):
             taxes_data = line._compute_l10n_in_tax(
                 taxes=line.tax_ids,
                 price_unit=line.l10n_in_tax_price_unit,
-                currency=line.company_currency_id or None,
+                currency=line.company_currency_id,
                 quantity=line.quantity,
-                product=line.product_id or None,
-                partner=line.partner_id or None)
+                product=line.product_id,
+                partner=line.partner_id)
             line.l10n_in_igst_amount = taxes_data['igst_amount']
             line.l10n_in_cgst_amount = taxes_data['cgst_amount']
             line.l10n_in_sgst_amount = taxes_data['sgst_amount']
@@ -95,15 +95,14 @@ class AccountMoveLine(models.Model):
         filter_tax = taxes.filtered(lambda t: t.type_tax_use != 'none')
         tax_compute = filter_tax.compute_all(price_unit, currency=currency, quantity=quantity, product=product, partner=partner)
         for tax_data in tax_compute['taxes']:
-            tax = AccountTax.browse(tax_data['id'])
-            tax_group_id = tax.tax_group_id.id
-            if tax_group_id == (sgst_group and sgst_group.id or False):
+            tax_group = AccountTax.browse(tax_data['id']).tax_group_id
+            if tax_group == sgst_group:
                 res['sgst_amount'] += tax_data['amount']
-            if tax_group_id == (cgst_group and cgst_group.id or False):
+            if tax_group == cgst_group:
                 res['cgst_amount'] += tax_data['amount']
-            if tax_group_id == (igst_group and igst_group.id or False):
+            if tax_group == igst_group:
                 res['igst_amount'] += tax_data['amount']
-            if tax_group_id == (cess_group and cess_group.id or False):
+            if tax_group == cess_group:
                 res['cess_amount'] += tax_data['amount']
         res.update(tax_compute)
         return res
@@ -115,17 +114,10 @@ class AccountMoveLine(models.Model):
         gst_group = self.env.ref('l10n_in.gst_group', False)
         exempt_group = self.env.ref('l10n_in.exempt_group', False)
         nil_rated_group = self.env.ref('l10n_in.nil_rated_group', False)
-        gst_group_ids = [
-            gst_group and gst_group.id or False,
-            igst_group and igst_group.id or False,
-            exempt_group and exempt_group.id or False,
-            nil_rated_group and nil_rated_group.id or False]
+        gst_groups = [gst_group, igst_group, exempt_group, nil_rated_group]
         for line in self:
-            tax_id = False
-            for tax in line.tax_ids:
-                if tax.tax_group_id.id in gst_group_ids:
-                    tax_id = tax.id
-            line.l10n_in_tax_id = tax_id
+            tax = line.tax_ids.filtered(lambda tax: tax.tax_group_id in gst_groups)
+            line.l10n_in_tax_id = tax and tax[-1] or False
 
 
 class AccountTax(models.Model):

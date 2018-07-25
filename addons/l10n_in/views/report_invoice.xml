@@ -45,20 +45,18 @@
 
         <xpath expr="//t[@name='account_invoice_line_accountable']" position="inside">
             <t t-if="o.company_id.country_id.code == 'IN'">
-                <t t-if="o.company_id.country_id.code == 'IN'">
-                    <td class="text-right" t-if="display_cgst">
-                        <span t-field="line.l10n_in_cgst_amount" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
-                    </td>
-                    <td class="text-right" t-if="display_sgst">
-                        <span t-field="line.l10n_in_sgst_amount" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
-                    </td>
-                    <td class="text-right" t-if="display_igst">
-                        <span t-field="line.l10n_in_igst_amount" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
-                    </td>
-                    <td class="text-right" t-if="display_cess">
-                        <t t-esc="line.l10n_in_cess_amount" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
-                    </td>
-                </t>
+                <td class="text-right" t-if="display_cgst">
+                    <span t-field="line.l10n_in_cgst_amount" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                </td>
+                <td class="text-right" t-if="display_sgst">
+                    <span t-field="line.l10n_in_sgst_amount" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                </td>
+                <td class="text-right" t-if="display_igst">
+                    <span t-field="line.l10n_in_igst_amount" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                </td>
+                <td class="text-right" t-if="display_cess">
+                    <t t-esc="line.l10n_in_cess_amount" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                </td>
             </t>
         </xpath>
 
