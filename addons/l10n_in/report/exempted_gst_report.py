@@ -11,6 +11,7 @@ class L10nInExemptedReport(models.Model):
     _auto = False
 
     account_move_id = fields.Many2one('account.move', string="Account Move")
+    partner_id = fields.Many2one('res.partner', string="Customer")
     out_supply_type = fields.Char(string="Outward Supply Type")
     in_supply_type = fields.Char(string="Inward Supply Type")
     nil_rated_amount = fields.Float("Nil rated supplies")
@@ -21,12 +22,14 @@ class L10nInExemptedReport(models.Model):
     gstin_partner_id = fields.Many2one('res.partner', string="GSTIN")
     journal_id = fields.Many2one('account.journal', string="Journal")
 
+
     @api.model_cr
     def init(self):
         tools.drop_view_if_exists(self.env.cr, self._table)
         self._cr.execute("""
             CREATE OR REPLACE VIEW %s AS (
                 SELECT aml.id AS id,
+                    aml.partner_id AS partner_id,
                     aml.date_maturity AS date,
                     ABS(aml.balance) AS price_total,
                     am.l10n_in_gstin_partner_id AS gstin_partner_id,

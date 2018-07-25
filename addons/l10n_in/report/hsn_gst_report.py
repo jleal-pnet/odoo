@@ -12,6 +12,7 @@ class L10nInProductHsnReport(models.Model):
     _order = 'date desc'
 
     account_move_id = fields.Many2one('account.move', string="Account Move")
+    partner_id = fields.Many2one('res.partner', string="Customer")
     product_id = fields.Many2one("product.product", string="Product")
     uom_id = fields.Many2one('uom.uom', string="UOM")
     quantity = fields.Float(string="Product Qty")
@@ -37,6 +38,7 @@ class L10nInProductHsnReport(models.Model):
         self.env.cr.execute("""CREATE OR REPLACE VIEW %s AS (
             SELECT aml.id AS id,
                 aml.move_id AS account_move_id,
+                aml.partner_id AS partner_id,
                 aml.product_id,
                 aml.product_uom_id AS uom_id,
                 aml.quantity,
