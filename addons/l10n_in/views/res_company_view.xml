@@ -10,8 +10,11 @@
             <xpath expr="//field[@name='vat']" position="attributes">
                 <attribute name="string">GSTIN</attribute>
             </xpath>
+            <field name="partner_id" position="after">
+                <field name="l10n_in_country_code" invisible="1"/>
+            </field>
             <xpath expr="//notebook" position="inside">
-                <page string="GSTIN" attrs="{'invisible': [('partner_id','=', False)]}" groups="l10n_in.group_l10n_in_multi_gstin">
+                <page string="GSTIN" attrs="{'invisible': [('l10n_in_country_code','!=', 'IN')]}" groups='l10n_in.group_l10n_in_multi_gstin'>
                     <field name="l10n_in_gstin_partner_ids" mode="kanban" context="{'default_parent_id': partner_id, 'default_street': street, 'default_street2': street2, 'default_city': city, 'default_state_id': state_id, 'default_zip': zip, 'default_country_id': country_id, 'default_supplier': False, 'default_customer': False, 'default_type': 'other',
                     'default_is_company': True}">
                         <kanban>
