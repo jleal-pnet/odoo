@@ -162,18 +162,10 @@ class MassMailingContact(models.Model):
     country_id = fields.Many2one('res.country', string='Country')
     tag_ids = fields.Many2many('res.partner.category', string='Tags')
 
-    @api.model_create_multi
-    def create(self, vals_list):
-        for vals in vals_list:
-            if 'opt_out' in vals:
-                vals['unsubscription_date'] = vals['opt_out'] and fields.Datetime.now()
-        return super(MassMailingContact, self).create(vals_list)
-
-    @api.multi
-    def write(self, vals):
+    @api.preupdate('opt_out')
+    def _preupdate_unsubscription_date(self, vals):
         if 'opt_out' in vals:
             vals['unsubscription_date'] = vals['opt_out'] and fields.Datetime.now()
-        return super(MassMailingContact, self).write(vals)
 
     def get_name_email(self, name):
         name, email = self.env['res.partner']._parse_partner_name(name)
@@ -218,7 +210,7 @@ class MassMailingCampaign(models.Model):
     _rec_name = "campaign_id"
     _inherits = {'utm.campaign': 'campaign_id'}
 
-    stage_id = fields.Many2one('mail.mass_mailing.stage', string='Stage', ondelete='restrict', required=True, 
+    stage_id = fields.Many2one('mail.mass_mailing.stage', string='Stage', ondelete='restrict', required=True,
         default=lambda self: self.env['mail.mass_mailing.stage'].search([], limit=1),
         group_expand='_group_expand_stage_ids')
     user_id = fields.Many2one(

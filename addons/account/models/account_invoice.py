@@ -1802,18 +1802,12 @@ class AccountInvoiceLine(models.Model):
         }
         return data
 
-    @api.model
-    def create(self, vals):
+    @api.preupdate('display_type')
+    def _preupdate_display_type(self, vals):
         if vals.get('display_type', self.default_get(['display_type'])['display_type']):
             vals.update(price_unit=0, account_id=False, quantity=0)
-
-        return super(AccountInvoiceLine, self).create(vals)
-
-    @api.multi
-    def write(self, values):
-        if 'display_type' in values and self.filtered(lambda line: line.display_type != values.get('display_type')):
-            raise UserError("You cannot change the type of an invoice line. Instead you should delete the current line and create a new line of the proper type.")
-        return super(AccountInvoiceLine, self).write(values)
+            if self.filtered(lambda line: line.display_type != vals.get('display_type')):
+                raise UserError("You cannot change the type of an invoice line. Instead you should delete the current line and create a new line of the proper type.")
 
     _sql_constraints = [
         ('accountable_required_fields',

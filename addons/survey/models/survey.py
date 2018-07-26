@@ -823,20 +823,11 @@ class SurveyUserInputLine(models.Model):
         mark = label.quizz_mark if label.exists() else 0.0
         return mark
 
-    @api.model_create_multi
-    def create(self, vals_list):
-        for vals in vals_list:
-            value_suggested = vals.get('value_suggested')
-            if value_suggested:
-                vals.update({'quizz_mark': self._get_mark(value_suggested)})
-        return super(SurveyUserInputLine, self).create(vals_list)
-
-    @api.multi
-    def write(self, vals):
+    @api.preupdate('value_suggested')
+    def _preupdate_quizz_mark(self, vals):
         value_suggested = vals.get('value_suggested')
         if value_suggested:
             vals.update({'quizz_mark': self._get_mark(value_suggested)})
-        return super(SurveyUserInputLine, self).write(vals)
 
     @api.model
     def save_lines(self, user_input_id, question, post, answer_tag):

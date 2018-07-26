@@ -28,15 +28,9 @@ class AccountBudgetPost(models.Model):
         if not account_ids:
             raise ValidationError(_('The budget must have at least one account.'))
 
-    @api.model
-    def create(self, vals):
+    @api.preupdate()
+    def _preupdate_account_ids(self, vals):
         self._check_account_ids(vals)
-        return super(AccountBudgetPost, self).create(vals)
-
-    @api.multi
-    def write(self, vals):
-        self._check_account_ids(vals)
-        return super(AccountBudgetPost, self).write(vals)
 
 
 class CrossoveredBudget(models.Model):

@@ -92,19 +92,13 @@ class SaleQuoteLine(models.Model):
         if self.product_id and self.product_uom_id:
             self.price_unit = self.product_id.uom_id._compute_price(self.product_id.lst_price, self.product_uom_id)
 
-    @api.model
-    def create(self, values):
+    @api.preupdate('display_type', 'website_description', 'product_id')
+    def _preupdate_website_description(self, values):
         if values.get('display_type', self.default_get(['display_type'])['display_type']):
             values.update(product_id=False, price_unit=0, product_uom_qty=0, product_uom_id=False)
-        values = self._inject_quote_description(values)
-        return super(SaleQuoteLine, self).create(values)
-
-    @api.multi
-    def write(self, values):
         if 'display_type' in values and self.filtered(lambda line: line.display_type != values.get('display_type')):
             raise UserError("You cannot change the type of a sale quote line. Instead you should delete the current line and create a new line of the proper type.")
         values = self._inject_quote_description(values)
-        return super(SaleQuoteLine, self).write(values)
 
     def _inject_quote_description(self, values):
         values = dict(values or {})
