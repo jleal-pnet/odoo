@@ -12,7 +12,6 @@ class L10nInAccountInvoiceReport(models.Model):
     _order = 'date desc'
 
     account_move_id = fields.Many2one('account.move', string="Account Move")
-    account_move_line_id = fields.Many2one('account.move.line', string="Account Move Line")
     invoice_id = fields.Many2one('account.invoice', string="Invoice")
     company_id = fields.Many2one('res.company', string="Company")
     gstin_partner_id = fields.Many2one('res.partner', string="GSTIN")
@@ -67,8 +66,7 @@ class L10nInAccountInvoiceReport(models.Model):
 
     def _select(self):
         select_str = """
-            SELECT concat(am.id, '-', aml.l10n_in_tax_id, '-', aml.partner_id) AS id,
-                min(aml.id) AS account_move_line_id,
+            SELECT min(aml.id) AS id,
                 aml.invoice_id,
                 aml.l10n_in_tax_id,
                 am.id AS account_move_id,
