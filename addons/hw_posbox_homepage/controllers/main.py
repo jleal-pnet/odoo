@@ -186,6 +186,9 @@ class PosboxHomepage(odoo.addons.web.controllers.main.Home):
     # Set server address
     @http.route('/server', type='http', auth='none', website=True)
     def server(self):
+
+        hostname = subprocess.check_output('hostname').decode('utf-8')
+
         server_template = """
     <!DOCTYPE HTML>
     <html>
@@ -206,7 +209,7 @@ class PosboxHomepage(odoo.addons.web.controllers.main.Home):
                             Server IoT Name:
                         </td>
                         <td>
-                            <input type="text" name="iotname">
+                            <input type="text" name="iotname" value=""" + hostname + """>
                         </td>
                     </tr>
                     <tr>

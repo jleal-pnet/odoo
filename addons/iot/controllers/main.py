@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import logging
+# import logging
 #import os
 #import re
 #import time
@@ -18,20 +18,6 @@ class IoTController(http.Controller):
             return iotbox.url
         else:
             return '' # Can not we throw 404?
-
-    @http.route('/iot2', type='http', auth='public', csrf=False)
-    def update_device(self, iot_identifier, name, identifier):
-        # Search id of iotbox that corresponds to this identifier
-        existing_devices = request.env['iot.device'].sudo().search([('iot_id.identifier', '=', iot_identifier),
-                                                               ('identifier', '=', identifier)])
-        if not existing_devices:
-            box = request.env['iot.box'].sudo().search([('identifier', '=', iot_identifier)], limit=1)
-            request.env['iot.device'].sudo().create({
-                'iot_id': box.id, #Might return error code when not successful
-                'name': name,
-                'identifier': identifier,
-            })
-        return 'ok'
 
     @http.route('/iotbox_conf', type='json', auth='public', csrf=False)
     def update_box(self):
