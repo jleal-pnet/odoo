@@ -272,8 +272,7 @@ var ActionManager = Widget.extend({
         } else {
             this.controlPanel.update({
                 breadcrumbs: this._getBreadcrumbs(),
-                options: {clear: false}
-            });
+                }, {clear: false});
         }
     },
     /**
@@ -888,7 +887,7 @@ var ActionManager = Widget.extend({
             var action = self.actions[controller.actionID];
             if (!action.flags || !action.flags.headless) {
                 var breadcrumbs = self._getBreadcrumbs();
-                self.controlPanel.update({breadcrumbs: breadcrumbs, options: {clear: false}});
+                self.controlPanel.update({breadcrumbs: breadcrumbs}, {clear: false});
             }
         });
         return controller.widget.appendTo(fragment).then(function () {
