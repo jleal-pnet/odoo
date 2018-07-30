@@ -45,6 +45,7 @@ class AccountInvoice(models.Model):
         ('import_service', 'Import of Service'),
         ('import_service_sez', 'Import of Service from SEZ')],
         string='Import Type', default='regular', required=True)
+    l10n_in_partner_vat = fields.Char(related="partner_id.vat", readonly=True)
 
     @api.model
     def _get_refund_common_fields(self):
