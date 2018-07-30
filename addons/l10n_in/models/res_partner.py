@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import api, fields, models
+from odoo import api, fields, models, _
+from odoo.exceptions import ValidationError
 
 
 class AccountFiscalPosition(models.Model):
@@ -63,3 +64,12 @@ class ResPartner(models.Model):
                 name = "%s (%s)" % (name, vat)
             new_res.append((partner[0], name))
         return new_res
+
+    @api.constrains('vat')
+    def l10n_in_check_vat(self):
+        for partner in self.filtered(lambda p: p.vat):
+            country_code = partner.commercial_partner_id.country_id.code
+            if country_code == 'IN':
+                if len(partner.vat) != 15:
+                    msg = _('The GSTIN [%s] for partner [%s] should be 15 characters only.') % (self.vat, self.name)
+                    raise ValidationError(msg)
