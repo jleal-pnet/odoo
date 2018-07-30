@@ -18,7 +18,7 @@ Sheet, now only Vertical format has been permitted Which is Supported By Odoo.
   """,
     'category': 'Localization',
     'depends': [
-        'account_invoicing', 'account_tax_python',
+        'account_tax_python',
     ],
     'data': [
         'security/l10n_in_security.xml',
