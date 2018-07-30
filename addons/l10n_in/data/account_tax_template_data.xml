@@ -431,6 +431,7 @@ if tax > result:result=tax</field>
         <field name="children_tax_ids" eval="[(6, 0, [ref('sgst_sale_2_5'), ref('cgst_sale_2_5'),])]"/>
         <field name="tax_group_id" ref="gst_group"/>
         <field name="l10n_in_description">5.0</field>
+        <field name="sequence">0</field>
     </record>
 
     <!-- Purchase Taxes-->
@@ -846,6 +847,7 @@ if tax > result:result=tax</field>
         <field name="children_tax_ids" eval="[(6, 0, [ref('sgst_purchase_2_5'),ref('cgst_purchase_2_5'),])]"/>
         <field name="tax_group_id" ref="gst_group"/>
         <field name="l10n_in_description">5.0</field>
+        <field name="sequence">0</field>
     </record>
 
 </odoo>
