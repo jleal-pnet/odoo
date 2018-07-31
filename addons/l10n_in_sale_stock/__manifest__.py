@@ -12,6 +12,7 @@
         'stock'
     ],
     'data': [
+        'views/sale_views.xml'
     ],
     'auto_install': True,
 }

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_order_form_inherit_l10n_in_sale_stock" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit.l10n.in.sale.stock</field>
+        <field name="model">sale.order</field>
+        <field name="groups_id" eval="[(4,ref('l10n_in.group_l10n_in_multi_gstin'))]"/>
+        <field name="inherit_id" ref="l10n_in_sale.view_order_form_inherit_l10n_in_sale"/>
+        <field name="arch" type="xml">
+            <field name="l10n_in_gstin_partner_id" position="attributes">
+                <attribute name="groups">base.group_no_one</attribute>
+            </field>
+        </field>
+    </record>
+</odoo>

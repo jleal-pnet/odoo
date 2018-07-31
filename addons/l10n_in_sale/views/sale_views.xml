@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="l10n_in_view_order_form" model="ir.ui.view">
-        <field name="name">l10n.in.sale.order.form</field>
+    <record id="view_order_form_inherit_l10n_in_sale" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit.l10n.in.sale</field>
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
