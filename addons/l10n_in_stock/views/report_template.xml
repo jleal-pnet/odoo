@@ -3,8 +3,8 @@
     <template id="l10n_in_stock_external_layout" inherit_id="l10n_in.l10n_in_external_layout">
         <xpath expr="//t[@name='company_partner']" position="after">
             <t t-if="'picking_type_id' in o">
-                <t t-if="o.picking_type_id.warehouse_id.partner_id">
-                    <t t-set="l10n_in_gstin_partner" t-value="o.sudo().picking_type_id.warehouse_id.partner_id"/>
+                <t t-if="o.picking_type_id.warehouse_id.l10n_in_gstin_partner_id">
+                    <t t-set="l10n_in_gstin_partner" t-value="o.sudo().picking_type_id.warehouse_id.l10n_in_gstin_partner_id"/>
                 </t>
             </t>
         </xpath>

@@ -112,17 +112,6 @@
             <t t-set="l10n_in_gstin_partner" t-value="company.partner_id"/>
         </t>
 
-        <t t-if="company.external_report_layout == 'background'">
-            <t t-call="l10n_in.l10n_in_external_layout_background"><t t-raw="0"/></t>
-        </t>
-        <t t-if="company.external_report_layout == 'boxed'">
-            <t t-call="l10n_in.l10n_in_external_layout_boxed"><t t-raw="0"/></t>
-        </t>
-        <t t-if="company.external_report_layout == 'clean'">
-            <t t-call="l10n_in.l10n_in_external_layout_clean"><t t-raw="0"/></t>
-        </t>
-        <t t-if="company.external_report_layout in (False, 'standard')">
-            <t t-call="l10n_in.l10n_in_external_layout_standard"><t t-raw="0"/></t>
-        </t>
+        <t t-call="l10n_in.l10n_in_external_layout_{{company.external_report_layout or 'standard'}}"><t t-raw="0"/></t>
     </template>
 </odoo>
