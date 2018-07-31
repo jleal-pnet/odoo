@@ -14,11 +14,13 @@ class SaleOrder(models.Model):
         default=lambda self: self.env['res.company']._company_default_get('sale.order').partner_id,
         readonly=True, states={'draft': [('readonly', False)]}
         )
+    l10n_in_reseller_partner_id = fields.Many2one('res.partner', 'Reseller', domain=[('vat', '!=', False)], states={'posted': [('readonly', True)]})
 
     @api.multi
     def _prepare_invoice(self):
         invoice_vals = super(SaleOrder, self)._prepare_invoice()
         invoice_vals['l10n_in_gstin_partner_id'] = self.l10n_in_gstin_partner_id.id
+        invoice_vals['l10n_in_reseller_partner_id'] = self.l10n_in_reseller_partner_id.id
         return invoice_vals
 
     @api.multi
