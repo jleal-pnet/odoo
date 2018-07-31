@@ -19,6 +19,19 @@
                     </div>
                 </div>
             </div>
+            <div id="invoicing_settings" position="inside">
+                <div class="col-xs-12 col-md-6 o_setting_box" title="Manage Reseller(E-Commerce)" attrs="{'invisible': [('show_module_l10n_in', '=', False)]}">
+                    <div class="o_setting_left_pane">
+                        <field name="group_l10n_in_reseller"/>
+                    </div>
+                    <div class="o_setting_right_pane" name="l10n_eu_service_right_pane">
+                        <label for="group_l10n_in_reseller"/>
+                        <div class="text-muted">
+                            Use this if setup with Reseller(E-Commerce).
+                        </div>
+                    </div>
+                </div>
+            </div>
         </field>
 	</record>
 </odoo>

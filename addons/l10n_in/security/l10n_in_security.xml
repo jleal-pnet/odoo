@@ -1,5 +1,8 @@
 <odoo>
     <record model="res.groups" id="group_l10n_in_multi_gstin">
-    	<field name="name">Multi GSTIN</field>
+        <field name="name">Multi GSTIN</field>
+    </record>
+    <record model="res.groups" id="group_l10n_in_reseller">
+        <field name="name">Manage Reseller(E-Commerce)</field>
     </record>
 </odoo>
