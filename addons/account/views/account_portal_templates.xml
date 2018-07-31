@@ -96,10 +96,10 @@
                                 <img class="rounded-circle mr4 float-left o_portal_contact_img" t-if="invoice.user_id.image" t-attf-src="data:image/png;base64,#{invoice.user_id.image}" alt="Contact"/>
                                 <img class="rounded-circle mr4 float-left o_portal_contact_img" t-if="not invoice.user_id.image" src="/web/static/src/img/user_menu_avatar.png" alt="Contact"/>
                                 <span t-field="invoice.user_id" t-field-options='{"widget": "contact", "fields": ["name", "phone"], "no_marker": True}'/>
-                                <a data-toggle="modal" href="#" data-target="#invoice_chatter">Contact us</a>
+                                <a href="#invoice_history">Contact us</a>
                             </t>
                             <div t-if="not invoice.user_id" class="text-center mr16">
-                                <a data-toggle="modal" href="#" data-target="#invoice_chatter">Contact us</a>
+                                <a href="#invoice_history">Contact us</a>
                             </div>
                         </div>
                         <div class="text-center d-none d-md-block mt4 o_portal_brand">
@@ -119,24 +119,13 @@
         </xpath>
     </template>
 
-    <template id="portal_invoice_chatter" name="Allow Comments &amp; History" inherit_id="account.portal_invoice_page">
-        <xpath expr="//div[@id='invoice_content']//div[hasclass('o_portal_html_view')]" position="after">
-            <div class="modal fade" id="invoice_chatter" role="dialog">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h3 class="mt0 ml16 mb0">History</h3>
-                            <button type="button" class="close" data-dismiss="modal">&amp;times;</button>
-                        </div>
-                        <div class="modal-body">
-                            <t t-call="portal.message_thread">
-                                <t t-set="token" t-value="invoice.access_token"/>
-                                <t t-set="object" t-value="invoice"/>
-                            </t>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <template id="invoice_chatter" name="Allow Comments &amp; History" customize_show="True" inherit_id="account.portal_invoice_page">
+        <xpath expr="//div[@id='invoice_content']" position="inside">
+            <h1 class="page-header pt48" id="invoice_history">History</h1>
+            <t t-call="portal.message_thread">
+                <t t-set="token" t-value="invoice.access_token"/>
+                <t t-set="object" t-value="invoice"/>
+            </t>
         </xpath>
     </template>
 
