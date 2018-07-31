@@ -162,6 +162,7 @@ class SaleOrder(models.Model):
 
     signature = fields.Binary('Signature', help='Signature received through the portal.', copy=False, attachment=True)
     signed_by = fields.Char('Signed by', help='Name of the person that signed the SO.', copy=False)
+    product_id = fields.Many2one('product.product', related='order_line.product_id', string='Product')
 
     def _compute_portal_url(self):
         super(SaleOrder, self)._compute_portal_url()

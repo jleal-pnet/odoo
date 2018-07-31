@@ -32,6 +32,21 @@ class PurchaseOrder(models.Model):
         help="Technical field used to display the Drop Ship Address", readonly=True)
     group_id = fields.Many2one('procurement.group', string="Procurement Group", copy=False)
     is_shipped = fields.Boolean(compute="_compute_is_shipped")
+    product_qty = fields.Float(compute='_compute_product_qty')
+    product_uom_id = fields.Many2one('uom.uom', compute='_compute_product_qty', string='Unit of Measure')
+
+    @api.depends('picking_ids')
+    def _compute_product_qty(self):
+        purchase_sum = 0
+        for purchase in self:
+            uom_id = False
+            if self._context.get('lot_id'):
+                lot_id = self._context['lot_id']
+                move_lines = self.env['stock.move.line'].search([('lot_id', '=', lot_id)]).filtered(lambda x: x.move_id.purchase_line_id.id in purchase.order_line.ids)
+                purchase_sum = sum(move_lines.mapped('qty_done'))
+                uom_id = move_lines.mapped('product_uom_id').id
+            purchase.product_uom_id = uom_id
+            purchase.product_qty = purchase_sum
 
     @api.depends('order_line.move_ids.returned_move_ids',
                  'order_line.move_ids.state',

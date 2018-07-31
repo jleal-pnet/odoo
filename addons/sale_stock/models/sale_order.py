@@ -34,6 +34,21 @@ class SaleOrder(models.Model):
     picking_ids = fields.One2many('stock.picking', 'sale_id', string='Pickings')
     delivery_count = fields.Integer(string='Delivery Orders', compute='_compute_picking_ids')
     procurement_group_id = fields.Many2one('procurement.group', 'Procurement Group', copy=False)
+    product_uom_qty = fields.Float(compute='_compute_product_uom_qty')
+    product_uom_id = fields.Many2one('uom.uom', compute='_compute_product_uom_qty', string='Unit of Measure')
+
+    @api.depends('picking_ids')
+    def _compute_product_uom_qty(self):
+        sale_sum = 0
+        for sale in self:
+            uom_id = False
+            if self._context.get('lot_id'):
+                lot_id = self._context['lot_id']
+                move_lines = self.env['stock.move.line'].search([('lot_id', '=', lot_id)]).filtered(lambda x: x.move_id.sale_line_id.id in sale.order_line.ids)
+                sale_sum = sum(move_lines.mapped('qty_done'))
+                uom_id = move_lines.mapped('product_uom_id').id
+            sale.product_uom_id = uom_id
+            sale.product_uom_qty = sale_sum
 
     @api.multi
     def write(self, values):
