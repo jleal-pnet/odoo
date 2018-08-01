@@ -188,7 +188,7 @@ class L10nInAccountInvoiceReport(models.Model):
                 LEFT JOIN res_partner rp ON rp.id = am.l10n_in_reseller_partner_id
                 LEFT JOIN account_tax at ON at.id = aml.l10n_in_tax_id
                 where am.state = 'posted' AND aml.l10n_in_tax_id IS NOT NULL
-                    AND at.tax_group_id not in (SELECT res_id FROM ir_model_data WHERE module='l10n_in' AND name='exempt_group')
+                    AND at.tax_group_id not in (SELECT res_id FROM ir_model_data WHERE module='l10n_in' AND name in ('exempt_group','nil_rated_group'))
         """
         return from_str
 
