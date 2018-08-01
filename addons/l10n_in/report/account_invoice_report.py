@@ -129,13 +129,13 @@ class L10nInAccountInvoiceReport(models.Model):
                     END) AS supply_type,
                 (CASE WHEN am.l10n_in_export_type in ('deemed', 'export_with_igst', 'sez_with_igst')
                     THEN 'EXPWP'
-                    WHEN am.l10n_in_export_type in ('export_lut', 'sez_without_igst')
+                    WHEN am.l10n_in_export_type in ('sale_from_bonded_wh', 'sez_without_igst')
                     THEN 'EXPWOP'
                     ELSE ''
                     END) AS export_type,
                 (CASE WHEN refund_ai.l10n_in_export_type in ('deemed', 'export_with_igst', 'sez_with_igst')
                     THEN 'EXPWP'
-                    WHEN refund_ai.l10n_in_export_type in ('export_lut', 'sez_without_igst')
+                    WHEN refund_ai.l10n_in_export_type in ('sale_from_bonded_wh', 'sez_without_igst')
                     THEN 'EXPWOP'
                     ELSE 'B2CL'
                     END) AS refund_export_type,
@@ -143,7 +143,7 @@ class L10nInAccountInvoiceReport(models.Model):
                     THEN 'Regular'
                     WHEN ai.l10n_in_export_type = 'deemed'
                     THEN 'Deemed'
-                    WHEN ai.l10n_in_export_type = 'export_lut'
+                    WHEN ai.l10n_in_export_type = 'sale_from_bonded_wh'
                     THEN 'Sale from Bonded WH'
                     WHEN ai.l10n_in_export_type = 'export_with_igst'
                     THEN 'Export with IGST'
