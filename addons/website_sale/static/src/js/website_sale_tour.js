@@ -24,9 +24,9 @@ tour.register('website_sale_tour', {
                     method: 'create',
                     args: [{
                         'auth_signup_uninvited': 'b2c',
-                        'sale_show_tax': 'subtotal',
-                        'group_show_price_total': false,
-                        'group_show_price_subtotal': true,
+                        'show_line_subtotals_tax_selection': 'tax_excluded',
+                        'group_show_line_subtotals_tax_excluded': true,
+                        'group_show_line_subtotals_tax_included': false,
                     }],
                 });
                 var def2 = def1.then( function (res_id) {
@@ -203,6 +203,7 @@ tour.register('website_sale_tour', {
         },
         {
             content: "Sign up",
+            extra_trigger: '.oe_cart .thanks_msg',
             trigger: '.oe_cart a:contains("Sign Up")',
         },
         {
@@ -227,11 +228,11 @@ tour.register('website_sale_tour', {
         // Sign in as admin change config auth_signup -> b2b, sale_show_tax -> total and Logout
         {
             content: "Open Dropdown for logout",
-            trigger: '#top_menu li a.dropdown-toggle:visible span.caret',
+            trigger: '#top_menu li.dropdown:visible a:contains("abc")',
         },
         {
             content: "logout",
-            trigger: '#o_logout a:contains("Logout")',
+            trigger: '#o_logout:contains("Logout")',
         },
         {
             content: "Sign in as admin",
@@ -260,9 +261,9 @@ tour.register('website_sale_tour', {
                     method: 'create',
                     args: [{
                         'auth_signup_uninvited': 'b2b',
-                        'sale_show_tax': 'total',
-                        'group_show_price_total': true,
-                        'group_show_price_subtotal': false,
+                        'show_line_subtotals_tax_selection': 'tax_included',
+                        'group_show_line_subtotals_tax_excluded': false,
+                        'group_show_line_subtotals_tax_included': true,
                     }],
                 });
                 var def2 = def1.then( function (res_id) {
@@ -401,11 +402,11 @@ tour.register('website_sale_tour', {
         {
             content: "Open Dropdown for See quotation",
             extra_trigger: '.thanks_msg',
-            trigger: '#top_menu li a.dropdown-toggle:visible span.caret',
+            trigger: '#top_menu li.dropdown:visible a:contains("abc")',
         },
         {
             content: "My account",
-            extra_trigger: '#top_menu li.dropdown.open:contains("abc")',
+            extra_trigger: '#top_menu li.dropdown.show:contains("abc")',
             trigger: '.dropdown-menu a[href="/my/home"]:visible',
         },
         {
@@ -416,11 +417,11 @@ tour.register('website_sale_tour', {
         // enable extra step on website congit and check extra step on checkout process
         {
             content: "Open Dropdown for logout",
-            trigger: '#top_menu li a.dropdown-toggle:visible span.caret',
+            trigger: '#top_menu li.dropdown:visible a:contains("abc")',
         },
         {
             content: "logout",
-            trigger: '#o_logout a:contains("Logout")',
+            trigger: '#o_logout:contains("Logout")',
         },
         {
             content: "Sign in as admin",
@@ -499,7 +500,7 @@ tour.register('website_sale_tour', {
         },
         {
             content: "Check that shipping address is of 2nd order shipping address",
-            trigger: '.oe_cart .panel-body div:contains("Shipping") span[itemprop="streetAddress"]:contains("2,wxy, Mumbai , Gujarat GJ, India")',
+            trigger: '.oe_cart .card-body div:contains("Shipping") span[itemprop="streetAddress"]:contains("2,wxy, Mumbai , Gujarat GJ, India")',
         },
         {
             content: "Select `Wire Transfer` payment method",
