@@ -21,29 +21,18 @@ class L10nInPaymentReport(models.AbstractModel):
     place_of_supply = fields.Char(string="Place of Supply")
     supply_type = fields.Char(string="Supply Type")
 
-    default_tax_id = fields.Many2one('account.tax', compute="_compute_default_tax_id", string="Default Tax")
-    l10n_in_description = fields.Char(compute="_compute_l10n_in_description", string="Rate")
+    l10n_in_tax_id = fields.Many2one('account.tax', string="Tax")
+    l10n_in_description = fields.Char(string="Rate")
     igst_amount = fields.Float(compute="_compute_tax_amount", string="IGST amount")
     cgst_amount = fields.Float(compute="_compute_tax_amount", string="CGST amount")
     sgst_amount = fields.Float(compute="_compute_tax_amount", string="SGST amount")
     cess_amount = fields.Float(compute="_compute_tax_amount", string="CESS amount")
+    gross_amount = fields.Float(compute="_compute_tax_amount", string="Gross advance")
 
     #TO BE OVERWRITTEN
     @api.depends('currency_id')
     def _compute_tax_amount(self):
         """Calculate tax amount base on default tax set in company"""
-
-    @api.depends('journal_id.company_id.account_sale_tax_id', 'journal_id.company_id.account_purchase_tax_id', 'supply_type')
-    def _compute_default_tax_id(self):
-        for record in self:
-            default_sale_tax = record.journal_id.company_id.account_sale_tax_id
-            default_purchase_tax = record.journal_id.company_id.account_purchase_tax_id
-            record.default_tax_id = default_sale_tax if record.supply_type == 'outbound' else default_purchase_tax
-
-    @api.depends('journal_id.company_id.account_sale_tax_id', 'journal_id.company_id.account_purchase_tax_id', 'supply_type')
-    def _compute_l10n_in_description(self):
-        for record in self:
-            record.l10n_in_description = record.default_tax_id.l10n_in_description or '0'
 
     def _select(self):
         return """SELECT aml.id AS id,
@@ -51,6 +40,8 @@ class L10nInPaymentReport(models.AbstractModel):
             ap.id AS payment_id,
             ap.l10n_in_gstin_partner_id AS gstin_partner_id,
             ap.payment_type,
+            ap.l10n_in_tax_id as l10n_in_tax_id,
+            tax.l10n_in_description,
             am.partner_id,
             am.amount AS payment_amount,
             ap.journal_id,
@@ -71,6 +62,7 @@ class L10nInPaymentReport(models.AbstractModel):
             JOIN account_move am ON am.id = aml.move_id
             JOIN account_payment ap ON ap.id = aml.payment_id
             JOIN account_account AS ac ON ac.id = aml.account_id
+            JOIN account_tax AS tax ON tax.id = ap.l10n_in_tax_id
             LEFT JOIN res_partner p ON p.id = am.partner_id
             LEFT JOIN res_country_state pos ON pos.id = am.l10n_in_place_of_supply
             LEFT JOIN res_partner gstin_p ON gstin_p.id = ap.l10n_in_gstin_partner_id
@@ -105,7 +97,7 @@ class AdvancesPaymentReport(models.Model):
         for record in self:
             base_amount = record.payment_amount - record.reconcile_amount
             taxes_data = account_move_line._compute_l10n_in_tax(
-                taxes=record.default_tax_id,
+                taxes=record.l10n_in_tax_id,
                 price_unit=base_amount,
                 currency=record.currency_id or None,
                 quantity=1,
@@ -114,6 +106,7 @@ class AdvancesPaymentReport(models.Model):
             record.cgst_amount = taxes_data['cgst_amount']
             record.sgst_amount = taxes_data['sgst_amount']
             record.cess_amount = taxes_data['cess_amount']
+            record.gross_amount = taxes_data['total_excluded']
 
     def _select(self):
         select_str = super(AdvancesPaymentReport, self)._select()
@@ -144,7 +137,7 @@ class L10nInAdvancesPaymentAdjustmentReport(models.Model):
         account_move_line = self.env['account.move.line']
         for record in self:
             taxes_data = account_move_line._compute_l10n_in_tax(
-                taxes=record.default_tax_id,
+                taxes=record.l10n_in_tax_id,
                 price_unit=record.amount,
                 currency=record.currency_id or None,
                 quantity=1,
@@ -153,6 +146,7 @@ class L10nInAdvancesPaymentAdjustmentReport(models.Model):
             record.cgst_amount = taxes_data['cgst_amount']
             record.sgst_amount = taxes_data['sgst_amount']
             record.cess_amount = taxes_data['cess_amount']
+            record.gross_amount = taxes_data['total_excluded']
 
     def _select(self):
         select_str = super(L10nInAdvancesPaymentAdjustmentReport, self)._select()

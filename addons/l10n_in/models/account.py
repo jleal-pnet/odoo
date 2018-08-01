@@ -93,7 +93,8 @@ class AccountMoveLine(models.Model):
         sgst_group = self.env.ref('l10n_in.sgst_group', False)
         cess_group = self.env.ref('l10n_in.cess_group', False)
         filter_tax = taxes.filtered(lambda t: t.type_tax_use != 'none')
-        for tax_data in filter_tax.compute_all(price_unit, currency=currency, quantity=quantity, product=product, partner=partner)['taxes']:
+        tax_compute = filter_tax.compute_all(price_unit, currency=currency, quantity=quantity, product=product, partner=partner)
+        for tax_data in tax_compute['taxes']:
             tax = AccountTax.browse(tax_data['id'])
             tax_group_id = tax.tax_group_id.id
             if tax_group_id == (sgst_group and sgst_group.id or False):
@@ -104,6 +105,7 @@ class AccountMoveLine(models.Model):
                 res['igst_amount'] += tax_data['amount']
             if tax_group_id == (cess_group and cess_group.id or False):
                 res['cess_amount'] += tax_data['amount']
+        res.update(tax_compute)
         return res
 
     @api.depends('tax_ids')

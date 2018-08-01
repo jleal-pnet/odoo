@@ -9,12 +9,12 @@
                 <field name="gstin_partner_id" groups='l10n_in.group_l10n_in_multi_gstin'/>
                 <field name="payment_id"/>
                 <field name="date"/>
-                <field name="amount"/>
+                <field name="gross_amount"/>
                 <field name="reconcile_amount" groups="base.group_no_one"/>
                 <field name="partner_id"/>
                 <field name="supply_type"/>
                 <field name="payment_type"/>
-                <field name="default_tax_id" groups="base.group_no_one"/>
+                <field name="l10n_in_tax_id" groups="base.group_no_one"/>
                 <field name="l10n_in_description"/>
                 <field name="igst_amount"/>
                 <field name="cgst_amount"/>
@@ -62,11 +62,11 @@
                 <field name="gstin_partner_id" groups='l10n_in.group_l10n_in_multi_gstin'/>
                 <field name="payment_id"/>
                 <field name="date"/>
-                <field name="amount"/>
+                <field name="gross_amount"/>
                 <field name="partner_id"/>
                 <field name="supply_type"/>
                 <field name="payment_type"/>
-                <field name="default_tax_id" groups="base.group_no_one"/>
+                <field name="l10n_in_tax_id" groups="base.group_no_one"/>
                 <field name="l10n_in_description"/>
                 <field name="igst_amount"/>
                 <field name="cgst_amount"/>

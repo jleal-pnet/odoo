@@ -10,6 +10,7 @@
                 <field name="company_id" invisible="1"/>
                 <field name="l10n_in_gstin_partner_id" groups='l10n_in.group_l10n_in_multi_gstin' domain="[('l10n_in_gstin_company_id', '=', company_id)]" options="{'no_create': True, 'always_reload': True}" context="{'show_vat':True}"/>
                 <field name="l10n_in_place_of_supply"/>
+                <field name="l10n_in_tax_id" groups="base.group_no_one"/>
             </xpath>
          </field>
     </record>
