@@ -32,33 +32,41 @@ class L10nInProductHsnReport(models.Model):
 
     l10n_in_uom_code = fields.Char(related='uom_id.l10n_in_code')
 
+    def _select(self):
+        select_str = """SELECT aml.id AS id,
+            aml.move_id AS account_move_id,
+            aml.partner_id AS partner_id,
+            aml.product_id,
+            aml.product_uom_id AS uom_id,
+            aml.quantity,
+            aml.date_maturity AS date,
+            ABS(aml.balance) As price_total,
+            aml.l10n_in_igst_amount AS igst_amount,
+            aml.l10n_in_cgst_amount AS cgst_amount,
+            aml.l10n_in_sgst_amount AS sgst_amount,
+            aml.l10n_in_cess_amount AS cess_amount,
+            am.l10n_in_gstin_partner_id AS gstin_partner_id,
+            am.journal_id,
+            ABS(aml.balance) + aml.l10n_in_igst_amount + aml.l10n_in_cgst_amount + aml.l10n_in_sgst_amount + aml.l10n_in_cess_amount  AS total,
+            aj.company_id,
+            pt.l10n_in_hsn_code AS hsn_code,
+            pt.l10n_in_hsn_description AS hsn_description
+        """
+        return select_str
+
+    def _from(self):
+        from_str = """FROM account_move_line aml
+            JOIN account_move am ON am.id = aml.move_id
+            JOIN account_account aa ON aa.id = aml.account_id
+            JOIN account_journal aj ON aj.id = am.journal_id
+            JOIN product_product pp ON pp.id = aml.product_id
+            JOIN product_template pt ON pt.id = pp.product_tmpl_id
+            WHERE aa.internal_type = 'other'
+        """
+        return from_str
+
     @api.model_cr
     def init(self):
         tools.drop_view_if_exists(self.env.cr, self._table)
-        self.env.cr.execute("""CREATE OR REPLACE VIEW %s AS (
-            SELECT aml.id AS id,
-                aml.move_id AS account_move_id,
-                aml.partner_id AS partner_id,
-                aml.product_id,
-                aml.product_uom_id AS uom_id,
-                aml.quantity,
-                aml.date_maturity AS date,
-                ABS(aml.balance) As price_total,
-                aml.l10n_in_igst_amount AS igst_amount,
-                aml.l10n_in_cgst_amount AS cgst_amount,
-                aml.l10n_in_sgst_amount AS sgst_amount,
-                aml.l10n_in_cess_amount AS cess_amount,
-                am.l10n_in_gstin_partner_id AS gstin_partner_id,
-                am.journal_id,
-                ABS(aml.balance) + aml.l10n_in_igst_amount + aml.l10n_in_cgst_amount + aml.l10n_in_sgst_amount + aml.l10n_in_cess_amount  AS total,
-                aj.company_id,
-                pt.l10n_in_hsn_code AS hsn_code,
-                pt.l10n_in_hsn_description AS hsn_description
-            FROM account_move_line aml
-                JOIN account_move am ON am.id = aml.move_id
-                JOIN account_account aa ON aa.id = aml.account_id
-                JOIN account_journal aj ON aj.id = am.journal_id
-                JOIN product_product pp ON pp.id = aml.product_id
-                JOIN product_template pt ON pt.id = pp.product_tmpl_id
-            WHERE aa.internal_type = 'other'
-        )""" % (self._table))
+        self.env.cr.execute("""CREATE OR REPLACE VIEW %s AS (%s %s)""" % (
+            self._table, self._select(), self._from()))

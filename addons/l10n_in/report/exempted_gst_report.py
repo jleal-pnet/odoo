@@ -22,73 +22,77 @@ class L10nInExemptedReport(models.Model):
     gstin_partner_id = fields.Many2one('res.partner', string="GSTIN")
     journal_id = fields.Many2one('account.journal', string="Journal")
 
+    def _select(self):
+        select_str = """SELECT aml.id AS id,
+            aml.partner_id AS partner_id,
+            aml.date_maturity AS date,
+            ABS(aml.balance) AS price_total,
+            am.l10n_in_gstin_partner_id AS gstin_partner_id,
+            am.journal_id,
+            aj.company_id,
+            aml.move_id as account_move_id,
+
+            (CASE WHEN am.l10n_in_place_of_supply = gstin_p.state_id
+                THEN (CASE WHEN p.vat IS NOT NULL
+                    THEN 'Intra-State supplies to registered persons'
+                    ELSE 'Intra-State supplies to unregistered persons'
+                    END)
+                WHEN am.l10n_in_place_of_supply != gstin_p.state_id
+                THEN (CASE WHEN p.vat IS NOT NULL
+                    THEN 'Inter-State supplies to registered persons'
+                    ELSE 'Inter-State supplies to unregistered persons'
+                    END)
+            END) AS out_supply_type,
+            (CASE WHEN am.l10n_in_place_of_supply = gstin_p.state_id
+            THEN 'Intra-State supplies'
+            WHEN am.l10n_in_place_of_supply != gstin_p.state_id
+            THEN 'Inter-State supplies'
+            END) AS in_supply_type,
+
+            (CASE WHEN (
+                SELECT MAX(account_tax_id) FROM account_move_line_account_tax_rel
+                    JOIN account_tax at ON at.id = account_tax_id
+                    WHERE account_move_line_id = aml.id AND at.tax_group_id IN
+                     ((SELECT res_id FROM ir_model_data WHERE module='l10n_in' AND name='nil_rated_group'))
+            ) IS NOT NULL
+                THEN ABS(aml.balance)
+                ELSE 0
+            END) AS nil_rated_amount,
+
+            (CASE WHEN (
+                SELECT MAX(account_tax_id) FROM account_move_line_account_tax_rel
+                    JOIN account_tax at ON at.id = account_tax_id
+                    WHERE account_move_line_id = aml.id AND at.tax_group_id IN
+                     ((SELECT res_id FROM ir_model_data WHERE module='l10n_in' AND name='exempt_group'))
+            ) IS NOT NULL
+                THEN ABS(aml.balance)
+                ELSE 0
+            END) AS exempted_amount,
+
+            (CASE WHEN (
+                SELECT MAX(account_tax_id) FROM account_move_line_account_tax_rel
+                    WHERE account_move_line_id = aml.id
+                ) IS NULL
+                THEN ABS(aml.balance)
+                ELSE 0
+            END) AS non_gst_supplies
+        """
+        return select_str
+
+    def _from(self):
+        from_str = """FROM account_move_line aml
+            JOIN account_move am ON am.id = aml.move_id
+            JOIN account_account aa ON aa.id = aml.account_id
+            JOIN account_journal aj ON aj.id = am.journal_id
+            LEFT JOIN res_partner p ON p.id = am.partner_id
+            LEFT JOIN res_country pc ON pc.id = p.country_id
+            LEFT JOIN res_partner gstin_p ON gstin_p.id = am.l10n_in_gstin_partner_id
+            WHERE aa.internal_type = 'other' and aml.tax_line_id IS NULL
+        """
+        return from_str
 
     @api.model_cr
     def init(self):
         tools.drop_view_if_exists(self.env.cr, self._table)
-        self._cr.execute("""
-            CREATE OR REPLACE VIEW %s AS (
-                SELECT aml.id AS id,
-                    aml.partner_id AS partner_id,
-                    aml.date_maturity AS date,
-                    ABS(aml.balance) AS price_total,
-                    am.l10n_in_gstin_partner_id AS gstin_partner_id,
-                    am.journal_id,
-                    aj.company_id,
-                    aml.move_id as account_move_id,
-
-                    (CASE WHEN am.l10n_in_place_of_supply = gstin_p.state_id
-                        THEN (CASE WHEN p.vat IS NOT NULL
-                            THEN 'Intra-State supplies to registered persons'
-                            ELSE 'Intra-State supplies to unregistered persons'
-                            END)
-                        WHEN am.l10n_in_place_of_supply != gstin_p.state_id
-                        THEN (CASE WHEN p.vat IS NOT NULL
-                            THEN 'Inter-State supplies to registered persons'
-                            ELSE 'Inter-State supplies to unregistered persons'
-                            END)
-                    END) AS out_supply_type,
-
-                    (CASE WHEN am.l10n_in_place_of_supply = gstin_p.state_id
-                    THEN 'Intra-State supplies'
-                    WHEN am.l10n_in_place_of_supply != gstin_p.state_id
-                    THEN 'Inter-State supplies'
-                    END) AS in_supply_type,
-
-                    (CASE WHEN (
-                        SELECT MAX(account_tax_id) FROM account_move_line_account_tax_rel
-                            JOIN account_tax at ON at.id = account_tax_id
-                            WHERE account_move_line_id = aml.id AND at.tax_group_id IN
-                             ((SELECT res_id FROM ir_model_data WHERE module='l10n_in' AND name='nil_rated_group'))
-                    ) IS NOT NULL 
-                        THEN ABS(aml.balance)
-                        ELSE 0
-                    END) AS nil_rated_amount,
-
-                    (CASE WHEN (
-                        SELECT MAX(account_tax_id) FROM account_move_line_account_tax_rel
-                            JOIN account_tax at ON at.id = account_tax_id
-                            WHERE account_move_line_id = aml.id AND at.tax_group_id IN 
-                             ((SELECT res_id FROM ir_model_data WHERE module='l10n_in' AND name='exempt_group'))
-                    ) IS NOT NULL 
-                        THEN ABS(aml.balance)
-                        ELSE 0
-                    END) AS exempted_amount,
-
-                    (CASE WHEN (
-                        SELECT MAX(account_tax_id) FROM account_move_line_account_tax_rel
-                            WHERE account_move_line_id = aml.id
-                        ) IS NULL 
-                        THEN ABS(aml.balance)
-                        ELSE 0
-                    END) AS non_gst_supplies
-
-                FROM account_move_line aml
-                    JOIN account_move am ON am.id = aml.move_id
-                    JOIN account_account aa ON aa.id = aml.account_id
-                    JOIN account_journal aj ON aj.id = am.journal_id
-                    LEFT JOIN res_partner p ON p.id = am.partner_id
-                    LEFT JOIN res_country pc ON pc.id = p.country_id
-                    LEFT JOIN res_partner gstin_p ON gstin_p.id = am.l10n_in_gstin_partner_id
-                WHERE aa.internal_type = 'other' and aml.tax_line_id IS NULL
-            )""" % (self._table))
+        self._cr.execute("""CREATE OR REPLACE VIEW %s AS (%s %s)""" % (
+            self._table, self._select(), self._from()))
