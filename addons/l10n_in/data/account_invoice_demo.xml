@@ -9,6 +9,7 @@
         <field name="payment_term_id" ref="account.account_payment_term"/>
         <field name="type">out_invoice</field>
         <field name="date_invoice" eval="time.strftime('%Y-%m')+'-01'"/>
+        <field name="l10n_in_place_of_supply" ref="base.state_in_gj"/>
     </record>
 
     <record id="demo_invoice_b2b_line_1" model="account.invoice.line">
@@ -79,6 +80,7 @@
         <field name="payment_term_id" ref="account.account_payment_term"/>
         <field name="type">out_invoice</field>
         <field name="date_invoice" eval="time.strftime('%Y-%m')+'-01'"/>
+        <field name="l10n_in_place_of_supply" ref="base.state_in_gj"/>
     </record>
 
     <record id="demo_invoice_b2cs_line_1" model="account.invoice.line">
@@ -157,6 +159,7 @@
         <field name="payment_term_id" ref="account.account_payment_term"/>
         <field name="type">out_invoice</field>
         <field name="date_invoice" eval="time.strftime('%Y-%m')+'-01'"/>
+        <field name="l10n_in_place_of_supply" ref="base.state_in_gj"/>
     </record>
 
     <record id="demo_invoice_b2cl_line_1" model="account.invoice.line">
@@ -200,6 +203,7 @@
         <field name="l10n_in_shipping_bill_number">999704</field>
         <field name="l10n_in_shipping_bill_date" eval="time.strftime('%Y-%m')+'-02'"/>
         <field name="l10n_in_shipping_port_code_id" ref="l10n_in.port_code_inixy1"/>
+        <field name="l10n_in_place_of_supply" ref="l10n_in.state_in_ot"/>
     </record>
 
     <record id="demo_invoice_exp_line_1" model="account.invoice.line">
@@ -233,6 +237,7 @@
         <field name="payment_term_id" ref="account.account_payment_term"/>
         <field name="type">out_invoice</field>
         <field name="date_invoice" eval="time.strftime('%Y-%m')+'-01'"/>
+        <field name="l10n_in_place_of_supply" ref="base.state_in_gj"/>
     </record>
 
     <record id="demo_invoice_nill_line_1" model="account.invoice.line">
@@ -284,6 +289,7 @@
         <field name="date_invoice" eval="time.strftime('%Y-%m')+'-02'"/>
         <field name="refund_invoice_id" ref="l10n_in.demo_invoice_b2b"/>
         <field name="l10n_in_refund_reason_id" ref="l10n_in.refund_reason_01"/>
+        <field name="l10n_in_place_of_supply" ref="base.state_in_gj"/>
     </record>
 
     <record id="demo_invoice_cdnr_line_1" model="account.invoice.line">
@@ -356,6 +362,7 @@
         <field name="date_invoice" eval="time.strftime('%Y-%m')+'-02'"/>
         <field name="refund_invoice_id" ref="l10n_in.demo_invoice_b2cl"/>
         <field name="l10n_in_refund_reason_id" ref="l10n_in.refund_reason_01"/>
+        <field name="l10n_in_place_of_supply" ref="base.state_in_gj"/>
     </record>
 
     <record id="demo_invoice_cdnur_line_1" model="account.invoice.line">
@@ -390,6 +397,7 @@
         <field name="payment_term_id" ref="account.account_payment_term"/>
         <field name="type">out_invoice</field>
         <field name="date_invoice" eval="(datetime.now() + relativedelta(months=1)).strftime('%Y-%m-01')"/>
+        <field name="l10n_in_place_of_supply" ref="base.state_in_gj"/>
     </record>
 
     <record id="demo_invoice_atadj_line_1" model="account.invoice.line">

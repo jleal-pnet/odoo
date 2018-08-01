@@ -22,7 +22,17 @@ class account_abstract_payment(models.AbstractModel):
         invoices = self.env['account.invoice'].browse(active_ids)
         if any(inv.l10n_in_gstin_partner_id != invoices[0].l10n_in_gstin_partner_id for inv in invoices):
             rec.update({'multi': True})
+        if any(inv.l10n_in_place_of_supply != invoices[0].l10n_in_place_of_supply for inv in invoices):
+            rec.update({'multi': True})
         return rec
+
+    @api.onchange('partner_id')
+    def _onchange_partner_id(self):
+        if self.partner_id.state_id.country_id.code == 'IN':
+            self.l10n_in_place_of_supply = self.partner_id.state_id
+        else:
+            self.l10n_in_place_of_supply = self.env.ref('l10n_in.state_in_ot')
+        return super(account_abstract_payment, self)._onchange_partner_id()
 
 
 class account_register_payments(models.TransientModel):
@@ -37,7 +47,7 @@ class account_register_payments(models.TransientModel):
         new_results = {}
         for key, invoices in results.items():
             for invoice in invoices:
-                new_key = (*key, invoice.l10n_in_gstin_partner_id.id)
+                new_key = (*key, invoice.l10n_in_gstin_partner_id.id, invoice.l10n_in_place_of_supply.id)
                 if not new_key in new_results:
                     new_results[new_key] = self.env['account.invoice']
                 new_results[new_key] += invoice
@@ -47,6 +57,7 @@ class account_register_payments(models.TransientModel):
     def _prepare_payment_vals(self, invoices):
         vals = super(account_register_payments, self)._prepare_payment_vals(invoices)
         vals['l10n_in_gstin_partner_id'] = invoices[0].l10n_in_gstin_partner_id.id
+        vals['l10n_in_place_of_supply'] = invoices[0].l10n_in_place_of_supply.id
         return vals
 
 
@@ -61,6 +72,7 @@ class account_payment(models.Model):
         if invoice_defaults and len(invoice_defaults) == 1:
             invoice = invoice_defaults[0]
             rec['l10n_in_gstin_partner_id'] = invoice['l10n_in_gstin_partner_id'][0]
+            rec['l10n_in_place_of_supply'] = invoice['l10n_in_place_of_supply'][0]
         return rec
 
     l10n_in_gstin_partner_id = fields.Many2one(
@@ -70,6 +82,9 @@ class account_payment(models.Model):
         default=lambda self: self.env['res.company']._company_default_get('account.payment').partner_id,
         readonly=True, states={'draft': [('readonly', False)]}
         )
+    l10n_in_place_of_supply = fields.Many2one(
+        'res.country.state', string="Place Of Supply", readonly=True,
+        states={'draft': [('readonly', False)]}, domain=[("country_id.code", "=", "IN")])
 
     @api.onchange('journal_id')
     def _onchange_l10n_in_journal(self):
@@ -78,4 +93,5 @@ class account_payment(models.Model):
     def _get_move_vals(self, journal=None):
         res = super(account_payment, self)._get_move_vals(journal=journal)
         res['l10n_in_gstin_partner_id'] = self.l10n_in_gstin_partner_id.id
+        res['l10n_in_place_of_supply'] = self.l10n_in_place_of_supply.id
         return res

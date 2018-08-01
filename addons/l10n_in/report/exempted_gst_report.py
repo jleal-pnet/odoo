@@ -37,21 +37,21 @@ class L10nInExemptedReport(models.Model):
                     aj.company_id,
                     aml.move_id as account_move_id,
 
-                    (CASE WHEN (p.state_id = gstin_p.state_id and p.id IS NOT NULL and gstin_p.state_id IS NOT NULL) or (p.id IS NULL)
+                    (CASE WHEN am.l10n_in_place_of_supply = gstin_p.state_id
                         THEN (CASE WHEN p.vat IS NOT NULL
                             THEN 'Intra-State supplies to registered persons'
                             ELSE 'Intra-State supplies to unregistered persons'
                             END)
-                        WHEN p.state_id != gstin_p.state_id and p.state_id IS NOT NULL and gstin_p.state_id IS NOT NULL or (p.state_id IS NULL AND pc.code != 'IN')
+                        WHEN am.l10n_in_place_of_supply != gstin_p.state_id
                         THEN (CASE WHEN p.vat IS NOT NULL
                             THEN 'Inter-State supplies to registered persons'
                             ELSE 'Inter-State supplies to unregistered persons'
                             END)
                     END) AS out_supply_type,
 
-                    (CASE WHEN (p.state_id = gstin_p.state_id and p.id IS NOT NULL and gstin_p.state_id IS NOT NULL) or (p.id IS NULL)
+                    (CASE WHEN am.l10n_in_place_of_supply = gstin_p.state_id
                     THEN 'Intra-State supplies'
-                    WHEN p.state_id != gstin_p.state_id and p.state_id IS NOT NULL and gstin_p.state_id IS NOT NULL or (p.state_id IS NULL AND pc.code != 'IN')
+                    WHEN am.l10n_in_place_of_supply != gstin_p.state_id
                     THEN 'Inter-State supplies'
                     END) AS in_supply_type,
 

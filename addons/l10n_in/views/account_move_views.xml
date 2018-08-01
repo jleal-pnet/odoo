@@ -7,6 +7,7 @@
         <field name="arch" type="xml">
             <xpath expr="//notebook/page[2]" position="inside">
                 <group string="Indian Accounting Details" groups="base.group_no_one">
+                    <field name="l10n_in_place_of_supply"/>
                     <field name="l10n_in_import_export" invisible="1"/>
                     <field name="l10n_in_export_type" attrs="{'invisible': [('l10n_in_import_export', '!=', True)]}"/>
                     <field name="l10n_in_shipping_bill_number" attrs="{'invisible': [('l10n_in_import_export', '!=', True)]}"/>

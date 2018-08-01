@@ -44,6 +44,9 @@ class AccountMove(models.Model):
         ('import_service', 'Import of Service'),
         ('import_service_sez', 'Import of Service from SEZ')],
         string='Import Type', default='regular', required=True)
+    l10n_in_place_of_supply = fields.Many2one(
+        'res.country.state', string="Place Of Supply",
+        states={'posted': [('readonly', True)]}, domain=[("country_id.code", "=", "IN")])
 
 
 class AccountMoveLine(models.Model):

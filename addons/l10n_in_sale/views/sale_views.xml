@@ -11,6 +11,9 @@
             <xpath expr="//field[@name='partner_id']" position="after">
                 <field name="l10n_in_reseller_partner_id" groups="l10n_in.group_l10n_in_reseller"/>
             </xpath>
+            <xpath expr="//field[@name='user_id']" position="before">
+                <field name="l10n_in_place_of_supply"/>
+            </xpath>
         </field>
     </record>
 </odoo>

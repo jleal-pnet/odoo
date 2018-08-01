@@ -17,7 +17,7 @@ class L10nInPaymentReport(models.AbstractModel):
     payment_type = fields.Selection([('outbound', 'Send Money'), ('inbound', 'Receive Money')], string='Payment Type')
     journal_id = fields.Many2one('account.journal', string="Journal")
     company_id = fields.Many2one(related="journal_id.company_id", string="Company")
-    partner_state_id = fields.Many2one('res.country.state', string="Partner State")
+    l10n_in_place_of_supply = fields.Many2one('res.country.state', string="Partner State")
     place_of_supply = fields.Char(string="Place of Supply")
     supply_type = fields.Char(string="Supply Type")
 
@@ -55,18 +55,14 @@ class L10nInPaymentReport(models.AbstractModel):
             am.amount AS payment_amount,
             ap.journal_id,
             aml.currency_id,
-            p.state_id AS partner_state_id,
-            (CASE WHEN ps.l10n_in_tin IS NOT NULL
-                THEN concat(ps.l10n_in_tin,'-',ps.name)
-                WHEN ps.l10n_in_tin IS NULL AND pc.code != 'IN'
-                THEN '97-Other Territory'
-                WHEN p.id IS NULL AND gstin_ps.l10n_in_tin IS NOT NULL
-                THEN concat(gstin_ps.l10n_in_tin,'-',gstin_ps.name)
+            am.l10n_in_place_of_supply,
+            (CASE WHEN pos.l10n_in_tin IS NOT NULL
+                THEN concat(pos.l10n_in_tin,'-',pos.name)
                 ELSE ''
                 END) AS place_of_supply,
-            (CASE WHEN (ps.id = gstin_ps.id and ps.id IS NOT NULL and gstin_ps.id IS NOT NULL) or (p.id IS NULL)
+            (CASE WHEN pos.id = gstin_ps.id
                 THEN 'Intra State'
-                WHEN ps.id != gstin_ps.id and ps.id IS NOT NULL and gstin_ps.id IS NOT NULL or (ps.id IS NULL AND pc.code != 'IN')
+                WHEN pos.id != gstin_ps.id
                 THEN 'Inter State'
                 END) AS supply_type"""
 
@@ -76,8 +72,7 @@ class L10nInPaymentReport(models.AbstractModel):
             JOIN account_payment ap ON ap.id = aml.payment_id
             JOIN account_account AS ac ON ac.id = aml.account_id
             LEFT JOIN res_partner p ON p.id = am.partner_id
-            LEFT JOIN res_country pc ON pc.id = p.country_id
-            LEFT JOIN res_country_state ps ON ps.id = p.state_id
+            LEFT JOIN res_country_state pos ON pos.id = am.l10n_in_place_of_supply
             LEFT JOIN res_partner gstin_p ON gstin_p.id = ap.l10n_in_gstin_partner_id
             LEFT JOIN res_country_state gstin_ps ON gstin_ps.id = gstin_p.state_id
             """

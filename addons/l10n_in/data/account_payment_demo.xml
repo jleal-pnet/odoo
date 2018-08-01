@@ -16,6 +16,7 @@
             eval="obj().search([
                 ('type', '=', 'cash'),
                 ('company_id', '=', obj().env['res.company']._company_default_get('account.journal').id)], limit=1).inbound_payment_method_ids[0].id"/>
+        <field name="l10n_in_place_of_supply" ref="base.state_in_gj"/>
     </record>
 
     <function model="account.payment" name="post">

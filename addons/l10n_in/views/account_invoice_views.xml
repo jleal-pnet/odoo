@@ -6,6 +6,7 @@
         <field name="inherit_id" ref="account.invoice_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='move_id']" position="after">
+                <field name="l10n_in_place_of_supply"/>
                 <field name="l10n_in_import_export" invisible="1"/>
                 <field name="l10n_in_export_type" attrs="{'invisible': [('l10n_in_import_export', '!=', True)]}"/>
                 <field name="l10n_in_reverse_charge" attrs="{'invisible': [('l10n_in_export_type', '=', 'regular')]}"/>
@@ -31,6 +32,7 @@
         <field name="inherit_id" ref="account.invoice_supplier_form"/>
         <field name="arch" type="xml">
         <xpath expr="//field[@name='date']" position="after">
+            <field name="l10n_in_place_of_supply"/>
             <field name="l10n_in_import_export" invisible="1"/>
             <field name="l10n_in_partner_vat" invisible="1"/>
             <field name="l10n_in_import_type" attrs="{'invisible': [('l10n_in_import_export', '!=', True)]}"/>

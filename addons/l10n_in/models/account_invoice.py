@@ -46,13 +46,17 @@ class AccountInvoice(models.Model):
         ('import_service_sez', 'Import of Service from SEZ')],
         string='Import Type', default='regular', required=True)
     l10n_in_partner_vat = fields.Char(related="partner_id.vat", readonly=True)
+    l10n_in_place_of_supply = fields.Many2one(
+        'res.country.state', string="Place Of Supply",readonly=True,
+        states={'draft': [('readonly', False)]}, domain=[("country_id.code", "=", "IN")])
 
     @api.model
     def _get_refund_common_fields(self):
         """This list of fields value pass to refund invoice."""
         return super(AccountInvoice, self)._get_refund_common_fields() + [
             'l10n_in_reverse_charge',
-            'l10n_in_gstin_partner_id']
+            'l10n_in_gstin_partner_id',
+            'l10n_in_place_of_supply']
 
     def _get_printed_report_name(self):
         self.ensure_one()
@@ -102,7 +106,8 @@ class AccountInvoice(models.Model):
                 'l10n_in_reseller_partner_id': inv.l10n_in_reseller_partner_id.id,
                 'l10n_in_reverse_charge': inv.l10n_in_reverse_charge,
                 'l10n_in_gstin_partner_id': inv.l10n_in_gstin_partner_id.id,
-                'l10n_in_import_type': inv.l10n_in_import_type
+                'l10n_in_import_type': inv.l10n_in_import_type,
+                'l10n_in_place_of_supply': inv.l10n_in_place_of_supply.id
                 }
             inv.move_id.write(vals)
         return res
@@ -137,6 +142,11 @@ class AccountInvoice(models.Model):
 
     @api.onchange('partner_id', 'company_id', 'l10n_in_gstin_partner_id')
     def _onchange_partner_id(self):
+        if not self.env.context.get('from_purchase_order_change'):
+            if self.partner_id.state_id.country_id.code == 'IN':
+                self.l10n_in_place_of_supply = self.partner_id.state_id
+            else:
+                self.l10n_in_place_of_supply = self.env.ref('l10n_in.state_in_ot')
         return super(AccountInvoice, self.with_context(l10n_in_gstin_partner_id=self.l10n_in_gstin_partner_id.id))._onchange_partner_id()
 
 

@@ -7,7 +7,7 @@ from odoo import api, fields, models, tools
 class L10nInAccountInvoiceReport(models.Model):
 
     _inherit = "l10n_in.account.invoice.report"
-   
+
     pos_order_id = fields.Many2one('pos.order', string="POS order")
 
     def _select(self):
