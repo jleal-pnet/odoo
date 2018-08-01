@@ -42,7 +42,7 @@ class AccountBudgetPost(models.Model):
 class CrossoveredBudget(models.Model):
     _name = "crossovered.budget"
     _description = "Budget"
-    _inherit = ['mail.thread']
+    _inherit = ['mail.thread', 'mail.activity.mixin']
 
     name = fields.Char('Budget Name', required=True, states={'done': [('readonly', True)]})
     user_id = fields.Many2one('res.users', 'Responsible', default=lambda self: self.env.user, oldname='creating_user_id')
