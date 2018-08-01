@@ -729,12 +729,17 @@ class PaymentTransaction(models.Model):
                 continue
 
             payment_vals = trans._prepare_account_payment_vals()
-            payment = payments.create(payment_vals)
+            payment = None
+            if invoices.state and invoices.state == 'paid':
+                invoices.payment_ids.write(payment_vals)
+                payment = invoices.payment_ids
+            else:
+                payment = payments.create(payment_vals)
             payments += payment
 
             # Track the payment to make a one2one.
             trans.payment_id = payment
-        payments.post()
+        payments.filtered(lambda x: x.state != 'posted').post()
 
         self.write({'state': 'done', 'date': datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT)})
         self._log_payment_transaction_received()
