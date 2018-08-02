@@ -49,7 +49,7 @@ var Menu = Widget.extend({
      * @param {Number} id database id of the terminal menu to select
      */
     open_menu: function (event) {
-        var id = event.data.id;
+        var id = event.data ? event.data.id : event.id;
         this.current_menu = id;
         session.active_id = id;
         var $clicked_menu, $sub_menu, $main_menu;

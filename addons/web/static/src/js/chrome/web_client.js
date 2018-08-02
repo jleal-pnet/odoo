@@ -160,10 +160,10 @@ return AbstractWebClient.extend({
             }
         });
     },
-    on_menu_action: function(options) {
-        this.action_manager.doAction(options.action_id, {
+    on_menu_action: function(event) {
+        this.action_manager.doAction(event.data.action_id, {
             clear_breadcrumbs: true,
-            action_menu_id: options.id,
+            action_menu_id: event.data.id,
         });
     },
     toggle_fullscreen: function(fullscreen) {
