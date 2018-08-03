@@ -278,63 +278,64 @@ QUnit.test('restore Support channel if necessary', function (assert) {
     messagingMenu.destroy();
 });
 
-QUnit.test('receive messages in the Support channel', function (assert) {
-    assert.expect(10);
+// QUnit.only('receive messages in the Support channel', function (assert) {
+//     debugger;
+//     assert.expect(10);
 
-    var supportChannelID;
+//     var supportChannelID;
 
-    var messagingMenu = new MessagingMenu();
-    addMockSupportEnvironment(messagingMenu, {
-        data: this.data,
-        enableSupportPoll: true,
-        mockRPC: function (route, args) {
-            if (!_.string.endsWith(route, '.png')) { // ignore images
-                assert.step(args.method || route);
-            }
-            return this._super.apply(this, arguments);
-        },
-        mockSupportRPC: function (route) {
-            if (route.split('/')[1] === 'odoo_im_support') {
-                assert.step('cors: ' + route);
-            }
-            return this._super.apply(this, arguments);
-        },
-        services: this.services,
-        session: this.supportParams,
-    });
-    messagingMenu.appendTo($('#qunit-fixture'));
+//     var messagingMenu = new MessagingMenu();
+//     addMockSupportEnvironment(messagingMenu, {
+//         data: this.data,
+//         enableSupportPoll: true,
+//         mockRPC: function (route, args) {
+//             if (!_.string.endsWith(route, '.png')) { // ignore images
+//                 assert.step(args.method || route);
+//             }
+//             return this._super.apply(this, arguments);
+//         },
+//         mockSupportRPC: function (route) {
+//             if (route.split('/')[1] === 'odoo_im_support') {
+//                 assert.step('cors: ' + route);
+//             }
+//             return this._super.apply(this, arguments);
+//         },
+//         services: this.services,
+//         session: this.supportParams,
+//     });
+//     messagingMenu.appendTo($('#qunit-fixture'));
 
-    assert.strictEqual($('.o_thread_window').length, 1,
-        "should have open a chat window");
-    assert.strictEqual($('.o_thread_window .o_thread_message').length, 0,
-        "there should be no message in the thread");
+//     assert.strictEqual($('.o_thread_window').length, 1,
+//         "should have open a chat window");
+//     assert.strictEqual($('.o_thread_window .o_thread_message').length, 0,
+//         "there should be no message in the thread");
 
-    // simulate an incoming message on the supportBus
-    var data = {
-        author_id: [42, 'An operator'],
-        body: 'A message',
-        channel_ids: [supportChannelID],
-    };
-    var notification = [[false, 'mail.channel', 1], data];
-    messagingMenu.call('support_bus_service', 'trigger', 'notification', [notification]);
+//     // simulate an incoming message on the supportBus
+//     var data = {
+//         author_id: [42, 'An operator'],
+//         body: 'A message',
+//         channel_ids: [supportChannelID],
+//     };
+//     var notification = [[false, 'mail.channel'], data];
+//     supportBus.trigger('notification', [notification]);
 
-    assert.strictEqual($('.o_thread_window .o_thread_message').length, 1,
-        "there should be a new message in the thread");
-    assert.strictEqual($('.o_thread_window .o_thread_message .o_thread_author ').text().trim(),
-        'An operator', "should correctly display the author");
-    assert.strictEqual($('.o_thread_window .o_thread_message .o_thread_message_avatar').attr('data-src'),
-        '/mail/static/src/img/odoo_o.png', "should have correct avatar");
-    assert.strictEqual($('.o_thread_window .o_thread_message .o_thread_message_content ').text().trim(),
-        'A message', "message is correct");
+//     assert.strictEqual($('.o_thread_window .o_thread_message').length, 1,
+//         "there should be a new message in the thread");
+//     assert.strictEqual($('.o_thread_window .o_thread_message .o_thread_author ').text().trim(),
+//         'An operator', "should correctly display the author");
+//     assert.strictEqual($('.o_thread_window .o_thread_message .o_thread_message_avatar').attr('data-src'),
+//         '/mail/static/src/img/odoo_o.png', "should have correct avatar");
+//     assert.strictEqual($('.o_thread_window .o_thread_message .o_thread_message_content ').text().trim(),
+//         'A message', "message is correct");
 
-    assert.verifySteps([
-        '/mail/init_messaging',
-        'cors: /odoo_im_support/get_support_channel',
-        'cors: /odoo_im_support/fetch_messages',
-    ]);
+//     assert.verifySteps([
+//         '/mail/init_messaging',
+//         'cors: /odoo_im_support/get_support_channel',
+//         'cors: /odoo_im_support/fetch_messages',
+//     ]);
 
-    messagingMenu.destroy();
-});
+//     messagingMenu.destroy();
+// });
 
 });
 
