@@ -343,8 +343,7 @@ ActionManager.include({
                         self.controllerStack.unshift(lazyLoadedController.jsID);
                         self.controlPanel.update({
                             breadcrumbs: self._getBreadcrumbs(),
-                            options: {clear: false}
-                        });
+                        }, {clear: false});
                     }
                 });
             }).fail(self._destroyWindowAction.bind(self, action));
