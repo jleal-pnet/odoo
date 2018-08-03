@@ -36,11 +36,11 @@ class PosOrder(models.Model):
         res = super(PosOrder, self)._create_account_move_line(session=session, move=move)
         for order in self:
             l10n_in_gstin_partner_id = order.config_id.l10n_in_gstin_partner_id.id
-            l10n_in_place_of_supply = order.config_id.l10n_in_place_of_supply.id or self.env.ref('l10n_in.state_in_ot')
+            l10n_in_place_of_supply = order.config_id.l10n_in_place_of_supply or self.env.ref('l10n_in.state_in_ot', False)
             if order.account_move:
                 order.account_move.write({
                     'l10n_in_gstin_partner_id': l10n_in_gstin_partner_id,
-                    'l10n_in_place_of_supply': l10n_in_place_of_supply})
+                    'l10n_in_place_of_supply': l10n_in_place_of_supply and l10n_in_place_of_supply.id})
             payment = self.env['account.payment']
             move = self.env['account.move']
             for statement_line_id in order.statement_ids:
@@ -51,16 +51,17 @@ class PosOrder(models.Model):
                         payment += journal_entry_id.payment_id
             move.write({
                 'l10n_in_gstin_partner_id': l10n_in_gstin_partner_id,
-                'l10n_in_place_of_supply': l10n_in_place_of_supply})
+                'l10n_in_place_of_supply': l10n_in_place_of_supply and l10n_in_place_of_supply.id})
             payment.write({
                 'l10n_in_gstin_partner_id': l10n_in_gstin_partner_id,
-                'l10n_in_place_of_supply': l10n_in_place_of_supply})
+                'l10n_in_place_of_supply': l10n_in_place_of_supply and l10n_in_place_of_supply.id})
         return res
 
     def _prepare_invoice(self):
         res = super(PosOrder, self)._prepare_invoice()
+        l10n_in_place_of_supply = self.config_id.l10n_in_place_of_supply or self.env.ref('l10n_in.state_in_ot')
         res['l10n_in_gstin_partner_id'] = self.config_id.l10n_in_gstin_partner_id.id
-        res['l10n_in_place_of_supply'] = self.config_id.l10n_in_place_of_supply.id or self.env.ref('l10n_in.state_in_ot')
+        res['l10n_in_place_of_supply'] = l10n_in_place_of_supply and l10n_in_place_of_supply.id
         return res
 
 

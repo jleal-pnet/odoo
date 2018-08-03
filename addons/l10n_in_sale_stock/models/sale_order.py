@@ -9,4 +9,4 @@ class SaleOrder(models.Model):
 
     @api.onchange('warehouse_id')
     def _onchange_l10n_in_sale_stock_warehouse_id(self):
-        self.l10n_in_gstin_partner_id = self.warehouse_id and self.warehouse_id.l10n_in_gstin_partner_id.id or self.company_id.partner_id.id
+        self.l10n_in_gstin_partner_id = self.warehouse_id.l10n_in_gstin_partner_id.id or self.company_id.partner_id

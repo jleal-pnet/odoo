@@ -8,8 +8,7 @@
     'category': 'Localization',
     'depends': [
         'l10n_in',
-        'sale',
-        'stock'
+        'sale_stock'
     ],
     'data': [
         'views/sale_views.xml'
