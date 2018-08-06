@@ -11,7 +11,7 @@ class L10nInAccountInvoiceReport(models.Model):
     def _from(self):
         from_str = super(L10nInAccountInvoiceReport, self)._from()
         from_str += """AND aml.product_id::text != (
-            CASE WHEN (SELECT key from ir_config_parameter where key = 'sale.default_deposit_product_id') 
+            CASE WHEN (SELECT value from ir_config_parameter where key = 'sale.default_deposit_product_id') 
             IS NULL Then '0'
-            ELSE (SELECT key from ir_config_parameter where key = 'sale.default_deposit_product_id') END)"""
+            ELSE (SELECT value from ir_config_parameter where key = 'sale.default_deposit_product_id') END)"""
         return from_str
