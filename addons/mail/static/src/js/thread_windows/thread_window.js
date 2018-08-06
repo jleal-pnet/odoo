@@ -3,6 +3,7 @@ odoo.define('mail.ThreadWindow', function (require) {
 
 var AbstractThreadWindow = require('mail.AbstractThreadWindow');
 var BasicComposer = require('mail.composer.Basic');
+var AutocompleteImStatus = require('mail.autocomplete_im_status');
 
 var core = require('web.core');
 
@@ -45,6 +46,8 @@ var ThreadWindow = AbstractThreadWindow.extend({
             // replaced with newly opened DM chat window
             this.directPartnerID = null;
         }
+
+        AutocompleteImStatus.register_autocomplete_im_status();
     },
 
     /**
@@ -238,10 +241,12 @@ var ThreadWindow = AbstractThreadWindow.extend({
         var self = this;
         this.$el.addClass('o_thread_less');
         this.$('.o_thread_search_input input')
-            .autocomplete({
+            .autocomplete_im_status({
                 source: function (request, response) {
-                    self.call('mail_service', 'searchPartner', request.term, 10)
-                        .done(response);
+                    self.call('mail_service', 'searchPartner', {
+                        searchVal: request.term,
+                        limit: 10
+                    }).done(response);
                 },
                 select: function (event, ui) {
                     // remember partner ID so that we can replace this window
@@ -249,7 +254,7 @@ var ThreadWindow = AbstractThreadWindow.extend({
                     var partnerID = ui.item.id;
                     self.directPartnerID = partnerID;
                     self.call('mail_service', 'openDMChatWindowFromBlankThreadWindow', partnerID);
-                },
+                }
             })
             .focus();
     },

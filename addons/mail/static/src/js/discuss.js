@@ -4,6 +4,7 @@ odoo.define('mail.Discuss', function (require) {
 var BasicComposer = require('mail.composer.Basic');
 var ExtendedComposer = require('mail.composer.Extended');
 var ThreadWidget = require('mail.widget.Thread');
+var AutocompleteImStatus = require('mail.autocomplete_im_status');
 
 var AbstractAction = require('web.AbstractAction');
 var config = require('web.config');
@@ -64,7 +65,11 @@ var PartnerInviteDialog = Dialog.extend({
                 return $('<span>').text(item.text).prepend(status);
             },
             query: function (query) {
-                self.call('mail_service', 'searchPartner', query.term, 20)
+                self.call('mail_service', 'searchPartner', {
+                        searchVal: query.term,
+                        limit: 20,
+                        channelID: self._channelID
+                    })
                     .then(function (partners) {
                         query.callback({
                             results: _.map(partners, function (partner) {
@@ -219,6 +224,8 @@ var Discuss = AbstractAction.extend(ControlPanelMixin, {
         this._selectedMessage = null;
         this._throttledUpdateThreads = _.throttle(
             this._updateThreads.bind(this), 100, { leading: false });
+
+        AutocompleteImStatus.register_autocomplete_im_status();
     },
     /**
      * @override
@@ -596,10 +603,13 @@ var Discuss = AbstractAction.extend(ControlPanelMixin, {
                 }
             });
         } else if (type === 'dm_chat') {
-            $input.autocomplete({
+            $input.autocomplete_im_status({
                 source: function (request, response) {
                     self._lastSearchVal = _.escape(request.term);
-                    self.call('mail_service', 'searchPartner', self._lastSearchVal, 10).done(response);
+                    self.call('mail_service', 'searchPartner', {
+                        searchVal: self._lastSearchVal,
+                        limit: 10
+                    }).done(response);
                 },
                 select: function (ev, ui) {
                     var partnerID = ui.item.id;
@@ -1196,6 +1206,7 @@ var Discuss = AbstractAction.extend(ControlPanelMixin, {
      */
     _onInviteButtonClicked: function () {
         var title = _.str.sprintf(_t("Invite people to #%s"), this._thread.getName());
+        console.log(this);
         new PartnerInviteDialog(this, title, this._thread.getID()).open();
     },
     /**

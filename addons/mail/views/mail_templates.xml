@@ -10,6 +10,7 @@
         <template id="assets_backend" name="mail assets" inherit_id="web.assets_backend">
             <xpath expr="." position="inside">
                 <script type="text/javascript" src="/mail/static/src/js/many2many_tags_email.js"></script>
+                <script type="text/javascript" src="/mail/static/src/js/autocomplete_im_status.js"></script>
 
                 <!-- Services -->
                 <script type="text/javascript" src="/mail/static/src/js/services/mail_manager.js"></script>
