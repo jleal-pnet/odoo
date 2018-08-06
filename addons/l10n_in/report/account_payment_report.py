@@ -63,7 +63,7 @@ class L10nInPaymentReport(models.AbstractModel):
             JOIN account_payment ap ON ap.id = aml.payment_id
             JOIN account_account AS ac ON ac.id = aml.account_id
             JOIN account_tax AS tax ON tax.id = ap.l10n_in_tax_id
-            LEFT JOIN res_partner p ON p.id = am.partner_id
+            JOIN res_partner p ON p.id = aml.partner_id
             LEFT JOIN res_country_state pos ON pos.id = am.l10n_in_place_of_supply
             LEFT JOIN res_partner gstin_p ON gstin_p.id = ap.l10n_in_gstin_partner_id
             LEFT JOIN res_country_state gstin_ps ON gstin_ps.id = gstin_p.state_id
