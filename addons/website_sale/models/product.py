@@ -213,9 +213,9 @@ class Product(models.Model):
     @api.model
     def set_test_product_tax(self):
         product = self.env.ref('product.product_product_7')
-        file_path = 'test', 'account_minimal_test.xml'
+        file_path = 'tests', 'account_tax_test.xml'
         tools.convert_file(self.env.cr, 'website_sale',
-                           get_resource_path('account', *file_path),
+                           get_resource_path('website_sale', *file_path),
                            {}, 'init', False, 'test', self.env.registry._assertion_report)
         tax_id = self.env.ref('website_sale.sale_tax').id
         product.write({'taxes_id': [(4, tax_id)]})
