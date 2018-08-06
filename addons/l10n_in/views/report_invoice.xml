@@ -40,7 +40,7 @@
         </xpath>
 
         <xpath expr="//td[@name='account_invoice_line_name']" position="inside">
-            <t t-if="line.product_id.l10n_in_hsn_code"><h6><strong class="ml16">HSN/SAC Code:</strong> <span t-field="line.product_id.l10n_in_hsn_code"/></h6></t>
+            <t t-if="line.product_id.l10n_in_hsn_code"><p class="mb0"><strong class="ml16">HSN/SAC Code:</strong> <span t-field="line.product_id.l10n_in_hsn_code"/></p></t>
         </xpath>
 
         <xpath expr="//t[@name='account_invoice_line_accountable']" position="inside">
