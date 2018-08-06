@@ -131,10 +131,9 @@ class ProductProduct(models.Model):
         help = "Cost used for stock valuation in standard price and as a first price to set in average/fifo. "
                "Also used as a base price for pricelists. "
                "Expressed in the default unit of measure of the product.")
-    volume = fields.Float('Volume', help="The volume in m3.")
-    weight = fields.Float(
-        'Weight', digits=dp.get_precision('Stock Weight'),
-        help="Weight of the product, packaging not included. The unit of measure can be changed in the general settings")
+    volume = fields.Float('Volume')
+    volume_name = fields.Char(string='Volume unit of measure label', compute='_compute_volume_name')
+    weight = fields.Float('Weight', digits=dp.get_precision('Stock Weight'))
 
     pricelist_item_ids = fields.Many2many(
         'product.pricelist.item', 'Pricelist Items', compute='_get_pricelist_items')
@@ -146,6 +145,16 @@ class ProductProduct(models.Model):
     _sql_constraints = [
         ('barcode_uniq', 'unique(barcode)', "A barcode can only be assigned to one product !"),
     ]
+
+    @api.depends('volume')
+    def _compute_volume_name(self):
+        """ Get the unit of measure to interpret the `volume` field. By default, we consider
+        that volumes are expressed in cubic meters. Users can configure to express them in cubic feet
+        by adding an ir.config_parameter record with "product.product_volume" as key
+        and "1" as value.
+        """
+        get_param = self.env['ir.config_parameter'].sudo().get_param
+        self.volume_name = "ft³" if get_param('product.volume') == '1' else "m³"
 
     def _get_invoice_policy(self):
         return False

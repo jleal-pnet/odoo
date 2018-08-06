@@ -83,12 +83,11 @@ class ProductTemplate(models.Model):
                "Expressed in the default unit of measure of the product. ")
 
     volume = fields.Float(
-        'Volume', compute='_compute_volume', inverse='_set_volume',
-        help="The volume in m3.", store=True)
+        'Volume', compute='_compute_volume', inverse='_set_volume', store=True)
+    volume_name = fields.Char(string='Volume unit of measure label', compute='_compute_volume_name')
     weight = fields.Float(
         'Weight', compute='_compute_weight', digits=dp.get_precision('Stock Weight'),
-        inverse='_set_weight', store=True,
-        help="The weight of the contents in Kg, not including any packaging, etc.")
+        inverse='_set_weight', store=True)
     weight_uom_id = fields.Many2one('uom.uom', string='Weight Unit of Measure', compute='_compute_weight_uom_id')
     weight_uom_name = fields.Char(string='Weight unit of measure label', related='weight_uom_id.name', readonly=True)
 
@@ -263,6 +262,16 @@ class ProductTemplate(models.Model):
         weight_uom_id = self._get_weight_uom_id_from_ir_config_parameter()
         for product_template in self:
             product_template.weight_uom_id = weight_uom_id
+
+    @api.depends('volume')
+    def _compute_volume_name(self):
+        """ Get the unit of measure to interpret the `volume` field. By default, we consider
+        that volumes are expressed in cubic meters. Users can configure to express them in cubic feet
+        by adding an ir.config_parameter record with "product.product_volume" as key
+        and "1" as value.
+        """
+        get_param = self.env['ir.config_parameter'].sudo().get_param
+        self.volume_name = "ft³" if get_param('product.volume') == '1' else "m³"
 
     @api.one
     def _set_weight(self):
