@@ -17,6 +17,7 @@ class AccountFiscalPosition(models.Model):
         company_id = self.env.context.get('force_company') or self.env.context.get('company_id') or self.env.user.company_id.id
         if self.env['res.company'].browse(company_id).country_id.code == 'IN':
             return False
+        return super(AccountFiscalPosition, self)._get_fpos_by_region(country_id=country_id, state_id=state_id, zipcode=zipcode, vat_required=vat_required)
 
     @api.model
     def get_fiscal_position(self, partner_id, delivery_id=None):
@@ -31,7 +32,7 @@ class AccountFiscalPosition(models.Model):
             supply_type = False
             if partner_id.state_id.id != gstin_partner_id.state_id.id:
                 supply_type = 'inter_state'
-            if partner_id.country_id.id != gstin_partner_id.country_id.id:
+            if partner_id.state_id.country_id.id != gstin_partner_id.country_id.id:
                 supply_type = 'export_import'
             if supply_type:
                 fiscal_position_id = self.search([
