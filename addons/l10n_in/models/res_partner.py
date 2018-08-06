@@ -65,7 +65,7 @@ class ResPartner(models.Model):
             new_res.append((partner[0], name))
         return new_res
 
-    @api.constrains('vat')
+    @api.constrains('vat', 'country_id')
     def l10n_in_check_vat(self):
         for partner in self.filtered(lambda p: p.vat):
             country_code = partner.commercial_partner_id.country_id.code
