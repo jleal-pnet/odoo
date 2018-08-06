@@ -77,7 +77,7 @@ class SaleQuoteLine(models.Model):
     def _onchange_product_id(self):
         self.ensure_one()
         if self.product_id:
-            name = self.product_id.name_get()[0][1]
+            name = self.product_id.display_name
             if self.product_id.description_sale:
                 name += '\n' + self.product_id.description_sale
             self.name = name

@@ -1143,7 +1143,7 @@ class SaleOrderLine(models.Model):
                 self.product_id = False
                 return result
 
-        name = product.name_get()[0][1]
+        name = product.display_name
         if product.description_sale:
             name += '\n' + product.description_sale
         vals['name'] = name
