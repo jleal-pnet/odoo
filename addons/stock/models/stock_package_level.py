@@ -26,7 +26,7 @@ class StockPackageLevel(models.Model):
     ],string='State', compute='_compute_state')
     is_fresh_package = fields.Boolean(compute='_compute_fresh_pack')
 
-    picking_source_location = fields.Many2one('stock.location', related='picking_id.location_id')
+    picking_source_location = fields.Many2one('stock.location', string="Picking Source Location", related='picking_id.location_id')
     show_lots_m2o = fields.Boolean(compute='_compute_show_lot')
     show_lots_text = fields.Boolean(compute='_compute_show_lot')
 

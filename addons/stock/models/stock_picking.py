@@ -231,12 +231,12 @@ class Picking(models.Model):
     date_done = fields.Datetime('Date of Transfer', copy=False, readonly=True, help="Date at which the transfer has been processed or cancelled.")
 
     location_id = fields.Many2one(
-        'stock.location', "Source Location",
+        'stock.location', "From",
         default=lambda self: self.env['stock.picking.type'].browse(self._context.get('default_picking_type_id')).default_location_src_id,
         readonly=True, required=True,
         states={'draft': [('readonly', False)]})
     location_dest_id = fields.Many2one(
-        'stock.location', "Destination Location",
+        'stock.location', "To",
         default=lambda self: self.env['stock.picking.type'].browse(self._context.get('default_picking_type_id')).default_location_dest_id,
         readonly=True, required=True,
         states={'draft': [('readonly', False)]})
