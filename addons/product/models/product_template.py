@@ -88,8 +88,7 @@ class ProductTemplate(models.Model):
     weight = fields.Float(
         'Weight', compute='_compute_weight', digits=dp.get_precision('Stock Weight'),
         inverse='_set_weight', store=True)
-    weight_uom_id = fields.Many2one('uom.uom', string='Weight Unit of Measure', compute='_compute_weight_uom_id')
-    weight_uom_name = fields.Char(string='Weight unit of measure label', related='weight_uom_id.name', readonly=True)
+    weight_uom_name = fields.Char(string='Weight unit of measure label', compute='_compute_weight_uom_name', readonly=True)
 
     sale_ok = fields.Boolean(
         'Can be Sold', default=True,
@@ -258,10 +257,11 @@ class ProductTemplate(models.Model):
         else:
             return self.env.ref('uom.product_uom_kgm')
 
-    def _compute_weight_uom_id(self):
-        weight_uom_id = self._get_weight_uom_id_from_ir_config_parameter()
-        for product_template in self:
-            product_template.weight_uom_id = weight_uom_id
+    @api.depends('weight')
+    def _compute_weight_uom_name(self):
+        for template in self:
+            weight = template._get_weight_uom_id_from_ir_config_parameter()
+            template.weight_uom_name = weight.name
 
     @api.depends('volume')
     def _compute_volume_name(self):

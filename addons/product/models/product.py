@@ -134,6 +134,7 @@ class ProductProduct(models.Model):
     volume = fields.Float('Volume')
     volume_name = fields.Char(string='Volume unit of measure label', compute='_compute_volume_name')
     weight = fields.Float('Weight', digits=dp.get_precision('Stock Weight'))
+    weight_uom_name = fields.Char(string='Weight unit of measure label', compute='_compute_weight_name', readonly=True)
 
     pricelist_item_ids = fields.Many2many(
         'product.pricelist.item', 'Pricelist Items', compute='_get_pricelist_items')
@@ -145,6 +146,16 @@ class ProductProduct(models.Model):
     _sql_constraints = [
         ('barcode_uniq', 'unique(barcode)', "A barcode can only be assigned to one product !"),
     ]
+
+    @api.depends('weight')
+    def _compute_weight_name(self):
+        """ Get the unit of measure to interpret the `weight` field. By default, we considerer
+        that weights are expressed in kilograms. Users can configure to express them in pounds
+        by adding an ir.config_parameter record with "product.product_weight_in_lbs" as key
+        and "1" as value.
+        """
+        get_param = self.env['ir.config_parameter'].sudo().get_param
+        self.weight_uom_name = "lb(s)" if get_param('product.weight_in_lbs') == '1' else "kg"
 
     @api.depends('volume')
     def _compute_volume_name(self):
