@@ -94,7 +94,7 @@ class L10nInAccountInvoiceReport(models.Model):
                 sum(aml.l10n_in_cgst_amount) AS cgst_amount,
                 sum(aml.l10n_in_sgst_amount) AS sgst_amount,
                 sum(aml.l10n_in_cess_amount) AS cess_amount,
-                sum(ABS(aml.balance)) AS price_total,
+                sum(aml.balance) * (CASE WHEN aj.type = 'sale' THEN -1 ELSE 1 END) AS price_total,
                 (CASE WHEN am.l10n_in_reverse_charge = True
                     THEN 'Y'
                     ELSE 'N'
@@ -227,7 +227,8 @@ class L10nInAccountInvoiceReport(models.Model):
             pos.id,
             gstin_ps.id,
             refund_ai.l10n_in_export_type,
-            ai.l10n_in_export_type
+            ai.l10n_in_export_type,
+            aj.type
         """
         return group_by_str
 

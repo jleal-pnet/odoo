@@ -26,7 +26,7 @@ class L10nInExemptedReport(models.Model):
         select_str = """SELECT aml.id AS id,
             aml.partner_id AS partner_id,
             aml.date_maturity AS date,
-            ABS(aml.balance) AS price_total,
+            aml.balance * (CASE WHEN aj.type = 'sale' THEN -1 ELSE 1 END) AS price_total,
             am.l10n_in_gstin_partner_id AS gstin_partner_id,
             am.journal_id,
             aj.company_id,
@@ -55,7 +55,7 @@ class L10nInExemptedReport(models.Model):
                     WHERE account_move_line_id = aml.id AND at.tax_group_id IN
                      ((SELECT res_id FROM ir_model_data WHERE module='l10n_in' AND name='nil_rated_group'))
             ) IS NOT NULL
-                THEN ABS(aml.balance)
+                THEN aml.balance * (CASE WHEN aj.type = 'sale' THEN -1 ELSE 1 END)
                 ELSE 0
             END) AS nil_rated_amount,
 
@@ -65,7 +65,7 @@ class L10nInExemptedReport(models.Model):
                     WHERE account_move_line_id = aml.id AND at.tax_group_id IN
                      ((SELECT res_id FROM ir_model_data WHERE module='l10n_in' AND name='exempt_group'))
             ) IS NOT NULL
-                THEN ABS(aml.balance)
+                THEN aml.balance * (CASE WHEN aj.type = 'sale' THEN -1 ELSE 1 END)
                 ELSE 0
             END) AS exempted_amount,
 
@@ -73,7 +73,7 @@ class L10nInExemptedReport(models.Model):
                 SELECT MAX(account_tax_id) FROM account_move_line_account_tax_rel
                     WHERE account_move_line_id = aml.id
                 ) IS NULL
-                THEN ABS(aml.balance)
+                THEN aml.balance * (CASE WHEN aj.type = 'sale' THEN -1 ELSE 1 END)
                 ELSE 0
             END) AS non_gst_supplies
         """
