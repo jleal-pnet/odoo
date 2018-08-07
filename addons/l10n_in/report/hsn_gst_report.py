@@ -30,7 +30,7 @@ class L10nInProductHsnReport(models.Model):
     hsn_code = fields.Char(string="HSN")
     hsn_description = fields.Char(string="HSN description")
 
-    l10n_in_uom_code = fields.Char(related='uom_id.l10n_in_code')
+    l10n_in_uom_code = fields.Char(string="UQC")
 
     def _select(self):
         select_str = """SELECT aml.id AS id,
@@ -49,8 +49,9 @@ class L10nInProductHsnReport(models.Model):
             am.journal_id,
             ABS(aml.balance) + aml.l10n_in_igst_amount + aml.l10n_in_cgst_amount + aml.l10n_in_sgst_amount + aml.l10n_in_cess_amount  AS total,
             aj.company_id,
-            pt.l10n_in_hsn_code AS hsn_code,
-            pt.l10n_in_hsn_description AS hsn_description
+            CASE WHEN pt.l10n_in_hsn_code IS NULL THEN '' ELSE pt.l10n_in_hsn_code END AS hsn_code,
+            CASE WHEN pt.l10n_in_hsn_description IS NULL THEN '' ELSE pt.l10n_in_hsn_description END AS hsn_description,
+            CASE WHEN uom.l10n_in_code IS NULL THEN '' ELSE uom.l10n_in_code END AS l10n_in_uom_code
         """
         return select_str
 
@@ -61,7 +62,8 @@ class L10nInProductHsnReport(models.Model):
             JOIN account_journal aj ON aj.id = am.journal_id
             JOIN product_product pp ON pp.id = aml.product_id
             JOIN product_template pt ON pt.id = pp.product_tmpl_id
-            WHERE aa.internal_type = 'other'
+            LEFT JOIN uom_uom uom ON uom.id = aml.product_uom_id
+            WHERE aa.internal_type = 'other' AND aml.tax_line_id IS NULL
         """
         return from_str
 

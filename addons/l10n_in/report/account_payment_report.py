@@ -41,7 +41,7 @@ class L10nInPaymentReport(models.AbstractModel):
             ap.l10n_in_gstin_partner_id AS gstin_partner_id,
             ap.payment_type,
             ap.l10n_in_tax_id as l10n_in_tax_id,
-            tax.l10n_in_description,
+            CASE WHEN tax.l10n_in_description IS NULL THEN '' ELSE tax.l10n_in_description END AS l10n_in_description,
             am.partner_id,
             am.amount AS payment_amount,
             ap.journal_id,
