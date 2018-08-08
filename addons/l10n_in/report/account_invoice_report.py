@@ -5,7 +5,6 @@ from odoo import api, fields, models, tools
 
 
 class L10nInAccountInvoiceReport(models.Model):
-
     _name = "l10n_in.account.invoice.report"
     _description = "Account Invoice Statistics"
     _auto = False
@@ -94,7 +93,7 @@ class L10nInAccountInvoiceReport(models.Model):
                 sum(aml.l10n_in_cgst_amount) AS cgst_amount,
                 sum(aml.l10n_in_sgst_amount) AS sgst_amount,
                 sum(aml.l10n_in_cess_amount) AS cess_amount,
-                sum(aml.balance) * (CASE WHEN aj.type = 'sale' THEN -1 ELSE 1 END) AS price_total,
+                sum(aml.balance) * (CASE WHEN aj.type = 'sale' AND (ai.type IS NULL OR ai.type != 'out_refund') THEN -1 ELSE 1 END) AS price_total,
                 (CASE WHEN am.l10n_in_reverse_charge = True
                     THEN 'Y'
                     ELSE 'N'
@@ -185,10 +184,14 @@ class L10nInAccountInvoiceReport(models.Model):
                 LEFT JOIN res_country_state gstin_ps ON gstin_ps.id = gstin_p.state_id
                 LEFT JOIN res_partner rp ON rp.id = am.l10n_in_reseller_partner_id
                 LEFT JOIN account_tax at ON at.id = aml.l10n_in_tax_id
-                where am.state = 'posted' AND aml.l10n_in_tax_id IS NOT NULL
-                    AND at.tax_group_id not in (SELECT res_id FROM ir_model_data WHERE module='l10n_in' AND name in ('exempt_group','nil_rated_group'))
         """
         return from_str
+
+    def _where(self):
+        return """
+                WHERE am.state = 'posted' AND aml.l10n_in_tax_id IS NOT NULL
+                    AND at.tax_group_id not in (SELECT res_id FROM ir_model_data WHERE module='l10n_in' AND name in ('exempt_group','nil_rated_group'))
+        """
 
     def _group_by(self):
         group_by_str = """
@@ -236,4 +239,4 @@ class L10nInAccountInvoiceReport(models.Model):
     def init(self):
         tools.drop_view_if_exists(self.env.cr, self._table)
         self.env.cr.execute("""CREATE or REPLACE VIEW %s AS (
-            %s %s %s)""" % (self._table, self._select(), self._from(), self._group_by()))
+            %s %s %s %s)""" % (self._table, self._select(), self._from(), self._where(), self._group_by()))

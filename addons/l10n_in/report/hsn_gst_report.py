@@ -5,7 +5,6 @@ from odoo import api, fields, models, tools
 
 
 class L10nInProductHsnReport(models.Model):
-
     _name = "l10n_in.product.hsn.report"
     _description = "Product HSN Statistics"
     _auto = False
@@ -63,7 +62,8 @@ class L10nInProductHsnReport(models.Model):
             JOIN product_product pp ON pp.id = aml.product_id
             JOIN product_template pt ON pt.id = pp.product_tmpl_id
             LEFT JOIN uom_uom uom ON uom.id = aml.product_uom_id
-            WHERE aa.internal_type = 'other' AND aml.tax_line_id IS NULL
+            LEFT JOIN account_invoice ai ON ai.id = aml.invoice_id
+            WHERE aa.internal_type = 'other' AND aml.tax_line_id IS NULL AND (ai.type IS NULL OR ai.type not in ('out_refund', 'in_refund'))
         """
         return from_str
 

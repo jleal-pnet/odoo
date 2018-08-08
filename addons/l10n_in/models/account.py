@@ -6,19 +6,18 @@ from odoo.exceptions import ValidationError
 
 
 class AccountJournal(models.Model):
-
     _inherit = "account.journal"
 
-    #Use for filter import and export type.
+    # Use for filter import and export type.
     l10n_in_import_export = fields.Boolean("Import/Export", help="Tick this if this journal is use for Import/Export Under Indian GST.")
 
 
 class AccountMove(models.Model):
     _inherit = "account.move"
 
-    #Use for invisible fields in form views.
+    # Use for invisible fields in form views.
     l10n_in_import_export = fields.Boolean(related='journal_id.l10n_in_import_export', readonly=True)
-    #For Export invoice this data is need in GSTR report
+    # For Export invoice this data is need in GSTR report
     l10n_in_export_type = fields.Selection([
         ('regular', 'Regular'), ('deemed', 'Deemed'),
         ('sale_from_bonded_wh', 'Sale from Bonded WH'),
@@ -52,7 +51,7 @@ class AccountMove(models.Model):
 class AccountMoveLine(models.Model):
     _inherit = "account.move.line"
 
-    #For use in GSTR report.
+    # For use in GSTR report.
     l10n_in_igst_amount = fields.Float(string="IGST Amount", compute='_compute_l10n_in_taxes_amount', store=True, readonly=True)
     l10n_in_cgst_amount = fields.Float(string="CGST Amount", compute='_compute_l10n_in_taxes_amount', store=True, readonly=True)
     l10n_in_sgst_amount = fields.Float(string="SGST Amount", compute='_compute_l10n_in_taxes_amount', store=True, readonly=True)
@@ -67,7 +66,6 @@ class AccountMoveLine(models.Model):
         for record in self:
             if record.l10n_in_itc_percentage < 0 or record.l10n_in_itc_percentage > 100:
                 ValidationError(_("ITC percentage between 0 to 100"))
-
 
     @api.depends('l10n_in_tax_price_unit', 'tax_ids', 'quantity', 'product_id', 'partner_id', 'company_currency_id')
     def _compute_l10n_in_taxes_amount(self):
@@ -98,11 +96,11 @@ class AccountMoveLine(models.Model):
             tax_group = AccountTax.browse(tax_data['id']).tax_group_id
             if tax_group == sgst_group:
                 res['sgst_amount'] += tax_data['amount']
-            if tax_group == cgst_group:
+            elif tax_group == cgst_group:
                 res['cgst_amount'] += tax_data['amount']
-            if tax_group == igst_group:
+            elif tax_group == igst_group:
                 res['igst_amount'] += tax_data['amount']
-            if tax_group == cess_group:
+            elif tax_group == cess_group:
                 res['cess_amount'] += tax_data['amount']
         res.update(tax_compute)
         return res
@@ -123,5 +121,5 @@ class AccountMoveLine(models.Model):
 class AccountTax(models.Model):
     _inherit = 'account.tax'
 
-    #use in GSTR export report as Rate of tax.
+    # use in GSTR export report as Rate of tax.
     l10n_in_description = fields.Char(string='Label on GST Report', help="Tax rate show in Indian GSTR report.")

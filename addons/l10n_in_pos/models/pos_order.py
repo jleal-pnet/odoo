@@ -43,12 +43,11 @@ class PosOrder(models.Model):
                     'l10n_in_place_of_supply': l10n_in_place_of_supply and l10n_in_place_of_supply.id})
             payment = self.env['account.payment']
             move = self.env['account.move']
-            for statement_line_id in order.statement_ids:
-                for journal_entry_id in statement_line_id.journal_entry_ids:
-                    if journal_entry_id.move_id not in move:
-                        move += journal_entry_id.move_id
-                    if journal_entry_id.payment_id not in payment:
-                        payment += journal_entry_id.payment_id
+            for journal_entry_id in order.statement_ids.mapped('journal_entry_ids'):
+                if journal_entry_id.move_id not in move:
+                    move += journal_entry_id.move_id
+                if journal_entry_id.payment_id not in payment:
+                    payment += journal_entry_id.payment_id
             move.write({
                 'l10n_in_gstin_partner_id': l10n_in_gstin_partner_id,
                 'l10n_in_place_of_supply': l10n_in_place_of_supply and l10n_in_place_of_supply.id})

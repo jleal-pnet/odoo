@@ -29,7 +29,7 @@
         <field name="model">l10n_in.product.hsn.report</field>
         <field name="arch" type="xml">
             <search string="Report Product HSN">
-                
+                <field name="gstin_partner_id" groups='l10n_in.group_l10n_in_multi_gstin'/>
                 <filter string="This Month" name="this_month" domain="[('date', '&gt;=', context_today().strftime('%%Y-%%m-01')), ('date', '&lt;', (context_today() + relativedelta(months=1)).strftime('%%Y-%%m-01'))]"/>
                 <filter string="Last Month" name="last_month" domain="['&amp;', ('date', '&gt;=', (context_today() - relativedelta(months=1)).strftime('%%Y-%%m-01')), ('date', '&lt;', context_today().strftime('%%Y-%%m-01'))]"/>
 

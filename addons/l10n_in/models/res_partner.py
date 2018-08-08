@@ -10,7 +10,8 @@ class AccountFiscalPosition(models.Model):
 
     l10n_in_supply_type = fields.Selection([
         ('inter_state', 'Inter State'),
-        ('export_import', 'Export/Import')], string="Supply Type")
+        ('export_import', 'Export/Import')
+    ], string="Supply Type")
 
     @api.model
     def _get_fpos_by_region(self, country_id=False, state_id=False, zipcode=False, vat_required=False):
@@ -21,35 +22,36 @@ class AccountFiscalPosition(models.Model):
 
     @api.model
     def get_fiscal_position(self, partner_id, delivery_id=None):
-        fiscal_position_id = super(AccountFiscalPosition, self).get_fiscal_position(partner_id=partner_id, delivery_id=delivery_id)
+        fiscal_position = super(AccountFiscalPosition, self).get_fiscal_position(partner_id=partner_id, delivery_id=delivery_id)
         company_id = self.env.context.get('force_company') or self.env.context.get('company_id') or self.env.user.company_id.id
-        if self.env['res.company'].browse(company_id).country_id.code != 'IN' or fiscal_position_id:
-            return fiscal_position_id
+        if fiscal_position or self.env['res.company'].browse(company_id).country_id.code != 'IN':
+            return fiscal_position
+        fiscal_position = self.env['account.fiscal.position']
         l10n_in_gstin_partner_id = self.env.context.get('l10n_in_gstin_partner_id')
         if l10n_in_gstin_partner_id and partner_id:
-            partner_id = self.env['res.partner'].browse(partner_id)
-            gstin_partner_id = self.env['res.partner'].browse(l10n_in_gstin_partner_id)
+            partner = self.env['res.partner'].browse(partner_id)
+            gstin_partner = self.env['res.partner'].browse(l10n_in_gstin_partner_id)
             supply_type = False
-            if partner_id.state_id.id != gstin_partner_id.state_id.id:
+            if partner.state_id != gstin_partner.state_id:
                 supply_type = 'inter_state'
-            if partner_id.state_id.country_id.id != gstin_partner_id.country_id.id:
+            if partner.state_id.country_id != gstin_partner.country_id:
                 supply_type = 'export_import'
             if supply_type:
-                fiscal_position_id = self.search([
-                    ('company_id', '=', company_id),
-                    ('auto_apply', '=', True),
-                    ('l10n_in_supply_type', '=', supply_type)], limit=1)
-        return fiscal_position_id.id if fiscal_position_id else False
+                fiscal_position = self.search([
+                    ('company_id', '=', company_id), ('auto_apply', '=', True),
+                    ('l10n_in_supply_type', '=', supply_type)
+                ], limit=1)
+        return fiscal_position.id
 
 
 class ResPartner(models.Model):
     _inherit = 'res.partner'
 
-    #Use for Multi GSTIN
+    # Use for Multi GSTIN
     l10n_in_gstin_company_id = fields.Many2one('res.company', string="GSTIN Company")
-    #Use in view attrs. Need to required state_id if Country is India.
+    # Use in view attrs. Need to required state_id if Country is India.
     country_code = fields.Char(related="country_id.code", string="Country code")
-    #In GSTR-2 report We need to specify that vendor is under composition scheme or not.
+    # In GSTR-2 report We need to specify that vendor is under composition scheme or not.
     l10n_in_composition = fields.Boolean(string="Is Composition", help="Check this box if this vendor is under composition scheme")
 
     @api.multi
@@ -68,9 +70,5 @@ class ResPartner(models.Model):
 
     @api.constrains('vat', 'country_id')
     def l10n_in_check_vat(self):
-        for partner in self.filtered(lambda p: p.vat):
-            country_code = partner.commercial_partner_id.country_id.code
-            if country_code == 'IN':
-                if len(partner.vat) != 15:
-                    msg = _('The GSTIN [%s] for partner [%s] should be 15 characters only.') % (self.vat, self.name)
-                    raise ValidationError(msg)
+        for partner in self.filtered(lambda p: p.commercial_partner_id.country_id.code == 'IN' and p.vat and len(p.vat) != 15):
+            raise ValidationError(_('The GSTIN [%s] for partner [%s] should be 15 characters only.') % (partner.vat, partner.name))

@@ -30,15 +30,16 @@
         <field name="model">l10n_in.account.invoice.report</field>
         <field name="arch" type="xml">
             <search string="GST Account Invoice Report">
+                <field name="gstin_partner_id" groups='l10n_in.group_l10n_in_multi_gstin'/>
                 <field name="name" string="Invoice Number" filter_domain="[('name', 'ilike', self)]"/>
                 <separator/>
-                <filter name="b2b" string="B2B Invoice" domain="[('partner_vat','!=', False), ('l10n_in_export_type', 'in', ['regular', 'deemed', 'sale_from_bonded_wh', 'sez_with_igst', 'sez_without_igst'])]"/>
-                <filter name="b2bl" string="B2CL Invoice" domain="[('partner_vat', '=', False),('total', '&gt;', '250000'),('supply_type', '=', 'Inter State'), ('journal_id.l10n_in_import_export', '!=', True)]" />
+                <filter name="b2b" string="B2B Invoice" domain="[('partner_vat','!=', False), ('l10n_in_export_type', 'in', ['regular', 'deemed', 'sale_from_bonded_wh', 'sez_with_igst', 'sez_without_igst']),('invoice_type', 'not in', ('out_refund','in_refund'))]"/>
+                <filter name="b2bl" string="B2CL Invoice" domain="[('partner_vat', '=', False),('total', '&gt;', '250000'),('supply_type', '=', 'Inter State'), ('journal_id.l10n_in_import_export', '!=', True),('invoice_type', 'not in', ('out_refund','in_refund'))]" />
                 <filter name="b2bs" string="B2CS Invoice" domain="[
-                    '&amp;', '&amp;',('partner_vat', '=', False), ('journal_id.l10n_in_import_export', '!=', True),
+                    '&amp;', '&amp;', '&amp;', ('partner_vat', '=', False), ('journal_id.l10n_in_import_export', '!=', True), ('invoice_type', 'not in', ('out_refund', 'in_refund')),
                     '|', ('supply_type', '=', 'Intra State'),
                     '&amp;', ('total', '&lt;=', '250000'), ('supply_type', '=', 'Inter State')]"/>
-                <filter name="exp" string="Export Invoice" domain="[('journal_id.l10n_in_import_export','=', True)]"/>
+                <filter name="exp" string="Export Invoice" domain="[('journal_id.l10n_in_import_export','=', True), ('invoice_type', 'not in', ('out_refund','in_refund'))]"/>
 
                 <filter name="credit_note_registed" string="CDNR Invoice" help="" domain="[('partner_vat','!=', False),('invoice_type', 'in', ('out_refund','in_refund'))]"/>
                 <filter name="credit_note_unregisted" string="CDNUR Invoice" domain="[('partner_vat','=', False),('invoice_type', 'in', ('out_refund','in_refund'))]"/>
@@ -46,7 +47,7 @@
                 <filter string="This Month" name="this_month" domain="[('date', '&gt;=', context_today().strftime('%%Y-%%m-01')), ('date', '&lt;', (context_today() + relativedelta(months=1)).strftime('%%Y-%%m-01'))]"/>
                 <filter string="Last Month" name="last_month" domain="['&amp;', ('date', '&gt;=', (context_today() - relativedelta(months=1)).strftime('%%Y-%%m-01')), ('date', '&lt;', context_today().strftime('%%Y-%%m-01'))]"/>
                 <group expand="0" string="Group By">
-                        <filter name="group_by_gstin_partner_id" string="GSTIN" context="{'group_by':'gstin_partner_id'}" groups='l10n_in.group_l10n_in_multi_gstin'/>
+                    <filter name="group_by_gstin_partner_id" string="GSTIN" context="{'group_by':'gstin_partner_id'}" groups='l10n_in.group_l10n_in_multi_gstin'/>
                 </group>
             </search>
         </field>

@@ -6,7 +6,6 @@ from odoo.exceptions import ValidationError
 
 
 class AccountInvoice(models.Model):
-
     _inherit = "account.invoice"
 
     @api.depends('amount_total')
@@ -15,9 +14,9 @@ class AccountInvoice(models.Model):
             invoice.amount_total_words = invoice.currency_id.amount_to_text(invoice.amount_total)
 
     amount_total_words = fields.Char("Total (In Words)", compute="_compute_amount_total_words")
-    #Use for invisible fields in form views.
+    # Use for invisible fields in form views.
     l10n_in_import_export = fields.Boolean(related='journal_id.l10n_in_import_export', readonly=True)
-    #For Export invoice this data is need in GSTR report
+    # For Export invoice this data is need in GSTR report
     l10n_in_export_type = fields.Selection([
         ('regular', 'Regular'), ('deemed', 'Deemed'),
         ('sale_from_bonded_wh', 'Sale from Bonded WH'),
@@ -98,7 +97,7 @@ class AccountInvoice(models.Model):
     def action_move_create(self):
         res = super(AccountInvoice, self).action_move_create()
         for inv in self:
-            vals = {
+            inv.move_id.write({
                 'l10n_in_export_type': inv.l10n_in_export_type,
                 'l10n_in_shipping_bill_number': inv.l10n_in_shipping_bill_number,
                 'l10n_in_shipping_bill_date': inv.l10n_in_shipping_bill_date,
@@ -108,8 +107,7 @@ class AccountInvoice(models.Model):
                 'l10n_in_gstin_partner_id': inv.l10n_in_gstin_partner_id.id,
                 'l10n_in_import_type': inv.l10n_in_import_type,
                 'l10n_in_place_of_supply': inv.l10n_in_place_of_supply.id
-                }
-            inv.move_id.write(vals)
+            })
         return res
 
     @api.multi
@@ -153,7 +151,7 @@ class AccountInvoice(models.Model):
 class AccountInvoiceLine(models.Model):
     _inherit = "account.invoice.line"
 
-    #This tax amount show in invoice PDF report
+    # This tax amount show in invoice PDF report
     l10n_in_igst_amount = fields.Float(string="IGST Amount", compute='_compute_l10n_in_taxes_amount', store=True, readonly=True)
     l10n_in_cgst_amount = fields.Float(string="CGST Amount", compute='_compute_l10n_in_taxes_amount', store=True, readonly=True)
     l10n_in_sgst_amount = fields.Float(string="SGST Amount", compute='_compute_l10n_in_taxes_amount', store=True, readonly=True)
@@ -188,5 +186,5 @@ class AccountInvoiceLine(models.Model):
     @api.onchange('product_id')
     def _onchange_product_id(self):
         res = super(AccountInvoiceLine, self)._onchange_product_id()
-        self.l10n_in_is_eligible_for_itc = self.product_id and self.product_id.l10n_in_is_eligible_for_itc or False
+        self.l10n_in_is_eligible_for_itc = self.product_id.l10n_in_is_eligible_for_itc
         return res

@@ -11,7 +11,7 @@
         'stock',
     ],
     'data': [
-        'views/report_template.xml',
+        'views/report_templates.xml',
         'views/report_stockpicking_operations.xml',
         'views/stock_warehouse_views.xml',
     ],

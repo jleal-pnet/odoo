@@ -39,7 +39,7 @@ Sheet, now only Vertical format has been permitted Which is Supported By Odoo.
         'views/product_template_view.xml',
         'views/port_code_views.xml',
         'views/account_payment_views.xml',
-        'views/report_template.xml',
+        'views/report_templates.xml',
         'views/report_invoice.xml',
         'views/account_report_payment_receipt_templates.xml',
         'views/res_company_view.xml',

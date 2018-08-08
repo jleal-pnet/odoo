@@ -11,7 +11,7 @@
         'point_of_sale'
     ],
     'data': [
-        'views/pos_config_view.xml',
+        'views/pos_config_views.xml',
     ],
     'auto_install': True,
 }

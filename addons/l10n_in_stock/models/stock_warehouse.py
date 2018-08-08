@@ -5,13 +5,10 @@ from odoo import api, fields, models
 
 
 class StockWarehouse(models.Model):
-
     _inherit = "stock.warehouse"
 
-    l10n_in_gstin_partner_id = fields.Many2one(
-        'res.partner', string="GSTIN", required=True,
-        default=lambda self: self.env['res.company']._company_default_get('stock.warehouse').partner_id
-        )
+    l10n_in_gstin_partner_id = fields.Many2one('res.partner',
+        string="GSTIN", required=True, default=lambda self: self.env['res.company']._company_default_get('stock.warehouse').partner_id)
 
     @api.model_create_multi
     def create(self, vals_list):

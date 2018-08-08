@@ -5,17 +5,15 @@ from odoo import api, models, fields
 
 
 class AccountInvoiceRefund(models.TransientModel):
-
     _inherit = "account.invoice.refund"
 
-    #Refund reason for credit or debite note.
+    # Refund reason for credit or debite note.
     l10n_in_refund_reason_id = fields.Many2one('l10n_in.refund.reason', string= "Refund Reason")
 
     @api.onchange("l10n_in_refund_reason_id")
     def _onchange_l10n_in_refund_reason(self):
         if self.l10n_in_refund_reason_id:
             self.description = self.l10n_in_refund_reason_id.name
-
 
     @api.multi
     def invoice_refund(self):

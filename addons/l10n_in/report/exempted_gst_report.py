@@ -5,7 +5,6 @@ from odoo import api, fields, models, tools
 
 
 class L10nInExemptedReport(models.Model):
-
     _name = "l10n_in.exempted.report"
     _description = "Exempted Gst Supplied Statistics"
     _auto = False

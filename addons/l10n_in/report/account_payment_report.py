@@ -81,7 +81,6 @@ class L10nInPaymentReport(models.AbstractModel):
 
 
 class AdvancesPaymentReport(models.Model):
-
     _name = "l10n_in.advances.payment.report"
     _inherit = 'l10n_in.payment.report'
     _description = "Advances Payment Analysis"
@@ -124,7 +123,6 @@ class AdvancesPaymentReport(models.Model):
 
 
 class L10nInAdvancesPaymentAdjustmentReport(models.Model):
-
     _name = "l10n_in.advances.payment.adjustment.report"
     _inherit = 'l10n_in.payment.report'
     _description = "Advances Payment Adjustment Analysis"
