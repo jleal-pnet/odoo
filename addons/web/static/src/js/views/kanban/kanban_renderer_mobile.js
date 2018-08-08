@@ -21,8 +21,8 @@ if (!config.device.isMobile) {
 
 KanbanRenderer.include({
     custom_events:  _.extend({}, KanbanRenderer.prototype.custom_events, {
-        'kanban_column_swipe_left': '_onMobileSwipeLeft',
-        'kanban_column_swipe_right': '_onMobileSwipeRight'
+        kanban_column_swipe_left: '_mobileSwipeLeft',
+        kanban_column_swipe_right: '_mobileSwipeRight'
     }),
     events: _.extend({}, KanbanRenderer.prototype.events, {
         'click .o_kanban_mobile_tab': '_onMobileTabClicked',
@@ -116,9 +116,29 @@ KanbanRenderer.include({
     _enableSwipe: function () {
         var currentColumn = this.widgets[this.activeColumnIndex];
         currentColumn.$el.swipe({
-            swipeLeft: this._onMobileSwipeLeft.bind(this),
-            swipeRight: this._onMobileSwipeRight.bind(this)
+            swipeLeft: this._mobileSwipeLeft.bind(this),
+            swipeRight: this._mobileSwipeRight.bind(this)
         });
+    },
+    /**
+     * swipe current stage to left side
+     *
+     * @private
+     */
+    _mobileSwipeLeft: function () {
+        if ((this.activeColumnIndex + 1) < this.$('.o_kanban_group').length) {
+            this._moveToGroup(this.activeColumnIndex + 1, this.ANIMATE);
+        }
+    },
+    /**
+     * swipe current stage to right side
+     *
+     * @private
+     */
+    _mobileSwipeRight: function () {
+        if (this.activeColumnIndex > 0) {
+            this._moveToGroup(this.activeColumnIndex - 1, this.ANIMATE);
+        }
     },
     /**
      * Moves to the given kanban column
@@ -215,16 +235,6 @@ KanbanRenderer.include({
      */
     _onMobileTabClicked: function (event) {
         this._moveToGroup($(event.currentTarget).index(), true);
-    },
-    _onMobileSwipeLeft: function (event) {
-        if ((this.activeColumnIndex + 1) < this.$('.o_kanban_group').length) {
-            this._moveToGroup(this.activeColumnIndex + 1, this.ANIMATE);
-        }
-    },
-    _onMobileSwipeRight: function (event) {
-        if (this.activeColumnIndex > 0) {
-            this._moveToGroup(this.activeColumnIndex - 1, this.ANIMATE);
-        }
     },
 
 });

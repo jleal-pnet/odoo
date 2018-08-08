@@ -104,7 +104,7 @@ var KanbanColumn = Widget.extend({
         this.$header.find('.o_kanban_header_title').tooltip();
 
         var scrollDelay = 0;
-        var scrollableParent = this.getScrollableParent();
+        var $scrollableParent = this._getScrollableParent();
         new Sortable(this.$('.o_kanban_record_wrap')[0], {
             group: {
                 name: '.o_kanban_record_wrap',
@@ -113,7 +113,7 @@ var KanbanColumn = Widget.extend({
             ghostClass: 'oe_kanban_card_ghost',
             chosenClass: 'o_kanban_record_chosen',
             draggable: '.o_kanban_record:not(.o_updating)',
-            scroll: config.device.isMobile ? true  : scrollableParent && scrollableParent[0],
+            scroll: config.device.isMobile ? true  : $scrollableParent && $scrollableParent[0],
             scrollSpeed: 20,
             scrollSensitivity: 40,
             delay: config.device.isMobile ? 200 : 0,
@@ -134,6 +134,9 @@ var KanbanColumn = Widget.extend({
                     self.$el.scrollTop(self.$el.scrollTop() + offsetY);
                 }
             } : false,
+            onMove: function () {
+                console.log('>>>>>>>>>>>>>>>>>>', this);
+            },
             onStart: function () {
                 if (config.device.isMobile) {
                     self.$el.swipe('disable');
@@ -243,18 +246,6 @@ var KanbanColumn = Widget.extend({
         }
     },
     /**
-     * Returns scrollable parent element
-     */
-    getScrollableParent: function () {
-        var scrollableParent;
-        this.trigger_up('get_scrollable_parent', {
-            callback: function (scrollable_parent) {
-                scrollableParent = scrollable_parent;
-            }
-        });
-        return scrollableParent;
-    },
-    /**
      * @returns {Boolean} true iff the column is empty
      */
     isEmpty: function () {
@@ -307,6 +298,23 @@ var KanbanColumn = Widget.extend({
             ids.push($(r).data('record').id);
         });
         return ids;
+    },
+    /**
+     * triggers get_scrollable_parent to find scrollable parent element
+     * get_scrollable_parent event is hanled by parents to return specific scrollable element
+     * else action_manager element is returned
+     *
+     * @private
+     * @returns {jQuery|undefined} scrollable parent element
+     */
+    _getScrollableParent: function () {
+        var $scrollableParent;
+        this.trigger_up('get_scrollable_parent', {
+            callback: function ($scrollable_parent) {
+                $scrollableParent = $scrollable_parent;
+            }
+        });
+        return $scrollableParent;
     },
 
     //--------------------------------------------------------------------------

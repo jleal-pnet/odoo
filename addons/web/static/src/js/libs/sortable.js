@@ -14,8 +14,8 @@ $.extend(proto, {
 	// extend _onTouchMove to add additional css property on clone element(add rotation)
 	_onTouchMove: function (/**TouchEvent*/evt) {
 		onTouchMove.call(this,evt);
-		var clonedDiv = $(this.el).find('.o_kanban_record_clone');
-		clonedDiv.css('transform', clonedDiv.css('transform') + ' rotate(-3deg)');
+		var $clonedDiv = $(this.el).find('.o_kanban_record_clone');
+		$clonedDiv.css('transform', $clonedDiv.css('transform') + ' rotate(-3deg)');
 	},
 });
 });

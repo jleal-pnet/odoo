@@ -428,18 +428,6 @@ ListRenderer.include({
             });
         }
     },
-    /**
-     * Returns scrollable parent element
-     */
-    getScrollableParent: function () {
-        var scrollableParent;
-        this.trigger_up('get_scrollable_parent', {
-            callback: function (scrollable_parent) {
-                scrollableParent = scrollable_parent;
-            }
-        });
-        return scrollableParent;
-    },
 
     //--------------------------------------------------------------------------
     // Private
@@ -539,13 +527,13 @@ ListRenderer.include({
     _renderBody: function () {
         var $body = this._super();
         if (this.handleField) {
-            var scrollableParent = this.getScrollableParent();
+            var $scrollableParent = this._getScrollableParent();
             new Sortable($body[0], {
                 handle: '.o_row_handle',
                 ghostClass: 'o_data_row_ghost',
                 draggable: 'tr.o_data_row',
                 // in testcase we are not getting scrollableParent.
-                scroll: scrollableParent ? scrollableParent[0] : true,
+                scroll: $scrollableParent ? $scrollableParent[0] : true,
                 onEnd: this._resequence.bind(this),
                 forceFallback: true,
                 fallbackClass: 'o_data_row_clone',
@@ -616,12 +604,29 @@ ListRenderer.include({
             }
         });
     },
+   /**
+     * triggers get_scrollable_parent to find scrollable parent element
+     * get_scrollable_parent event is hanled by parents to return specific scrollable element
+     * else action_manager element is returned
+     *
+     * @private
+     * @returns {jQuery|undefined} scrollable parent element
+     */
+    _getScrollableParent: function () {
+        var $scrollableParent;
+        this.trigger_up('get_scrollable_parent', {
+            callback: function ($scrollable_parent) {
+                $scrollableParent = $scrollable_parent;
+            }
+        });
+        return $scrollableParent;
+    },
+
     /**
      * Force the resequencing of the items in the list.
      *
      * @private
      * @param {jQuery.Event} event
-     * @param {Object} ui jqueryui sortable widget
      */
     _resequence: function (event) {
         var self = this;

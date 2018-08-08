@@ -222,18 +222,6 @@ var KanbanRenderer = BasicRenderer.extend({
         return $.when();
     },
     /**
-     * Returns scrollable parent element
-     */
-    getScrollableParent: function () {
-        var scrollableParent;
-        this.trigger_up('get_scrollable_parent', {
-            callback: function (scrollable_parent) {
-                scrollableParent = scrollable_parent;
-            }
-        });
-        return scrollableParent;
-    },
-    /**
      * @override
      */
     updateState: function (state) {
@@ -310,13 +298,13 @@ var KanbanRenderer = BasicRenderer.extend({
         }
         if (this.groupedByM2O) {
             // Enable column sorting
-            var scrollableParent = this.getScrollableParent();
+            var $scrollableParent = this._getScrollableParent();
             new Sortable(this.el, {
                 handle: '.o_kanban_header_title',
                 ghostClass: 'o_kanban_group_ghost',
                 sort: true,
                 draggable: '.o_kanban_group',
-                scroll: scrollableParent && scrollableParent[0],
+                scroll: $scrollableParent && $scrollableParent[0],
                 forceFallback: true,
                 fallbackClass: 'o_kanban_group_clone',
                 onEnd: function (event) {
@@ -488,6 +476,23 @@ var KanbanRenderer = BasicRenderer.extend({
                 cannotSelectAColumn = true;
             }
         }
+    },
+   /**
+     * triggers get_scrollable_parent to find scrollable parent element
+     * get_scrollable_parent event is hanled by parents to return specific scrollable element
+     * else action_manager element is returned
+     *
+     * @private
+     * @returns {jQuery|undefined} scrollable parent element
+     */
+    _getScrollableParent: function () {
+        var $scrollableParent;
+        this.trigger_up('get_scrollable_parent', {
+            callback: function ($scrollable_parent) {
+                $scrollableParent = $scrollable_parent;
+            }
+        });
+        return $scrollableParent;
     },
 
     //--------------------------------------------------------------------------

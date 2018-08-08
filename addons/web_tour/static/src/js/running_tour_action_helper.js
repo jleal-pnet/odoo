@@ -8,8 +8,19 @@ var Tip = require('web_tour.Tip');
 
 var get_first_visible_element = utils.get_first_visible_element;
 
+/**
+ * simulate a mouse event with a custom event on a position x and y. This is
+ * sometimes necessary because the basic way to trigger an event (such as
+ * $el.trigger('mousemove')); ) is too crude for some uses.
+ *
+ * @param {integer} x
+ * @param {integer} y
+ * @param {string} type a mouse event type, such as 'mousedown' or 'mousemove'
+ * @param {DOM Node} dispatchEvent on specific DOM element if given
+ */
 function triggerElementMouseEvent(x, y, type, el) {
     var ev = document.createEvent("MouseEvent");
+    el = el || document.elementFromPoint(x,y);
     ev.initMouseEvent(
         type,
         true /* bubble */,

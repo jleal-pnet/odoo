@@ -147,6 +147,7 @@
         &.o_kanban_record_clone {
             // Used !important becuae rubaxa generates cloned element with inline style
             opacity: 1 !important;
+            rotation: rotate(-3deg);
         }
         // -------  v11 Layout + generic layouts (~v10) -------
         // Kanban Record - Dropdown

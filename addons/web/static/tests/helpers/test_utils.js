@@ -543,6 +543,9 @@ function createParent(params) {
  * @param {Object} [options]
  * @param {string} [options.position=center] target position
  * @param {string} [options.disableDrop=false] whether to trigger the drop action
+ * @param {string} [options.isNativeDragAndDrop=false] whether to trigger jQuery mouse events or use native events
+ * @param {string} [options.isExtraMousemove=false] whether to trigger extra mousemove
+ * @returns {Deferred}
  */
 function dragAndDrop($el, $to, options) {
     var def = $.Deferred();
@@ -647,7 +650,7 @@ function triggerMouseEvent($el, type) {
  * @param {integer} x
  * @param {integer} y
  * @param {string} type a mouse event type, such as 'mousedown' or 'mousemove'
- * @param {DOM Node} el
+ * @param {DOM Node} dispatchEvent on specific DOM element if given
  */
 function triggerPositionalMouseEvent(x, y, type, el){
     var ev = document.createEvent("MouseEvent");
