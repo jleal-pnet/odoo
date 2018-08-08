@@ -69,10 +69,10 @@ def _initialize_db(id, db_name, demo, lang, user_password, login='admin', countr
                 modules._update_translations(lang)
 
             if country_code:
-                countries = env['res.country'].search([('code', 'ilike', country_code)])
-                if countries:
-                    countries[0].is_module_installed = True
-                    env['res.company'].browse(1).country_id = countries[0]
+                country = env['res.country'].search([('code', 'ilike', country_code)])
+                if country:
+                    country.install_l10_base_module()
+                    env['res.company'].browse(1).country_id = country
 
             # update admin's password and lang and login
             values = {'password': user_password, 'lang': lang}

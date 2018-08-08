@@ -66,8 +66,7 @@ class Country(models.Model):
         ], string="Customer Name Position", default="before",
         help="Determines where the customer/company name should be placed, i.e. after or before the address.")
     vat_label = fields.Char(string='Vat Label', translate=True, help="Use this field if you want to change vat label.")
-    is_module_installed = fields.Boolean(string="Module Installed", compute='_compute_is_module_installed', inverse='_inverse_is_module_installed', help="Toggle button which allow possibility to activate/deactivate a country, \
-        and install appropriate l10n_base_ module (which contain all of it's country specific data) if it exists.")
+    is_l10_base_install = fields.Boolean("Install country localisation", help="Toggle button to install country specific localisation")
 
     _sql_constraints = [
         ('name_uniq', 'unique (name)',
@@ -96,26 +95,22 @@ class Country(models.Model):
         self.ensure_one()
         return re.findall(r'\((.+?)\)', self.address_format)
 
-    def _compute_is_module_installed(self):
-        for country in self:
-            if country.code:
-                module_name = ''.join(['l10n_base_', country.code.lower()])
-                installed_base_module = self.env['ir.module.module'].search([('name', '=', module_name), ('state', '=', 'installed')])
-                country.is_module_installed = bool(installed_base_module)
+    @api.onchange('is_l10_base_install')
+    def on_change_l10_base_install(self):
+        module_name = 'l10n_base_%s' % self.code.lower()
+        l10_base_module = self.env['ir.module.module'].search([('name', '=', module_name)])
+        if self.is_l10_base_install:
+            l10_base_module.button_immediate_install()
+        else:
+            l10_base_module.button_immediate_uninstall()
 
-    def _inverse_is_module_installed(self):
+    @api.multi
+    def install_l10_base_module(self):
         for country in self:
-            if not country.code:
-                raise ValidationError('You should define country code to load localisation data')
-            module_name = ''.join(['l10n_base_', country.code.lower()])
-            base_module = self.env['ir.module.module'].search([('name', '=', module_name)])
-            if base_module:
-                if country.is_module_installed:
-                    base_module.button_immediate_install()
-                else:
-                    base_module.button_immediate_uninstall()
-            else:
-                raise UserError('Localisation module is not available')
+            module_name = 'l10n_base_%s' % country.code.lower()
+            l10_base_module = country.env['ir.module.module'].search([('name', '=', module_name)])
+            l10_base_module.button_immediate_install()
+            country.is_l10_base_install = True
 
 class CountryGroup(models.Model):
     _description = "Country Group"
