@@ -119,6 +119,7 @@ var KanbanColumn = Widget.extend({
             delay: config.device.isMobile ? 200 : 0,
             forceFallback: true,
             fallbackClass: 'o_kanban_record_clone',
+            rotateElement: 'o_kanban_record_clone', // just pass fallbackClass to rotate
             scrollFn: config.device.isMobile ? function (offsetX, offsetY, originalEvent, touchEvt, hoverTargetEl) {
                 // rubaxa calls scrollFn on each 24 miliseconds, 24 seconds are fix we can not configure it
                 // we need to add such custom logic to increase delay
@@ -134,9 +135,6 @@ var KanbanColumn = Widget.extend({
                     self.$el.scrollTop(self.$el.scrollTop() + offsetY);
                 }
             } : false,
-            onMove: function () {
-                console.log('>>>>>>>>>>>>>>>>>>', this);
-            },
             onStart: function () {
                 if (config.device.isMobile) {
                     self.$el.swipe('disable');
