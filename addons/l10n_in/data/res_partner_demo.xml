@@ -32,7 +32,7 @@
         <field name="zip">382007</field>
         <field name="state_id" ref="base.state_in_gj"/>
         <field name="country_id" ref="base.in"/>
-        <field name="vat">24AAACB8033M2ZR</field>
+        <field name="vat">12GEOPS0823BBZH</field>
     </record>
 
     <!-- Unregistered Customer -->
@@ -60,7 +60,7 @@
         <field name="zip">382007</field>
         <field name="state_id" ref="base.state_in_gj"/>
         <field name="country_id" ref="base.in"/>
-        <field name="vat">24AAACB8033M2ZR</field>
+        <field name="vat">12GEOPS0823BBZH</field>
     </record>
 
     <!-- Unregistered Customer -->
@@ -88,6 +88,6 @@
         <field name="zip">560001</field>
         <field name="state_id" ref="base.state_in_ka"/>
         <field name="country_id" ref="base.in"/>
-        <field name="vat">29EEECF6774H2ZR</field>
+        <field name="vat">12AJIPA1572E1C7</field>
     </record>
 </odoo>
