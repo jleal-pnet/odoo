@@ -14,6 +14,8 @@ var BasicComposer = Composers.BasicComposer;
 var createAsyncView = testUtils.createAsyncView;
 var createView = testUtils.createView;
 
+var Activity = require('mail.Activity');
+
 QUnit.module('mail', {}, function () {
 
 QUnit.module('Chatter', {
@@ -68,6 +70,7 @@ QUnit.module('Chatter', {
                         type: 'selection',
                         selection: [['overdue', 'Overdue'], ['today', 'Today'], ['planned', 'Planned']],
                     },
+                    note : { string: "Note", type: "char" },
                 },
             },
             'mail.activity.type': {
@@ -158,6 +161,82 @@ QUnit.test('basic rendering', function (assert) {
     assert.strictEqual(count, 0, "should have done no read_followers rpc as there are no followers");
     assert.strictEqual(unwanted_read_count, 0, "followers should only be fetched with read_followers route");
     form.destroy();
+});
+
+QUnit.test('Activity Done keep feedback on blur', function (assert) {
+    assert.expect(3);
+
+    this.data['mail.activity'].records = [
+        {activity_type_id: 1, id: 1, user_id: 2, state: 'today', note: 'But I\'m talkin\' about Shaft'},
+    ];
+    this.data.partner.records[0].activity_ids = [1];
+
+    var form = createView({
+        View: FormView,
+        model: 'partner',
+        data: this.data,
+        res_id: 2,
+        arch:'<form string="Partners">' +
+                '<sheet>' +
+                    '<field name="foo"/>' +
+                '</sheet>' +
+                '<div class="oe_chatter">' +
+                    '<field name="activity_ids" widget="mail_activity"/>' +
+                '</div>' +
+            '</form>',
+        viewOptions: {mode: 'edit'},
+    });
+    // Verifying activity is present
+    var $activityEl = form.$('.o_mail_activity[name=activity_ids]');
+    assert.equal($activityEl.find('.o_thread_message').length, 1,
+        'There should be one activity');
+    assert.equal($activityEl.find('.o_thread_message .o_thread_message_note').text().trim(), 'But I\'m talkin\' about Shaft',
+        'The activity should have the right note');
+
+    var $popover_el = $activityEl.find('.o_thread_message_tools .o_activity_done');
+
+    /*
+     *  SETTING UP MOCK FUNCTION
+     */
+
+    var hiddenCount = 0;
+    var assertPopoverShown = assert.async();
+    var $feedbackPopover;
+
+    function testOnPopoverShown () {
+        this._super.apply(this, arguments);
+        if (hiddenCount === 0) {
+            $feedbackPopover = $popover_el.data('bs.popover').tip();
+            // Assign a temporary value to the feedback
+            $feedbackPopover.find('#activity_feedback').val('John Shaft');
+
+            // Make feedback loose focus
+            form.$('input.o_field_char[name=foo]').focus();
+
+        } else if (hiddenCount === 1) {
+            assert.equal($feedbackPopover.find('#activity_feedback').val(), 'John Shaft',
+                'The value of the feedback field should not have changed');
+            assertPopoverShown();
+            testUtils.unpatch(Activity);
+            form.destroy();
+        }
+    }
+
+    testUtils.patch(Activity, {_onPopoverShown: testOnPopoverShown});
+
+    $popover_el.on('hidden.bs.popover', function() {
+        if (hiddenCount === 0) {
+            $popover_el.click();
+        }
+        hiddenCount++;
+    });
+
+    /*  START ACTUAL TEST
+     *  pop the popover up, write something inside, make it disappear and reappear.
+     *  Verify that the input has not changed
+     */
+
+    $popover_el.click();
 });
 
 QUnit.test('chatter is not rendered in mode === create', function (assert) {
