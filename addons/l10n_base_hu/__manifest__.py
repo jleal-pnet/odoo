@@ -6,5 +6,6 @@
     'description': """This module allows us to load country specific data that are used for specific localization
  like countries, country states or country-related information that are not related to accounting.
   """,
-    'data': ['data/res.bank.csv']
+    'data': ['data/res.bank.csv'],
+    'post_init_hook': '_l10_base_country_install',
 }

@@ -110,7 +110,6 @@ class Country(models.Model):
             module_name = 'l10n_base_%s' % country.code.lower()
             l10_base_module = country.env['ir.module.module'].search([('name', '=', module_name)])
             l10_base_module.button_immediate_install()
-            country.is_l10_base_install = True
 
 class CountryGroup(models.Model):
     _description = "Country Group"

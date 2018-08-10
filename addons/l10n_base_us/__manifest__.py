@@ -7,5 +7,6 @@
 like countries, country states or country-related information that are not related to accounting.
 """,
     'data': ['data/res.country.state.csv'],
+    'post_init_hook': '_l10_base_country_install',
     'auto_install': True,
 }
