@@ -278,8 +278,8 @@ QUnit.test('restore Support channel if necessary', function (assert) {
     messagingMenu.destroy();
 });
 
-QUnit.only('receive messages in the Support channel', function (assert) {
-    debugger;
+QUnit.test('receive messages in the Support channel', function (assert) {
+
     assert.expect(10);
 
     var supportChannelID;
@@ -317,7 +317,7 @@ QUnit.only('receive messages in the Support channel', function (assert) {
         channel_ids: [supportChannelID],
     };
     var notification = [[false, 'mail.channel'], data];
-    supportBus.trigger('notification', [notification]);
+    messagingMenu.call('support_bus_service', 'trigger', 'notification', [notification]);
 
     assert.strictEqual($('.o_thread_window .o_thread_message').length, 1,
         "there should be a new message in the thread");
