@@ -272,7 +272,7 @@ var ActionManager = Widget.extend({
         } else {
             this.controlPanel.update({
                 breadcrumbs: this._getBreadcrumbs(),
-                }, {clear: false});
+                options: {clear: false}},);
         }
     },
     /**
