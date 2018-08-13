@@ -963,6 +963,7 @@ ListRenderer.include({
      * @param {MouseEvent} event
      */
     _onWindowClicked: function (event) {
+
         // ignore clicks if this renderer is not in the dom.
         if (!document.contains(this.el)) {
             return;
@@ -974,7 +975,7 @@ ListRenderer.include({
         }
 
         // ignore clicks in autocomplete dropdowns
-        if ($(event.target).parents('.ui-autocomplete').length) {
+        if ($(event.data.target).parents('.ui-autocomplete').length) {
             return;
         }
 
@@ -990,13 +991,13 @@ ListRenderer.include({
 
         // ignore clicks if target is no longer in dom.  For example, a click on
         // the 'delete' trash icon of a m2m tag.
-        if (!document.contains(event.target)) {
+        if (!document.contains(event.data.target)) {
             return;
         }
 
         // ignore clicks if target is inside the list. In that case, they are
         // handled directly by the renderer.
-        if (this.el.contains(event.target) && this.el !== event.target) {
+        if (this.el.contains(event.data.target) && this.el !== event.data.target) {
             return;
         }
 
