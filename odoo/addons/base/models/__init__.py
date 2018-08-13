@@ -29,6 +29,7 @@ from . import ir_property
 from . import ir_module
 from . import ir_demo
 from . import ir_demo_failure
+from . import decimal_precision
 from . import report_paperformat
 from . import res_country
 from . import res_lang

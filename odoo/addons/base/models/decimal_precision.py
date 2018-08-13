@@ -1,7 +1,15 @@
 # -*- encoding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import api, fields, models, tools
+from odoo import api, fields, models, tools, SUPERUSER_ID
+
+def get_precision(application):
+    def change_digit(cr):
+        env = api.Environment(cr, SUPERUSER_ID, {})
+        precision = env['decimal.precision'].precision_get(application)
+        return 16, precision
+
+    return change_digit
 
 class DecimalPrecision(models.Model):
     _name = 'decimal.precision'
