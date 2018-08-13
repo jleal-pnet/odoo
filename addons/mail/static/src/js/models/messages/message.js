@@ -770,7 +770,7 @@ var Message =  AbstractMessage.extend(Mixins.EventDispatcherMixin, ServicesMixin
         if (this._moderationStatus !== 'accepted') {
             this.call('mail_service', 'removeMessageFromThreads', this);
         }
-        mailBus.trigger('update_message', this);
+        mailBus.trigger('update_message', {message: this});
     },
 
 });
