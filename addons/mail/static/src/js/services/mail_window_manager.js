@@ -548,7 +548,9 @@ MailManager.include({
      *   this message become passive, so that they are marked as read only when
      *   the focus is on the thread window.
      */
-    _updateThreadWindowsFromMessage: function (message, options) {
+    _updateThreadWindowsFromMessage: function (ev) {
+        var message = ev.data.message;
+        var options = ev.data.options;
         if (this._areAllThreadWindowsHidden()) {
             return;
         }
@@ -595,7 +597,9 @@ MailManager.include({
      * @param {Object} query
      * @param {boolean} query.isVisible write on it
      */
-    _onIsThreadBottomVisible: function (thread, query) {
+    _onIsThreadBottomVisible: function (ev) {
+        var thread = ev.data.thread;
+        var query = ev.data.query
         _.each(this._threadWindows, function (threadWindow) {
             if (
                 thread.getID() === threadWindow.getID() &&
@@ -627,7 +631,7 @@ MailManager.include({
      * @param {Object} message
      */
     _onNewMessage: function (ev) {
-        this._updateThreadWindowsFromMessage(message, { keepBottom: ev.data, passively: true });
+        this._updateThreadWindowsFromMessage({message: ev.data, options: { keepBottom: ev.data, passively: true }});
     },
     /**
      * @private
@@ -662,7 +666,8 @@ MailManager.include({
      * @private
      * @param {mail.model.Thread} thread
      */
-    _onUpdateThreadUnreadCounter: function (thread) {
+    _onUpdateThreadUnreadCounter: function (ev) {
+        var thread = ev.data;
         var self = this;
         this._hiddenThreadWindowsUnreadCounter = 0;
         _.each(this._threadWindows, function (threadWindow) {
@@ -703,8 +708,8 @@ MailManager.include({
      * @private
      * @param {Object} message
      */
-    _onUpdateMessage: function (message) {
-        this._updateThreadWindowsFromMessage(message, { keepBottom: false });
+    _onUpdateMessage: function (ev) {
+        this._updateThreadWindowsFromMessage({data: {message: ev.data.message, options: { keepBottom: false }}});
     },
 
 });
