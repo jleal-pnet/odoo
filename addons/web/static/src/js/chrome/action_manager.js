@@ -572,12 +572,12 @@ var ActionManager = Widget.extend({
             return $.Deferred();
         } else {
             var w = window.open(url, '_blank');
-            if (!w || w.closed || typeof w.closed === 'undefined') {
-                var message = _t('A popup window has been blocked. You ' +
+            if (!w || w.closed || typeof w.closed === 'undefined') {
+            var message = _t('A popup window has been blocked. You ' +
                              'may need to change your browser settings to allow ' +
                              'popup windows for this page.');
                 this.do_warn(_t('Warning'), message, true);
-            }
+            }
         }
 
         options.on_close();
@@ -887,7 +887,7 @@ var ActionManager = Widget.extend({
             var action = self.actions[controller.actionID];
             if (!action.flags || !action.flags.headless) {
                 var breadcrumbs = self._getBreadcrumbs();
-                self.controlPanel.update({breadcrumbs: breadcrumbs}, {clear: false});
+                self.controlPanel.update({breadcrumbs: breadcrumbs, options: {clear: false}});
             }
         });
         return controller.widget.appendTo(fragment).then(function () {
