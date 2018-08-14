@@ -544,6 +544,7 @@ class IrActionsServer(models.Model):
         :return: an action_id to be executed, or False is finished correctly without
                  return action
         """
+        _logger.warning("server action run [name:'%s']" % str(self.name))
         res = False
         for action in self:
             eval_context = self._get_eval_context(action)

@@ -301,6 +301,7 @@ _BUILTINS = {
     'range': range,
     'xrange': range,
     'zip': zip,
+    'print' : print,
     'Exception': Exception,
 }
 def safe_eval(expr, globals_dict=None, locals_dict=None, mode="eval", nocopy=False, locals_builtins=False):

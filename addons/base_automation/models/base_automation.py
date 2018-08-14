@@ -158,6 +158,7 @@ class BaseAutomation(models.Model):
     def _process(self, records):
         """ Process action ``self`` on the ``records`` that have not been done yet. """
         # filter out the records on which self has already been done
+        _logger.warning(" process automated action [self:'%s', records:'%s']" % +str(self) , str(records)  )
         action_done = self._context['__action_done']
         records_done = action_done.get(self, records.browse())
         records -= records_done
