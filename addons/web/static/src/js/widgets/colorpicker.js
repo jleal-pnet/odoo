@@ -266,7 +266,7 @@ var Colorpicker = Dialog.extend({
      * @private
      */
     _onFinalPick: function () {
-        this.trigger_up('colorpicker:saved', this.colorComponents);
+        this.trigger('colorpicker:saved', this.colorComponents);
     },
 
     //--------------------------------------------------------------------------

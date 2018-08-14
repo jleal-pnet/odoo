@@ -313,7 +313,7 @@ var Discuss = AbstractAction.extend(ControlPanelMixin, {
      * @override
      */
     on_attach_callback: function () {
-        this.call('mail_service', 'getMailBus').trigger('discuss_open', true);
+        this.call('mail_service', 'getMailBus').trigger('discuss_open', {open: true});
         if (this._thread) {
             this._threadWidget.scrollToPosition(this._threadsScrolltop[this._thread.getID()]);
         }
@@ -323,7 +323,7 @@ var Discuss = AbstractAction.extend(ControlPanelMixin, {
      * @override
      */
     on_detach_callback: function () {
-        this.call('mail_service', 'getMailBus').trigger('discuss_open', false);
+        this.call('mail_service', 'getMailBus').trigger('discuss_open', {open: false});
         this._threadsScrolltop[this._thread.getID()] = this._threadWidget.getScrolltop();
     },
 
@@ -1141,7 +1141,8 @@ var Discuss = AbstractAction.extend(ControlPanelMixin, {
      * @private
      * @param {integer|string} channelID
      */
-    _onChannelLeft: function (channelID) {
+    _onChannelLeft: function (ev) {
+        var channelID = ev.data.channel_id;
         if (this._thread.getID() === channelID) {
             this._setThread('mailbox_inbox');
         }
@@ -1323,7 +1324,8 @@ var Discuss = AbstractAction.extend(ControlPanelMixin, {
      * @private
      * @param {mail.model.Thread}
      */
-    _onOpenThreadInDiscuss: function (thread) {
+    _onOpenThreadInDiscuss: function (ev) {
+        var thread = ev.data.thread;
         if (thread.getType() !== 'document_thread') {
             this._setThread(thread.getID());
         }

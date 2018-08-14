@@ -113,6 +113,7 @@ return {
 
         $textarea.on('input focus', resize);
         if (options.parent) {
+            //TODO SUH: how to convert it???
             core.bus.on('DOM_updated', options.parent, resize);
             core.bus.on('view_shown', options.parent, resize);
         }
