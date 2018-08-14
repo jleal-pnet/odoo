@@ -1047,7 +1047,7 @@ class Binary(http.Controller):
     def content_image(self, xmlid=None, model='ir.attachment', id=None, field='datas',
                       filename_field='datas_fname', unique=None, filename=None, mimetype=None,
                       download=None, width=0, height=0, crop=False, share_id=None, share_token=None, access_token=None, avoid_if_small=False,
-                      upper_limit=False):
+                      upper_limit=False, checksum=False):
         status, headers, content = binary_content(
             xmlid=xmlid, model=model, id=id, field=field, unique=unique, filename=filename,
             filename_field=filename_field, download=download, mimetype=mimetype,
