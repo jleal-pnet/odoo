@@ -106,10 +106,10 @@ class MrpProductProduce(models.TransientModel):
             if move.product_id.tracking == 'none' and move.state not in ('done', 'cancel'):
                 rounding = move.product_uom.rounding
                 if move.product_id.id == self.production_id.product_id.id:
-                    move.quantity_done += float_round(quantity, precision_rounding=rounding)
+                    self.split_quantity(move, float_round(quantity, precision_rounding=rounding))
                 elif move.unit_factor:
                     # byproducts handling
-                    move.quantity_done += float_round(quantity * move.unit_factor, precision_rounding=rounding)
+                    self.split_quantity(move, float_round(quantity * move.unit_factor, precision_rounding=rounding))
         self.check_finished_move_lots()
         if self.production_id.state == 'confirmed':
             self.production_id.write({
@@ -117,6 +117,15 @@ class MrpProductProduce(models.TransientModel):
                 'date_start': datetime.now(),
             })
         return {'type': 'ir.actions.act_window_close'}
+
+    def split_quantity(self, move, quantity):
+        for move_line in move.move_line_ids:
+            move_quantity = min(quantity, move_line.product_uom_qty)
+            move_line.qty_done = move_quantity
+            quantity -= move_quantity
+            if quantity <= 0:
+                break
+        return True
 
     @api.multi
     def check_finished_move_lots(self):
