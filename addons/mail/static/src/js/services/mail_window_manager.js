@@ -631,7 +631,7 @@ MailManager.include({
      * @param {Object} message
      */
     _onNewMessage: function (ev) {
-        this._updateThreadWindowsFromMessage({message: ev.data, options: { keepBottom: ev.data, passively: true }});
+        this._updateThreadWindowsFromMessage({data: {message: ev.data, options: { keepBottom: true, passively: true }}});
     },
     /**
      * @private
@@ -667,7 +667,7 @@ MailManager.include({
      * @param {mail.model.Thread} thread
      */
     _onUpdateThreadUnreadCounter: function (ev) {
-        var thread = ev.data;
+        var thread = ev.data.message;
         var self = this;
         this._hiddenThreadWindowsUnreadCounter = 0;
         _.each(this._threadWindows, function (threadWindow) {
