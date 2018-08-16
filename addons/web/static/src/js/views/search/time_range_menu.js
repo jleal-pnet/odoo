@@ -165,7 +165,7 @@ var TimeRangeMenu = Widget.extend({
         };
 
         this.renderElement();
-        this.trigger_up('time_range_modified');
+        this.trigger('time_range_modified');
     },
     /**
      * @private

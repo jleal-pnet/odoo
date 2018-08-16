@@ -235,7 +235,7 @@ var PagePropertiesDialog = weWidgets.Dialog.extend({
             // If from page manager: reload url, if from page itself: go to
             // (possibly) new url
             var mo;
-            self.trigger_up('main_object_request', {
+            self.trigger('main_object_request', {
                 callback: function (value) {
                     mo = value;
                 },
@@ -812,7 +812,7 @@ var ContentMenu = websiteNavbarData.WebsiteNavbarActionWidget.extend({
      */
     _pageProperties: function () {
         var mo;
-        this.trigger_up('main_object_request', {
+        this.trigger('main_object_request', {
             callback: function (value) {
                 mo = value;
             },
@@ -834,7 +834,7 @@ var ContentMenu = websiteNavbarData.WebsiteNavbarActionWidget.extend({
     _togglePageOption: function (params, forceSave, noReload) {
         // First check it is a website page
         var mo;
-        this.trigger_up('main_object_request', {
+        this.trigger('main_object_request', {
             callback: function (value) {
                 mo = value;
             },

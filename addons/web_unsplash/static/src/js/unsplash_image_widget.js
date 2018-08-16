@@ -151,7 +151,7 @@ ImageWidget.include({
     _toggleAttachmentContaines: function (hideUnsplash) {
         this.$('.existing-attachments').toggleClass('o_hidden', !hideUnsplash);
         this.$('.unsplash_img_container').toggleClass('o_hidden', hideUnsplash);
-        this.trigger_up('update_control_panel');
+        this.trigger('update_control_panel');
     },
 
     //--------------------------------------------------------------------------
@@ -213,7 +213,7 @@ ImageWidget.include({
      * @private
      */
     _onUnsplashImgDblClick: function (ev) {
-        this.trigger_up('save_request');
+        this.trigger('save_request');
     },
 });
 });
