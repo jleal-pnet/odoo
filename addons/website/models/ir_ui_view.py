@@ -25,6 +25,13 @@ class View(models.Model):
     first_page_id = fields.Many2one('website.page', string='Website Page', help='First page linked to this view', compute='_compute_first_page_id')
     # theme_id = fields.Many2one('ir.module.module')
 
+    @api.model
+    def create(self, vals):
+        website = self.env['website'].get_current_website()
+        if website and 'website_id' not in vals and 'not_force_website_id' not in self.env.context:
+            vals['website_id'] = website.id
+        return super(View, self).create(vals)
+
     @api.multi
     def _compute_first_page_id(self):
         for view in self:
@@ -123,7 +130,7 @@ class View(models.Model):
     def filter_duplicate(self):
         """ Filter current recordset only keeping the most suitable view per distinct key """
         filtered = self.env['ir.ui.view']
-        for dummy, group in groupby(self.sorted('key'), key=lambda record: record.key):
+        for dummy, group in groupby(self.sorted(lambda x: x.key or ''), key=lambda record: record.key):
             filtered += sorted(group, key=lambda record: record._sort_suitability_key())[0]
         return filtered.sorted(key=lambda view: (view.priority, view.id))
 
