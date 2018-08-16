@@ -1426,7 +1426,8 @@ var Discuss = AbstractAction.extend(ControlPanelMixin, {
      * @private
      * @param {integer|string} threadID
      */
-    _onTypingPartnersUpdated: function (threadID) {
+    _onTypingPartnersUpdated: function (ev) {
+        var threadID = ev.data.threadID;
         var self = this;
         if (this._thread.getID() !== threadID) {
             return;

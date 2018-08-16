@@ -637,7 +637,8 @@ MailManager.include({
      * @private
      * @param {integer|string} threadID
      */
-    _onTypingPartnersUpdated: function (threadID) {
+    _onTypingPartnersUpdated: function (ev) {
+        var threadID = ev.data.threadID;
         var threadWindow = this._getThreadWindow(threadID);
         if (!threadWindow) {
             return;

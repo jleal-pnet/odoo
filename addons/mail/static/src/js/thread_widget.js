@@ -414,7 +414,7 @@ var ThreadWidget = Widget.extend({
      */
     _redirect: _.debounce(function (options) {
         if ('channelID' in options) {
-            this.trigger('redirect_to_channel', options.channelID);
+            this.trigger('redirect_to_channel', {channelID: options.channelID});
         } else {
             this.trigger('redirect', {
                 resModel:options.model,
@@ -507,7 +507,7 @@ var ThreadWidget = Widget.extend({
      */
     _onClickMessageNeedaction: function (ev) {
         var messageID = $(ev.currentTarget).data('message-id');
-        this.trigger('mark_as_read', messageID);
+        this.trigger('mark_as_read', {messageID: messageID});
     },
     /**
      * @private
