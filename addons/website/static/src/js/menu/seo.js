@@ -108,8 +108,8 @@ var SuggestionList = Widget.extend({
                     keyword: keyword,
                     page: self.htmlPage,
                 });
-                suggestion.on('selected', self, function (word, language) {
-                    self.trigger('selected', word, language);
+                suggestion.on('selected', self, function (ev) {
+                    self.trigger('selected', {word: ev.data.word, language: ev.data.language});
                 });
                 suggestion.appendTo(self.$el);
             }
@@ -139,8 +139,8 @@ var Keyword = Widget.extend({
             language: this.language,
             page: this.htmlPage,
         });
-        this.suggestionList.on('selected', this, function (word, language) {
-            this.trigger('selected', word, language);
+        this.suggestionList.on('selected', this, function (ev) {
+            this.trigger('selected', {word: ev.data.word, language: ev.data.language});
         });
         this.suggestionList.appendTo(this.$('.js_seo_keyword_suggestion'));
     },
@@ -210,8 +210,8 @@ var KeywordList = Widget.extend({
                self.trigger('removed', word);
                self.trigger('content-updated', true);
             });
-            keyword.on('selected', self, function (word, language) {
-                self.trigger('selected', word, language);
+            keyword.on('selected', self, function (ev) {
+                self.trigger('selected', {word: ev.data.word, language: ev.data.word});
             });
             keyword.appendTo(self.$el);
         }
@@ -368,8 +368,8 @@ var SeoConfigurator = Dialog.extend({
             self.$('input[name=seo_page_keywords]').removeAttr('readonly').attr('placeholder', "");
             self.$('button[data-action=add]').prop('disabled', false).removeClass('disabled');
         });
-        this.keywordList.on('selected', self, function (word, language) {
-            self.keywordList.add(word, language);
+        this.keywordList.on('selected', self, function (ev) {
+            self.keywordList.add(ev.data.word, ev.data.language);
         });
         this.keywordList.on('content-updated', self, function (removed) {
             self.updateTable(removed);
