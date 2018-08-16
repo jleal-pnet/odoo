@@ -266,6 +266,7 @@ class TestViewSaving(common.TransactionCase):
             'name': 'Base',
             'type': 'qweb',
             'arch': '<div>base content</div>',
+            'key': 'website.base_view',
         }).with_context(load_all_views=True)
 
         inherit_view = View.create({
@@ -273,6 +274,7 @@ class TestViewSaving(common.TransactionCase):
             'mode': 'extension',
             'inherit_id': base_view.id,
             'arch': '<div position="replace"><div>extended content</div></div>',
+            'key': 'website.extension_view',
         })
 
         # edit on backend, regular write
@@ -310,6 +312,7 @@ class TestViewSaving(common.TransactionCase):
             'name': 'Base',
             'type': 'qweb',
             'arch': '<div>content</div>',
+            'key': 'website.base_view',
         })
 
         View.create({
@@ -317,6 +320,7 @@ class TestViewSaving(common.TransactionCase):
             'mode': 'extension',
             'inherit_id': base_view.id,
             'arch': '<div position="inside">, extended content</div>',
+            'key': 'website.extension_view',
         })
 
         # edit on backend, regular write
