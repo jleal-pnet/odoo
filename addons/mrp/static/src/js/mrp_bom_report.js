@@ -14,6 +14,7 @@ var MrpBomReport = stock_report_generic.extend({
         'click .o_mrp_bom_foldable': '_onClickFold',
         'click .o_mrp_bom_action': '_onClickAction',
         'click .o_mrp_show_attachment_action': '_onClickShowAttachment',
+        'click .o_mrp_ecos_action': '_onClickEcos',
     },
     get_html: function() {
         var self = this;
@@ -183,6 +184,17 @@ var MrpBomReport = stock_report_generic.extend({
             target: 'current',
         });
     },
+    _onClickEcos: function (ev) {
+        var product_id = $(ev.currentTarget).data('res-id');
+        return this.do_action({
+            name: _t('ECOs'),
+            type: 'ir.actions.act_window',
+            res_model: 'mrp.eco',
+            domain: [['product_tmpl_id.product_variant_ids', 'in', [product_id]]],
+            views: [[false, 'kanban'], [false, 'list'], [false, 'form']],
+            target: 'current',
+        });
+    },
     _reload: function () {
         var self = this;
         return this.get_html().then(function () {
@@ -194,9 +206,15 @@ var MrpBomReport = stock_report_generic.extend({
         this.$('.o_mrp_bom_cost.o_hidden, .o_mrp_prod_cost.o_hidden').toggleClass('o_hidden');
         if (this.given_context.report_type === 'bom_structure') {
             this.$('.o_mrp_bom_cost').toggleClass('o_hidden');
+            this.$('.o_mrp_bom_ver, .o_mrp_ecos').removeClass('o_hidden');
         }
         if (this.given_context.report_type === 'bom_cost') {
             this.$('.o_mrp_prod_cost').toggleClass('o_hidden');
+            this.$('.o_mrp_bom_ver').removeClass('o_hidden');
+            this.$('.o_mrp_ecos').addClass('o_hidden');
+        }
+        if (this.given_context.report_type === 'all') {
+            this.$('.o_mrp_bom_ver, .o_mrp_ecos').addClass('o_hidden');
         }
     },
     _removeLines: function ($el) {
