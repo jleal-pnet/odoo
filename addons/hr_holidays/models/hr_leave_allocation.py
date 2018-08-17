@@ -40,7 +40,7 @@ class HolidaysAllocation(models.Model):
     def _default_domain_holiday_status_id(self):
         if self.user_has_groups('hr_holidays.group_hr_holidays_manager'):
             return [('valid', '=', True), ('limit', '=', False)]
-        return [('valid', '=', True), ('employee_applicability', 'in', ['allocation', 'both']), ('limit', '=', False)]
+        return [('valid', '=', True), ('allocation_type', '=', ['fixed_allocation']), ('limit', '=', False)]
 
     def _default_employee(self):
         return self.env.context.get('default_employee_id') or self.env['hr.employee'].search([('user_id', '=', self.env.uid)], limit=1)
@@ -108,7 +108,10 @@ class HolidaysAllocation(models.Model):
         'hr.employee.category', string='Employee Tag', readonly=True,
         states={'draft': [('readonly', False)], 'confirm': [('readonly', False)]}, help='Category of Employee')
     # accrual configuration
-    accrual = fields.Boolean("Accrual", related='holiday_status_id.accrual', store=True, readonly=True)
+    accrual = fields.Boolean(
+        "Accrual", readonly=True,
+        states={'draft': [('readonly', False)], 'confirm': [('readonly', False)]})
+    accrual_limit = fields.Integer('Balance limit', default=0, help="Maximum of allocation for accrual; 0 means no maximum.")
     number_per_interval = fields.Float("Number of unit per interval", readonly=True, states={'draft': [('readonly', False)], 'confirm': [('readonly', False)]}, default=1)
     interval_number = fields.Integer("Number of unit between two intervals", readonly=True, states={'draft': [('readonly', False)], 'confirm': [('readonly', False)]}, default=1)
     unit_per_interval = fields.Selection([
@@ -185,8 +188,8 @@ class HolidaysAllocation(models.Model):
 
             values['number_of_days_temp'] = holiday.number_of_days_temp + days_to_give * prorata
 
-            if holiday.holiday_status_id.balance_limit > 0:
-                values['number_of_days_temp'] = min(values['number_of_days_temp'], holiday.holiday_status_id.balance_limit)
+            if holiday.accrual_limit > 0:
+                values['number_of_days_temp'] = min(values['number_of_days_temp'], holiday.accrual_limit)
 
             values['number_of_hours'] = values['number_of_days_temp'] * holiday.employee_id.resource_calendar_id.hours_per_day or HOURS_PER_DAY
 
@@ -200,8 +203,8 @@ class HolidaysAllocation(models.Model):
             if holiday.type_request_unit == 'hour':
                 # In this case we need the number of days to reflect the number of hours taken
                 number_of_days = holiday.number_of_hours / holiday.employee_id.resource_calendar_id.hours_per_day or HOURS_PER_DAY
-            if holiday.holiday_status_id.balance_limit > 0:
-                number_of_days = min(number_of_days, holiday.holiday_status_id.balance_limit)
+            if holiday.accrual_limit > 0:
+                number_of_days = min(number_of_days, holiday.accrual_limit)
 
             holiday.number_of_days = number_of_days
 
