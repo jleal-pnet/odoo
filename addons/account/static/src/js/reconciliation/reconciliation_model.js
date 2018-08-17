@@ -389,7 +389,7 @@ var StatementModel = BasicModel.extend({
                 fields: ['code'],
             })
             .then(function (accounts) {
-                self.accounts = _.object(_.pluck(accounts, 'id'), _.pluck(accounts, 'code'));
+                self.accounts = _.object(_.pluck(accounts, 'id') , _.pluck(accounts, 'code'));
             });
         self.taxes = {};
         var def_taxes = this._rpc({
@@ -465,12 +465,14 @@ var StatementModel = BasicModel.extend({
         var fields = ['account_id', 'amount', 'amount_type', 'analytic_account_id', 'journal_id', 'label', 'force_tax_included', 'tax_id', 'analytic_tag_ids'];
         this._blurProposition(handle);
 
-        var focus = this._formatQuickCreate(line, _.pick(reconcileModel, fields));
+        var values = _.pick(reconcileModel, fields);
+        values.display_new = true;
+        var focus = this._formatQuickCreate(line, values);
         focus.reconcileModelId = reconcileModelId;
         line.reconciliation_proposition.push(focus);
 
         if (reconcileModel.has_second_line) {
-            var second = {};
+            var second = {display_new: true};
             _.each(fields, function (key) {
                 second[key] = ("second_"+key) in reconcileModel ? reconcileModel["second_"+key] : reconcileModel[key];
             });
@@ -604,6 +606,7 @@ var StatementModel = BasicModel.extend({
             prop = this._formatQuickCreate(line);
             line.reconciliation_proposition.push(prop);
         }
+        prop.display_new = true;
         _.each(values, function (value, fieldName) {
             if (fieldName === 'analytic_tag_ids') {
                 switch (value.operation) {
@@ -859,6 +862,7 @@ var StatementModel = BasicModel.extend({
 
                             tax_prop.amount_str = field_utils.format.monetary(Math.abs(tax_prop.amount), {}, formatOptions);
                             tax_prop.invalid = prop.invalid;
+                            tax_prop.display_new = true;
 
                             reconciliation_proposition.push(tax_prop);
                         });
@@ -972,6 +976,13 @@ var StatementModel = BasicModel.extend({
             var line = _.find(self.lines, function (l) {
                 return l.id === data.st_line.id;
             });
+            // Line has been already reconciled by the reconciliation model.
+            if(data.status === 'reconciled'){
+                self.valuenow += 1;
+                line.reconciled = true;
+                line.reconciled_aml_ids = data.reconciled_aml_ids;
+                return;
+            }
             line.visible = true;
             line.limitMoveLines = self.limitMoveLines;
             _.extend(line, data);
@@ -1010,7 +1021,12 @@ var StatementModel = BasicModel.extend({
                 }
             }
 
-            defs.push(self._computeLine(line));
+            var def = self._computeLine(line);
+            if(data.status === 'write_off'){
+                def = def.then(self.quickCreateProposition(line.handle, data.model_id));
+            }
+
+            defs.push(def);
         });
         return $.when.apply($, defs);
     },
@@ -1078,6 +1094,7 @@ var StatementModel = BasicModel.extend({
             'percent': values.amount_type === "percentage" ? values.amount : null,
             'link': values.link,
             'display': true,
+            'display_new': values.display_new,
             'invalid': true,
             '__tax_to_recompute': true,
             'is_tax': values.is_tax,

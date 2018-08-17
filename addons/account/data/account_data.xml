@@ -182,5 +182,12 @@
             <field name="state">code</field>
             <field name="code">action = records.action_share()</field>
         </record>
+
+        <!-- Account Reconciliation Models -->
+        <record id="reconciliation_model_rule_1" model="account.reconcile.model">
+            <field name="name">Invoices Matching Rule</field>
+            <field name="sequence">1</field>
+            <field name="type">invoices</field>
+        </record>
     </data>
 </odoo>

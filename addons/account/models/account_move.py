@@ -648,6 +648,8 @@ class AccountMoveLine(models.Model):
 
     recompute_tax_line = fields.Boolean(store=False, help="Technical field used to know if the tax_ids field has been modified in the UI.")
     tax_line_grouping_key = fields.Char(store=False, string='Old Taxes', help="Technical field used to store the old values of fields used to compute tax lines (in account.move form view) between the moment the user changed it and the moment the ORM reflects that change in its one2many")
+    model_id = fields.Many2one('account.reconcile.model', string='Reconciliation Model',
+        help='The reconciliation model used to perform the automatic reconciliation.')
 
     _sql_constraints = [
         ('credit_debit1', 'CHECK (credit*debit=0)', 'Wrong credit or debit value in accounting entry !'),

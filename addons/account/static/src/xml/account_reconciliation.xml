@@ -157,7 +157,11 @@
     <div class="quick_add">
         <div class="btn-group o_reconcile_models" t-if="state.reconcileModels">
             <t t-foreach="state.reconcileModels" t-as="reconcileModel">
-                <button class="btn btn-primary" t-att-data-reconcile-model-id="reconcileModel.id"><t t-esc="reconcileModel.name"/></button>
+                <button class="btn btn-primary"
+                        t-if="reconcileModel.type == 'manual'"
+                        t-att-data-reconcile-model-id="reconcileModel.id">
+                    <t t-esc="reconcileModel.name"/>
+                </button>
             </t>
             <p t-if="!state.reconcileModels.length" style="color: #bbb;">To speed up reconciliation, define <a style="cursor: pointer;" class="reconcile_model_create">reconciliation models</a>.</p>
         </div>
@@ -233,6 +237,9 @@
         <td class="cell_account_code"><t t-esc="line.account_code"/></td>
         <td class="cell_due_date"><t t-esc="line.date_maturity === false ? line.date : line.date_maturity"/></td>
         <td class="cell_label">
+            <t t-if="line.display_new">
+                <span class="badge badge-secondary">New</span>
+            </t>
             <t t-if="line.partner_id &amp;&amp; line.partner_id !== state.st_line.partner_id">
                 <t t-if="line.partner_name.length">
                     <t t-esc="line.partner_name"/>:

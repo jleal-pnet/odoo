@@ -669,6 +669,21 @@ class AccountChartTemplate(models.Model):
                 'force_second_tax_included': account_reconcile_model.force_second_tax_included,
                 'second_amount': account_reconcile_model.second_amount,
                 'second_tax_id': account_reconcile_model.second_tax_id and tax_template_ref[account_reconcile_model.second_tax_id.id] or False,
+                'type': account_reconcile_model.type,
+                'auto_reconcile': account_reconcile_model.auto_reconcile,
+                'match_journal_ids': [(6, None, account_reconcile_model.match_journal_ids.ids)],
+                'nature': account_reconcile_model.nature,
+                'match_amount': account_reconcile_model.match_amount,
+                'match_amount_param': account_reconcile_model.match_amount_param,
+                'match_amount_second_param': account_reconcile_model.match_amount_second_param,
+                'match_label': account_reconcile_model.match_label,
+                'match_label_param': account_reconcile_model.match_label_param,
+                'match_same_currency': account_reconcile_model.match_same_currency,
+                'match_total_amount': account_reconcile_model.match_total_amount,
+                'match_total_amount_param': account_reconcile_model.match_total_amount_param,
+                'partner_is_set': account_reconcile_model.partner_is_set,
+                'match_partner_ids': [(6, None, account_reconcile_model.match_partner_ids.ids)],
+                'match_partner_category_ids': [(6, None, account_reconcile_model.match_partner_category_ids.ids)],
             }
 
     @api.multi
@@ -907,10 +922,62 @@ class AccountFiscalPositionAccountTemplate(models.Model):
 class AccountReconcileModelTemplate(models.Model):
     _name = "account.reconcile.model.template"
 
+    # Base fields.
     chart_template_id = fields.Many2one('account.chart.template', string='Chart Template', required=True)
     name = fields.Char(string='Button Label', required=True)
     sequence = fields.Integer(required=True, default=10)
     has_second_line = fields.Boolean(string='Add a second line', default=False)
+
+    type = fields.Selection(selection=[
+        ('manual', _('Create manually journal items on clicked button.')),
+        ('write_off', _('Suggest an automatic write-off.')),
+        ('invoices', _('Suggest a matching with existing invoices/bills.'))
+    ], string='Type', default='manual', required=True)
+    auto_reconcile = fields.Boolean(string='Reconcile Automatically',
+        help='Reconcile the statement line with propositions automatically.')
+
+    # ===== Conditions =====
+    match_journal_ids = fields.Many2many('account.journal', string='Journals',
+        domain="[('type', '=', 'bank')]",
+        help='Restrict model to some journals.')
+    nature = fields.Selection(selection=[
+        ('amount_received', 'Amount Received'),
+        ('amount_paid', 'Amount Paid'),
+        ('both', 'Amount Paid/Received')
+    ], string='Amount Nature', required=True, default='both', help='''Restrict model on amount nature:
+        * Amount Received: Only applied when receiving an amount.
+        * Amount Paid: Only applied when paying an amount.
+        * Amount Paid/Received: Applied in both cases.''')
+    match_amount = fields.Selection(selection=[
+        ('lower', 'Is Lower Than'),
+        ('greater', 'Is Greater Than'),
+        ('between', 'Is Between'),
+    ], string='Line Amount',
+        help='Restrict to statement line amount being lower than, greater than or between specified amount(s).')
+    match_amount_param = fields.Float(string='Amount Parameter')
+    match_amount_second_param = fields.Float(string='Amount Second Parameter')
+    match_label = fields.Selection(selection=[
+        ('contains', 'Contains'),
+        ('not_contains', 'Not Contains'),
+        ('match_regex', 'Match Regex'),
+    ], string='Line Label', help='''Restrict reconciliation propositions label on:
+        * Contains: The proposition label must contains this string (case insensitive).
+        * Not Contains: Negation of "Contains".
+        * Match Regex: Define your own regular expression.''')
+    match_label_param = fields.Char(string='Label Parameter')
+    match_same_currency = fields.Boolean(string='Same Currency Matching', default=True,
+        help='Restrict to propositions having the same currency as the statement line.')
+    match_total_amount = fields.Boolean(string='Amount Matching', default=True,
+        help='The sum of total residual amount propositions matches the statement line amount.')
+    match_total_amount_param = fields.Float(string='Amount Matching %', default=100,
+        help='The sum of total residual amount propositions matches the statement line amount under this percentage.')
+    partner_is_set = fields.Boolean(string='Partner Is Set', help='Apply only when partner statement line is set.')
+    match_partner_ids = fields.Many2many('res.partner', string='Partners',
+        help='Restrict to some statement line partners.')
+    match_partner_category_ids = fields.Many2many('res.partner.category', string='Partner Categories',
+        help='Restrict to some statement line partner categories.')
+
+    # First part fields.
     account_id = fields.Many2one('account.account.template', string='Account', ondelete='cascade', domain=[('deprecated', '=', False)])
     label = fields.Char(string='Journal Item Label')
     amount_type = fields.Selection([
@@ -921,6 +988,8 @@ class AccountReconcileModelTemplate(models.Model):
     force_tax_included = fields.Boolean(string='Tax Included in Price',
         help='Force the tax to be managed as a price included tax.')
     tax_id = fields.Many2one('account.tax.template', string='Tax', ondelete='restrict', domain=[('type_tax_use', '=', 'purchase')])
+
+    # Second part fields.
     second_account_id = fields.Many2one('account.account.template', string='Second Account', ondelete='cascade', domain=[('deprecated', '=', False)])
     second_label = fields.Char(string='Second Journal Item Label')
     second_amount_type = fields.Selection([
