@@ -72,7 +72,7 @@
                 <xpath expr="//div[hasclass('o_kanban_primary_right')]" position="inside">
                     <div t-if="record.leave_to_approve_count.raw_value > 0" class="row">
                         <div class="col-9">
-                            <a name="%(hr_holidays_action_request_from_department)d" type="action">
+                            <a name="%(hr_leave_action_action_approve_department)d" type="action">
                                 Leave Requests
                             </a>
                         </div>
@@ -82,7 +82,7 @@
                     </div>
                     <div t-if="record.allocation_to_approve_count.raw_value > 0" class="row">
                         <div class="col-9">
-                            <a name="%(hr_holidays_action_allocation_from_department)d" type="action">
+                            <a name="%(hr_leave_allocation_action_approve_department)d" type="action">
                                 Allocation Requests
                             </a>
                         </div>
@@ -108,7 +108,7 @@
                 <xpath expr="//div[hasclass('o_kanban_manage_to_approve')]" position="inside">
                     <div class="row">
                         <div class="col-12 text-left">
-                            <a name="%(hr_holidays_action_request_from_department)d" type="action">
+                            <a name="%(hr_leave_action_action_approve_department)d" type="action">
                                 <t t-esc="record.leave_to_approve_count.raw_value or 0"/> Leave Requests
                             </a>
                         </div>
@@ -116,7 +116,7 @@
 
                     <div class="row">
                         <div class="col-12 text-left">
-                            <a name="%(hr_holidays_action_allocation_from_department)d" type="action">
+                            <a name="%(hr_leave_allocation_action_approve_department)d" type="action">
                                 <t t-esc="record.allocation_to_approve_count.raw_value or 0"/> Allocation Requests
                             </a>
                         </div>
@@ -126,7 +126,7 @@
                 <xpath expr="//div[hasclass('o_kanban_manage_reports')]" position="inside">
                     <div class="row">
                         <div class="col-12 text-left">
-                            <a name="%(action_hr_holidays_leaves_analysis_filtered)d" type="action">
+                            <a name="%(hr_leave_action_action_department)d" type="action">
                                 Leaves
                             </a>
                         </div>
