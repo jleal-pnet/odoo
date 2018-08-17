@@ -813,8 +813,8 @@ ListRenderer.include({
      *
      * @param {MouseEvent} ev
      */
-    _onAddGroupRecord: function (event) {
-        event.preventDefault();
+    _onAddGroupRecord: function (ev) {
+        ev.preventDefault();
         // we don't want the click to cause other effects, such as unselecting
         // the row that we are creating, because it counts as a click on a tr
         ev.stopPropagation();
