@@ -1253,6 +1253,12 @@ class Meeting(models.Model):
         }
 
     def _rrule_parse(self, rule_str, data, date_start):
+        # needs log for debugging, code is protected by a try except so at worst, make nothing
+        try:
+            if (self.env['ir.config_parameter'].sudo().get_param('calendar.debug_print', default=False)):
+                _logger.info('processing calendar event with rule_str: %s' % rule_str)
+        except:
+            pass
         day_list = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su']
         rrule_type = ['yearly', 'monthly', 'weekly', 'daily']
         ddate = fields.Datetime.from_string(date_start)
