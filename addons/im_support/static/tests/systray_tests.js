@@ -279,7 +279,6 @@ QUnit.test('restore Support channel if necessary', function (assert) {
 });
 
 QUnit.test('receive messages in the Support channel', function (assert) {
-
     assert.expect(10);
 
     var supportChannelID;
