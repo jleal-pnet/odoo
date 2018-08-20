@@ -91,7 +91,7 @@
                 <field name="name" string="Product Lots" filter_domain="['|',('name','ilike',self),('ref','ilike',self)]"/>
                 <field name="product_id"/>
                 <group expand="0" string="Group By">
-                    <filter name="group_by_product" string="Product" domain="[]" context="{'group_by':'product_id'}"/>
+                    <filter name="groupby_product_id" string="Product" domain="[]" context="{'group_by':'product_id'}"/>
                 </group>
             </search>
         </field>

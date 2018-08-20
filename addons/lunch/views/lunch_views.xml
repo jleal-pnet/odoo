@@ -22,9 +22,9 @@
                     <filter name="date_filter" string="Date" date="date" default_period="today"/>
                     <field name="user_id"/>
                     <group expand="0" string="Group By">
-                        <filter name="group_by_order_id" string="By Order" context="{'group_by':'order_id'}"/>
-                        <filter name="group_by_supplier" string="By Vendor" context="{'group_by':'supplier'}"/>
-                        <filter name="group_by_date" string="Order Date" context="{'group_by':'date'}" help="Vendor Orders by Date"/>
+                        <filter name="groupby_order_id" string="By Order" context="{'group_by':'order_id'}"/>
+                        <filter name="groupby_supplier" string="By Vendor" context="{'group_by':'supplier'}"/>
+                        <filter name="groupby_date" string="Order Date" context="{'group_by':'date'}" help="Vendor Orders by Date"/>
                     </group>
                 </search>
             </field>
@@ -40,8 +40,8 @@
                     <field name="user_id"/>
                     <filter name='is_payment' string="Payment" domain="[('state','=','payment')]"/>
                     <separator/>
-                    <filter name='is_mine_group' string="My Account grouped" domain="[('user_id','=',uid)]" context="{'group_by':'user_id'}"/>
-                    <filter name="group_by_user" string="By User" context="{'group_by':'user_id'}"/>
+                    <filter name='groupby_user_id' string="My Account grouped" domain="[('user_id','=',uid)]" context="{'group_by':'user_id'}"/>
+                    <filter name="groupby_user_id" string="By User" context="{'group_by':'user_id'}"/>
                 </search>
             </field>
         </record>
@@ -54,7 +54,7 @@
                     <field name="description"/>
                     <field name="user_id"/>
                     <group expand="0" string="Group By">
-                        <filter name='group_by_user' string="By Employee" context="{'group_by':'user_id'}"/>
+                        <filter name='groupby_user_id' string="By Employee" context="{'group_by':'user_id'}"/>
                     </group>
                 </search>
             </field>
