@@ -42,4 +42,34 @@ nv.tooltip.calcTooltipPosition = function () {
     container.style.top = container.style.top.split('px')[0] < 0 ? 0 + 'px' : container.style.top;
     return container;
 };
+
+// monkey patch nvd3 to translate "No Data Available"
+var core = require('web.core');
+var _t = core._t;
+nv.utils.noData = function(chart, container) {
+    var opt = chart.options(),
+        margin = opt.margin(),
+        noData = opt.noData(),
+        data = (noData == null) ? [_t("No Data Available.")] : [noData],
+        height = nv.utils.availableHeight(null, container, margin),
+        width = nv.utils.availableWidth(null, container, margin),
+        x = margin.left + width/2,
+        y = margin.top + height/2;
+
+    //Remove any previously created chart components
+    container.selectAll('g').remove();
+
+    var noDataText = container.selectAll('.nv-noData').data(data);
+
+    noDataText.enter().append('text')
+        .attr('class', 'nvd3 nv-noData')
+        .attr('dy', '-.7em')
+        .style('text-anchor', 'middle');
+
+    noDataText
+        .attr('x', x)
+        .attr('y', y)
+        .text(function(t){ return t; });
+};
+
 });
