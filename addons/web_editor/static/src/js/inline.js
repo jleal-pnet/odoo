@@ -4,9 +4,11 @@ odoo.define('web_editor.inline', function (require) {
 var core = require('web.core');
 var editor = require('web_editor.editor');
 var rte = require('web_editor.rte');
-var weWidgets = require('web_editor.widget');
+var weWidgets = require('wysiwyg.widgets');
 var transcoder = require('web_editor.transcoder');
 var snippet_editor = require('web_editor.snippet.editor');
+var Wysiwyg = require('web_editor.wysiwyg');
+
 
 weWidgets.MediaDialog.include({
     start: function () {
@@ -27,7 +29,7 @@ editor.Class.include({
                                 .filter(function () { return this.textContent.match(/\S|\u00A0/); })
                                 .add($('#editable_area'))
                                 .last()[0];
-                            $.summernote.core.range.create(node, $.summernote.core.dom.nodeLength(node)).select();
+                            Wysiwyg.setRangeFromNode(node, {begin: true});
                         });
                     }
                 });

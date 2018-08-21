@@ -10,6 +10,10 @@ var options = require('web_editor.snippets.options');
 var wUtils = require('website.utils');
 var _t = core._t;
 
+if (!$('.o_newsletter_popup').length) {
+    return $.Deferred().reject("DOM doesn't contain '#edit_dialog'");
+}
+
 var mass_mailing_common = options.Class.extend({
     popup_template_id: "editor_new_mailing_list_subscribe_button",
     popup_title: _t("Add a Newsletter Subscribe Button"),

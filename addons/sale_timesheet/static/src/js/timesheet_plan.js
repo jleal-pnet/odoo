@@ -134,7 +134,7 @@ var ProjectPlan = AbstractAction.extend(ControlPanelMixin, {
     _updateControlPanel: function (buttons) {
         // set actions button
         if (this.$buttons) {
-            this.$buttons.off().destroy();
+            this.$buttons.off().remove();
         }
         var buttons = buttons || [];
         this.$buttons = $(QWeb.render("project.plan.ControlButtons", {'buttons': buttons}));

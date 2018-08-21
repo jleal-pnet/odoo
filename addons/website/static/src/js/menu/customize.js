@@ -176,6 +176,7 @@ var AceEditorMenu = websiteNavbarData.WebsiteNavbarActionWidget.extend({
                     "web.assets_frontend",
                     "website.assets_frontend",
                 ],
+                context: weContext.get(),
             });
             return this.globalEditor.appendTo(document.body);
         }

@@ -3,7 +3,7 @@ odoo.define('website.editMenu', function (require) {
 
 var core = require('web.core');
 var weContext = require('web_editor.context');
-var editor = require('web_editor.editor');
+var EditorMenu = require('website.editor.menu');
 var websiteNavbarData = require('website.navbar');
 
 var _t = core._t;
@@ -35,22 +35,23 @@ var EditPageMenu = websiteNavbarData.WebsiteNavbarActionWidget.extend({
     start: function () {
         var def = this._super.apply(this, arguments);
 
+        // Check that the page is empty
+        var $wrap = this._targetForEdition().find('#wrap');
+        this.$wrap = $wrap;
+
+        if ($wrap.length && $wrap.html().trim() === '') {
+            // If readonly empty page, show the welcome message
+            this.$welcomeMessage = $(core.qweb.render('website.homepage_editor_welcome_message'));
+            this.$welcomeMessage.addClass('o_homepage_editor_welcome_message');
+            this.$welcomeMessage.css('min-height', $wrap.parent('main').height() - ($wrap.outerHeight(true) - $wrap.height()));
+            $wrap.empty().append(this.$welcomeMessage);
+        }
+
+
         // If we auto start the editor, do not show a welcome message
         if (this._editorAutoStart) {
             return $.when(def, this._startEditMode());
         }
-
-        // Check that the page is empty
-        var $wrap = $('#wrapwrap.homepage #wrap'); // TODO find this element another way
-        if (!$wrap.length || $wrap.html().trim() !== '') {
-            return def;
-        }
-
-        // If readonly empty page, show the welcome message
-        this.$welcomeMessage = $(core.qweb.render('website.homepage_editor_welcome_message'));
-        this.$welcomeMessage.css('min-height', $wrap.parent('main').height() - ($wrap.outerHeight(true) - $wrap.height()));
-        $wrap.empty().append(this.$welcomeMessage);
-
         return def;
     },
 
@@ -67,11 +68,14 @@ var EditPageMenu = websiteNavbarData.WebsiteNavbarActionWidget.extend({
      */
     _startEditMode: function () {
         var self = this;
-        return (new (editor.Class)(this)).prependTo(document.body).then(function () {
+        if (this.$welcomeMessage) {
+            this.$welcomeMessage.detach(); // detach from the readonly rendering before the clone by summernote
+        }
+        return new EditorMenu(this).prependTo(document.body).then(function () {
             if (self.$welcomeMessage) {
-                self.$welcomeMessage.remove();
+                self.$wrap.append(self.$welcomeMessage.clone()); // reappend if the user cancel the edition
             }
-            var $wrapwrap = $('#wrapwrap'); // TODO find this element another way
+            var $wrapwrap = self._targetForEdition();
             $wrapwrap.find('.oe_structure.oe_empty, [data-oe-type="html"]').attr('data-editor-message', _t('DRAG BUILDING BLOCKS HERE'));
             var def = $.Deferred();
             self.trigger_up('animation_start_demand', {
@@ -81,6 +85,15 @@ var EditPageMenu = websiteNavbarData.WebsiteNavbarActionWidget.extend({
             });
             return def;
         });
+    },
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    _targetForEdition: function () {
+        // in edit mode, we have .note-editable className
+        return $('#wrapwrap.homepage:not(.note-editable), #wrapwrap.homepage.note-editable');
     },
 
     //--------------------------------------------------------------------------

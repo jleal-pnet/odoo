@@ -1,12 +1,19 @@
 odoo.define('website.tour.rte', function (require) {
 'use strict';
 
+var ajax = require('web.ajax');
+var core = require('web.core');
+var session = require('web.session');
 var tour = require('web_tour.tour');
-var base = require('web_editor.base');
+
+var domReady = $.Deferred();
+$(domReady.resolve.bind(domReady));
+var ready = $.when(domReady, session.is_bound, ajax.loadXML());
+
 
 tour.register('rte_translator', {
     test: true,
-    wait_for: base.ready(),
+    wait_for: ready,
 }, [{
     content: "click on Add a language",
     trigger: '.js_language_selector a:has(i.fa)',

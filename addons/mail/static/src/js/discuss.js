@@ -299,7 +299,7 @@ var Discuss = AbstractAction.extend(ControlPanelMixin, {
      */
     destroy: function () {
         if (this.$buttons) {
-            this.$buttons.off().destroy();
+            this.$buttons.off().remove();
         }
         this._super.apply(this, arguments);
     },

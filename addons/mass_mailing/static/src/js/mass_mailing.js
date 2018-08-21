@@ -1,6 +1,6 @@
 odoo.define('mass_mailing.mass_mailing', function (require) {
 
-var FieldTextHtml = require('web_editor.backend').FieldTextHtml;
+var FieldTextHtml = require('web_editor.field.html.iframe');
 var KanbanRecord = require('web.KanbanRecord');
 var KanbanColumn = require('web.KanbanColumn');
 

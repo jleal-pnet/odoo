@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <templates id="template" xml:space="preserve">
 
-<t t-extend="web_editor.dialog.image">
+<t t-extend="wysiwyg.widgets.image">
     <t t-jquery=".card-body .form-inline" t-operation="append">
         <div class="ml8">
             <span class="text-muted">— or —</span>

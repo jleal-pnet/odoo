@@ -1,10 +1,12 @@
 .oe_form_field_html_text {
     .note-editable {
         min-height: 180px;
-        font: initial !important;
+        font: inherit !important;
         font-family: inherit !important;
-        line-height: initial !important;
-        color: initial !important;
+        line-height: inherit !important;
+        color: inherit !important;
+        overflow: visible;
+
         p, div {
             font-family: 'Lucida Grande', Helvetica, Verdana, Arial, sans-serif;
             font-size: 13px;

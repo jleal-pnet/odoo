@@ -4,7 +4,7 @@ odoo.define('web_unsplash.image_widgets', function (require) {
 var core = require('web.core');
 var UnsplashAPI = require('unsplash.api');
 
-var ImageWidget = require('web_editor.widget').ImageWidget;
+var ImageWidget = require('wysiwyg.widgets.media').ImageWidget;
 var QWeb = core.qweb;
 
 var unsplashAPI = null;

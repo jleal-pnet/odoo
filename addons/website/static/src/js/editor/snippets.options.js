@@ -1,9 +1,9 @@
-odoo.define('website.snippets.options', function (require) {
+odoo.define('website.editor.snippets.options', function (require) {
 'use strict';
 
 var core = require('web.core');
 var Dialog = require('web.Dialog');
-var weWidgets = require('web_editor.widget');
+var weWidgets = require('wysiwyg.widgets');
 var options = require('web_editor.snippets.options');
 
 var _t = core._t;

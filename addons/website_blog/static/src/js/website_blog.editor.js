@@ -54,38 +54,43 @@ odoo.define('website_blog.editor', function (require) {
 'use strict';
 
 require('web.dom_ready');
-var weWidgets = require('web_editor.widget');
+var weWidgets = require('wysiwyg.widgets');
 var options = require('web_editor.snippets.options');
-var rte = require('web_editor.rte');
+var WysiwygMultizone = require('web_editor.wysiwyg.multizone');
 
 if (!$('.website_blog').length) {
     return $.Deferred().reject("DOM doesn't contain '.website_blog'");
 }
 
-rte.Class.include({
-    // Destroy popOver and stop listening mouseup event on edit mode
+WysiwygMultizone.include({
+    /**
+     * Destroy popOver and stop listening mouseup event on edit mode
+     * @override
+     */
     start: function () {
         $(".js_tweet, .js_comment").off('mouseup').trigger('mousedown');
         return this._super.apply(this, arguments);
     },
-    _saveElement: function ($el, context) {
+    /**
+     * @override
+     */
+    _saveElement: function (outerHTML, recordInfo, editable) {
         var defs = [this._super.apply(this, arguments)];
         // TODO the o_dirty class is not put on the right element for blog cover
         // edition. For some strange reason, it was forcly put (even if not
         // dirty) in <= saas-16 but this is not the case anymore.
-        var $blogContainer = $el.closest('.o_blog_cover_container');
+        var $blogContainer = $(editable).closest('.o_blog_cover_container');
         if (!this.__blogCoverSaved && $blogContainer.length) {
-            $el = $blogContainer;
             this.__blogCoverSaved = true;
             defs.push(this._rpc({
                 route: '/blog/post_change_background',
                 params: {
-                    post_id: parseInt($el.closest("[name=\"blog_post\"], .website_blog").find("[data-oe-model=\"blog.post\"]").first().data("oe-id"), 10),
+                    post_id: parseInt($blogContainer.closest("[name=\"blog_post\"], .website_blog").find("[data-oe-model=\"blog.post\"]").first().data("oe-id"), 10),
                     cover_properties: {
-                        "background-image": $el.children(".o_blog_cover_image").css("background-image").replace(/"/g, '').replace(window.location.protocol + "//" + window.location.host, ''),
-                        "background-color": $el.data("filter_color"),
-                        "opacity": $el.data("filter_value"),
-                        "resize_class": $el.data("cover_class"),
+                        "background-image": $blogContainer.children(".o_blog_cover_image").css("background-image").replace(/"/g, '').replace(window.location.protocol + "//" + window.location.host, ''),
+                        "background-color": $blogContainer.data("filter_color"),
+                        "opacity": $blogContainer.data("filter_value"),
+                        "resize_class": $blogContainer.data("cover_class"),
                     },
                 },
             }));
