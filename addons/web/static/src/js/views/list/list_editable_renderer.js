@@ -187,7 +187,7 @@ ListRenderer.include({
         // been applied
         var currentRowID, currentWidget, focusedElement, selectionRange;
         if (self.currentRow !== null) {
-            currentRowID = self.getRecordId(this.currentRow);
+            currentRowID = self.getRecordID(this.currentRow);
             currentWidget = this.allFieldWidgets[currentRowID][this.currentFieldIndex];
             if (currentWidget) {
                 focusedElement = currentWidget.getFocusableElement().get(0);
@@ -229,7 +229,7 @@ ListRenderer.include({
                 self.currentRow = newRowIndex;
                 return self._selectCell(newRowIndex, self.currentFieldIndex, {force: true}).then(function () {
                     // restore the cursor position
-                    currentRowID = self.getRecordId(newRowIndex);
+                    currentRowID = self.getRecordID(newRowIndex);
                     currentWidget = self.allFieldWidgets[currentRowID][self.currentFieldIndex];
                     if (currentWidget) {
                         focusedElement = currentWidget.getFocusableElement().get(0);
@@ -259,7 +259,7 @@ ListRenderer.include({
      */
     getEditableRecordID: function () {
         if (this.currentRow !== null) {
-            return this.getRecordId(this.currentRow);
+            return this.getRecordID(this.currentRow);
         }
         return null;
     },
@@ -281,12 +281,12 @@ ListRenderer.include({
     },
     /**
      * When we render row we store recordId as jQuery data in row element.
-     * retrieves recordID using rowIndex
+     * retrieves recordID using rowIndex as DOM element table row stores recordID as data
      *
      * @param {integer} rowIndex
      * @returns {string} recordID
      */
-    getRecordId: function (rowIndex) {
+    getRecordID: function (rowIndex) {
         var $tr = this.$('table.o_list_view > tbody tr').eq(rowIndex);
         return $tr.data('id');
     },
@@ -295,7 +295,7 @@ ListRenderer.include({
      *
      * @returns {array}
      */
-    getRecordList: function (){
+    getRecordIDList: function (){
         var records =[];
         utils.traverse_records(this.state, function (data) {
             records.push(data.id);
@@ -309,10 +309,9 @@ ListRenderer.include({
      * @returns {jQueryElement}
      */
     getRow: function (recordID){
-        var $row = this.$('.o_data_row').filter(function (index, el) {
+        return this.$('.o_data_row').filter(function (index, el) {
             return $(el).data('id') === recordID;
         });
-        return $row;
     },
     /**
      * Removes the line associated to the given recordID (the index of the row
@@ -349,10 +348,7 @@ ListRenderer.include({
     setRowMode: function (recordID, mode) {
         var self = this;
 
-        // find the record and its row index (handles ungrouped and grouped cases
-        // as even if the grouped list doesn't support edition, it may contain
-        // a widget allowing the edition in readonly (e.g. priority), so it
-        // should be able to update a record as well)
+        // find the record and its row index (handles ungrouped and grouped cases)
         var record = self.getRecord(recordID);
         var $row = this.getRow(recordID);
         if (!record) {
@@ -439,7 +435,7 @@ ListRenderer.include({
         if (this.currentRow === null) {
             return $.when();
         }
-        var recordID = this.getRecordId(this.currentRow);
+        var recordID = this.getRecordID(this.currentRow);
         var recordWidgets = this.allFieldWidgets[recordID];
         toggleWidgets(true);
 
@@ -484,17 +480,17 @@ ListRenderer.include({
      * @param {position} [options.position] position previous and next
      * @returns {integer}
      */
-    _getNavigationIndex: function (index, options) {
+    _getNavigationLineIndex: function (index, options) {
         var newIndex;
-        var recordID = this.getRecordId(index);
-        var recordList = this.getRecordList();
-        var indexPos = recordList.indexOf(recordID);
+        var recordID = this.getRecordID(index);
+        var recordIDList = this.getRecordIDList();
+        var indexPos = recordIDList.indexOf(recordID);
         if (options.position === 'next'){
-            newIndex = this.state.groupedBy.length ? (indexPos + 1) % recordList.length : indexPos + 1;
+            newIndex = this.state.groupedBy.length ? (indexPos + 1) % recordIDList.length : indexPos + 1;
         } else {
-            newIndex = this.state.groupedBy.length ? (indexPos === 0) && recordList.length - 1 || indexPos - 1 : indexPos - 1;
+            newIndex = this.state.groupedBy.length ? (indexPos === 0) && recordIDList.length - 1 || indexPos - 1 : indexPos - 1;
         }
-        var $row = this.getRow(recordList[newIndex]);
+        var $row = this.getRow(recordIDList[newIndex]);
         var rowIndex = $row.prop('rowIndex') - 1;
         return rowIndex;
     },
@@ -529,7 +525,7 @@ ListRenderer.include({
      * @private
      */
     _moveToPreviousLine: function () {
-        var prevRowIndex = this._getNavigationIndex(this.currentRow, {
+        var prevRowIndex = this._getNavigationLineIndex(this.currentRow, {
             position: 'previous'
         });
         if (prevRowIndex >= 0) {
@@ -552,7 +548,7 @@ ListRenderer.include({
             if (fieldNames.length) {
                 return;
             }
-            var nextRowIndex = self._getNavigationIndex(self.currentRow, {
+            var nextRowIndex = self._getNavigationLineIndex(self.currentRow, {
                 position: 'next',
             });
             if (nextRowIndex >= 0) {
@@ -750,7 +746,7 @@ ListRenderer.include({
         // Select the row then activate the widget in the correct cell
         var self = this;
         return this._selectRow(rowIndex).then(function () {
-            var recordID = self.getRecordId(rowIndex);
+            var recordID = self.getRecordID(rowIndex);
             var record = self.getRecord(recordID);
             if (fieldIndex >= (self.allFieldWidgets[record.id] || []).length) {
                 return $.Deferred().reject();
@@ -783,7 +779,7 @@ ListRenderer.include({
         if (rowIndex === this.currentRow) {
             return $.when();
         }
-        var recrodID = this.getRecordId(rowIndex);
+        var recrodID = this.getRecordID(rowIndex);
         // To select a row, the currently selected one must be unselected first
         var self = this;
         return this.unselectRow().then(function () {
@@ -895,7 +891,7 @@ ListRenderer.include({
      * @returns {Class} Widget returns first widget
      */
     _getFirstWidget: function () {
-        var recordID = this.getRecordId(this.currentRow);
+        var recordID = this.getRecordID(this.currentRow);
         var recordWidgets = this.allFieldWidgets[recordID];
         var firstWidget = _.find(recordWidgets, function (widget) {
             var isFirst =

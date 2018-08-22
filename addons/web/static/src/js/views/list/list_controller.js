@@ -568,12 +568,14 @@ var ListController = BasicController.extend({
     },
     /**
      * Hides the create button when groupedby list
-    */
+     *
+     * @private
+     */
     _onToggleCreate: function (){
         if (this.$buttons){
             var state = this.model.get(this.handle);
-            var createbutton = this.$buttons.find('.o_list_button_add');
-            return state.groupedBy.length ? createbutton.addClass('o_hidden') : createbutton.removeClass('o_hidden');
+            var $createbutton = this.$buttons.find('.o_list_button_add');
+            return state.groupedBy.length ? $createbutton.addClass('o_hidden') : $createbutton.removeClass('o_hidden');
         }
     },
     /**
