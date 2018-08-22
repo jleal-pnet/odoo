@@ -567,15 +567,15 @@ var ListController = BasicController.extend({
         });
     },
     /**
-     * Hides the create button when groupedby list
+     * Hides the create button in a grouped list
      *
      * @private
      */
-    _onToggleCreate: function (){
-        if (this.$buttons){
+    _onToggleCreate: function () {
+        if (this.$buttons) {
             var state = this.model.get(this.handle);
-            var $createbutton = this.$buttons.find('.o_list_button_add');
-            return state.groupedBy.length ? $createbutton.addClass('o_hidden') : $createbutton.removeClass('o_hidden');
+            var $createButton = this.$buttons.find('.o_list_button_add');
+            $createButton.toggleClass('o_hidden', !!state.groupedBy.length);
         }
     },
     /**

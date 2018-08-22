@@ -280,8 +280,7 @@ ListRenderer.include({
         return record;
     },
     /**
-     * When we render row we store recordId as jQuery data in row element.
-     * retrieves recordID using rowIndex as DOM element table row stores recordID as data
+     * retrieves recordID using rowIndex as DOM element table row stores recordID data
      *
      * @param {integer} rowIndex
      * @returns {string} recordID
@@ -295,7 +294,7 @@ ListRenderer.include({
      *
      * @returns {array}
      */
-    getRecordIDList: function (){
+    getRecordIDList: function () {
         var records =[];
         utils.traverse_records(this.state, function (data) {
             records.push(data.id);
@@ -308,7 +307,7 @@ ListRenderer.include({
      * @param {string} [recordID]
      * @returns {jQueryElement}
      */
-    getRow: function (recordID){
+    getRow: function (recordID) {
         return this.$('.o_data_row').filter(function (index, el) {
             return $(el).data('id') === recordID;
         });
@@ -348,7 +347,6 @@ ListRenderer.include({
     setRowMode: function (recordID, mode) {
         var self = this;
 
-        // find the record and its row index (handles ungrouped and grouped cases)
         var record = self.getRecord(recordID);
         var $row = this.getRow(recordID);
         if (!record) {
