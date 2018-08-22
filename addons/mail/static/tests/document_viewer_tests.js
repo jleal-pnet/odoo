@@ -99,8 +99,8 @@ QUnit.module('DocumentViewer', {
         viewer.destroy();
     });
 
-    QUnit.only('Document Viewer PDF', function (assert) {
-        assert.expect(4);
+    QUnit.test('Document Viewer PDF', function (assert) {
+        assert.expect(5);
 
         var viewer = createViewer({
             attachmentID: 1,
@@ -123,8 +123,8 @@ QUnit.module('DocumentViewer', {
 
         viewer.$('.o_split_btn').click();
 
-        // check viewer not in DOM anymore
-        // check viewer.isDestroyed();
+        assert.ok(viewer.isDestroyed(), 'viewer should be destroyed')
+
     });
 
     QUnit.test('Document Viewer Youtube', function (assert) {
