@@ -67,7 +67,7 @@ class Website(models.Model):
     def _default_social_googleplus(self):
         return self.env.ref('base.main_company').social_googleplus
 
-    name = fields.Char('Website Name')
+    name = fields.Char('Website Name', required=True)
     domain = fields.Char('Website Domain')
     country_group_ids = fields.Many2many('res.country.group', 'website_country_group_rel', 'website_id', 'country_group_id',
                                          string='Country Groups', help='Used when multiple websites have the same domain.')
