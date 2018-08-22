@@ -77,17 +77,24 @@ var DocumentViewer = Widget.extend({
         this.$('[data-toggle="tooltip"]').tooltip({delay: 0});
         return this._super.apply(this, arguments);
     },
+    /**
+     * @override
+     * @returns {[type]} [description]
+     */
+    destroy: function () {
+        if (this.isDestroyed()) {
+            return;
+        }
+        this.trigger_up('document_viewer_closed');
+        this.$el.modal('hide');
+        this.$el.remove();
+        this._super.apply(this, arguments);
+    },
 
     //--------------------------------------------------------------------------
     // Private
     //---------------------------------------------------------------------------
-    /**
-     * @private
-     */
-    _closeViewer: function () {
-        this.$el.modal('hide');
-        this.trigger_up('document_viewer_closed');
-    },
+
     /**
      * @private
      */
@@ -175,18 +182,15 @@ var DocumentViewer = Widget.extend({
      */
     _onClose: function (e) {
         e.preventDefault();
-        this._closeViewer();
+        this.destroy();
     },
     /**
      * When popup close complete destroyed modal even DOM footprint too
+     *
      * @private
      */
     _onDestroy: function () {
-        if (this.isDestroyed()) {
-            return;
-        }
-        this.$el.modal('hide');
-        this.$el.remove();
+        this.destroy();
     },
     /**
      * @private
@@ -323,10 +327,10 @@ var DocumentViewer = Widget.extend({
      * @private
      * @param {MouseEvent} e
      */
-    _onSplitPDF: function (e) {
+    _onSplitPDF: function () {
         var self = this;
         var indices = $("input[name=Indices]").val();
-        var remainder = $("input[type=checkbox][name=remainder]").is(":checked")
+        var remainder = $("input[type=checkbox][name=remainder]").is(":checked");
         this._rpc({
             model: 'ir.attachment',
             method: 'split_pdf',
