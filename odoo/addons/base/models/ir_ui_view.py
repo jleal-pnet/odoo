@@ -9,6 +9,7 @@ import logging
 import os
 import re
 import time
+import uuid
 
 import itertools
 from dateutil.relativedelta import relativedelta
@@ -421,6 +422,15 @@ actual arch.
         if self.env.context.get('_force_unlink', False) and self.mapped('inherit_children_ids'):
             self.mapped('inherit_children_ids').unlink()
         super(View, self).unlink()
+
+    @api.multi
+    @api.returns('self', lambda value: value.id)
+    def copy(self, default=None):
+        self.ensure_one()
+        if self.key and 'key' not in default:
+            new_key = self.key + '_%s' % str(uuid.uuid4())[:6]
+            default = dict(default or {}, key=new_key)
+        return super(View, self).copy(default)
 
     @api.multi
     def toggle(self):

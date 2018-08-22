@@ -48,13 +48,20 @@ class View(models.Model):
                         ('website_id', '=', current_website_id)
                     ], limit=1)
                     if not website_specific_view:
-                        website_specific_view = view.copy({'website_id': current_website_id})
+                        # Set key to avoid copy() to generate an unique key as we want the specific view to have the same key
+                        website_specific_view = view.copy({'website_id': current_website_id, 'key': view.key})
                         view._create_website_specific_pages_for_view(website_specific_view,
                                                                      view.env['website'].browse(current_website_id))
 
-                        # trigger COW on inheriting views
                         for inherit_child in view.inherit_children_ids:
-                            inherit_child.write({'inherit_id': website_specific_view.id})
+                            # COW won't be triggered if there is already a website_id on the view, we should copy the view ourself
+                            if inherit_child.website_id.id == current_website_id:
+                                inherit_child.copy({'inherit_id': website_specific_view.id, 'key': inherit_child.key})
+                                # We should unlink website specific view from generic tree as it now copied on specific tree
+                                inherit_child.unlink()
+                            else:
+                                # trigger COW on inheriting views
+                                inherit_child.write({'inherit_id': website_specific_view.id})
 
                     return super(View, website_specific_view).write(vals)
         return super(View, self).write(vals)
