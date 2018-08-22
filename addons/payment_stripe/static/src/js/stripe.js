@@ -2,7 +2,10 @@ odoo.define('payment_stripe.stripe', function(require) {
     "use strict";
 
     var ajax = require('web.ajax');
-    var Dialog = require('web.Dialog');
+    var core = require('web.core');
+    var rpc = require('web.rpc');
+    var qweb = core.qweb;
+    ajax.loadXML('/payment_stripe/static/src/xml/stripe_templates.xml', qweb);
 
     require('web.dom_ready');
     if (!$('.o_payment_form').length) {
@@ -19,45 +22,68 @@ odoo.define('payment_stripe.stripe', function(require) {
         }
     });
 
-    function dispay_error (message, acquirer_id) {
+    function display_error(message, acquirer_id) {
         $('#payment_error').remove();
         var $acquirerForm = $('#o_payment_form_acq_' + acquirer_id);
-        var messageResult = '<div class="alert alert-danger mb4" id="payment_error">';
-        messageResult = messageResult + _.str.escapeHTML(message) + '</div>';
-        $acquirerForm.append(messageResult);
-        $(".stripe_container").remove();
+        var $message = $('<div>', {
+            class: 'alert alert-danger mx-4',
+            text:  _.str.escapeHTML(message),
+            id: 'payment_error',
+        });
+        $acquirerForm.append($message);
         $("#o_payment_form_pay").removeAttr('disabled');
     }
 
-    function stripe_none_flow_payment (data, acquirer_id) {
-        if (data) {
-            $("#o_payment_form_pay").attr('disabled', 'disabled');
-            ajax.jsonRpc('/stripe/payment/noneflow/', 'call', data).done(function (result) {
-                window.location.href = result;
-            }).fail(function(message, data) {
-                dispay_error(message.data.message, acquirer_id);
+    function stripeTokenHandler(token, provider_form) {
+        // Insert the token ID into the form so it gets submitted to the server
+        var $form = $('#payment-form');
+        var $hiddenInput = $('<input>', {
+            type: 'hidden',
+            name: 'stripeToken',
+            value: token.id
+        });
+        $form.append($hiddenInput);
+        $form.append(provider_form.find('input'));
+        $form.submit();
+    }
+
+    function create_stripe_token(stripe, provider_form, type) {
+        var $modal = $('#payment-element-modal');
+        if ($modal.length) {
+            $modal.modal('show');
+        } else {
+            var element = stripe.elements();
+            var paymentelement = element.create(type);
+            var wizard = $(qweb.render('stripe.payment.element', {type: type}));
+            wizard.appendTo($('body')).modal({'keyboard': true});
+            paymentelement.mount('#card-element');
+            paymentelement.addEventListener('change', function(event) {
+                var displayError = document.getElementById('card-errors');
+                displayError.textContent = '';
+                if (event.error) {
+                    displayError.textContent = event.error.message;
+                }
+            });
+            var form = document.getElementById('payment-form');
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+                stripe.createToken(paymentelement).then(function(result) {
+                    if (result.error) {
+                        // Inform the user if there was an error.
+                        var errorElement = document.getElementById('card-errors');
+                        errorElement.textContent = result.error.message;
+                    } else {
+                        // Send the token to server.
+                        stripeTokenHandler(result.token, provider_form);
+                    }
+                });
             });
         }
     }
 
-    function input_validation (payment_type, acquirer_id) {
-        var $form = $('#o_payment_type_' + payment_type + "_" + acquirer_id);
-        var res = true
-        $($form.find('input[data-is-required="true"]')).filter(function () {
-            if($.trim($(this).val()).length == 0) {
-                dispay_error("Please fill all the details correctly", acquirer_id);
-                res = false;
-            }
-        });
-        return res;
-    }
-
-    function do_stripe_payment (provider_form) {
+    function do_stripe_payment(provider_form) {
         // Open Checkout with further options
         var payment_form = $('.o_payment_form');
-        var $loader = '<div class="stripe_container text-center text-muted">'+'<i class="fa fa-circle-o-notch fa-4x fa-spin"></i>'+
-                        '</div>';
-        $(payment_form).append($loader);
         if(!payment_form.find('i').length)
             payment_form.append('<i class="fa fa-spinner fa-spin"/>');
             payment_form.attr('disabled','disabled');
@@ -66,25 +92,21 @@ odoo.define('payment_stripe.stripe', function(require) {
             return provider_form.find('input[name="' + name + '"]').val();
         }
 
-        var get_payment_value = function(name) {
-            return payment_form.find('input[name="' + name + '"]').val();
-        }
-
-        var payment_tx_url = get_payment_value('prepare_tx_url');
-        var access_token = get_payment_value('access_token') || get_payment_value('token') || '';
         var acquirer_id = parseInt(get_input_value('acquirer'));
         var amount = parseFloat(get_input_value("amount") || '0.0');
         var currency = get_input_value("currency");
         var email = get_input_value("email");
-
         $('#payment_error').remove();
         var $select = payment_form.find('.stripe_payment_type');
         var type = $select.val().toLowerCase().replace(/\ /g, '_');
         if (type == 'select_payment_type') {
-            dispay_error('Please select any Payment method.', acquirer_id)
+            display_error('Please select any Payment method.', acquirer_id);
             return;
         }
         var stripe = Stripe(get_input_value('stripe_key'));
+        if (_.contains(['card', 'sepa_debit'], type)) {
+            return create_stripe_token(stripe, provider_form, type);
+        }
         var data = {
             'type': type,
             'owner[name]': get_input_value('name'),
@@ -100,53 +122,37 @@ odoo.define('payment_stripe.stripe', function(require) {
             'owner[address][country]': get_input_value('country'),
             'owner[address][postal_code]': get_input_value('postal_code'),
         }
-        if (type == 'card') {
-            if (!input_validation('card', acquirer_id)) {return;}
-            data = _.extend({}, data, {
-                'card[number]': get_payment_value('cc_number').replace(/\ /g, ''),
-                'card[exp_month]': get_payment_value('cc_expiry').slice(0,2),
-                'card[exp_year]': get_payment_value('cc_expiry').slice(-2),
-                'card[cvc]': get_payment_value('cvc'),
-                'acquirer_id': acquirer_id
-            });
-            return stripe_none_flow_payment(data, acquirer_id)
-        } else if (type == 'sofort') {
+        if (type == 'sofort') {
             data = _.extend({}, data, {
                 'sofort[country]': get_input_value('country')
             });
-        } else if (type == 'sepa_debit') {
-            if (!input_validation('sepa_debit', acquirer_id)) {return;}
-            data = _.extend({}, data, {
-                'sepa_debit[iban]': get_payment_value('iban_number'),
-                'acquirer_id': acquirer_id
-            });
-            return stripe_none_flow_payment(data, acquirer_id);
         }
         stripe.createSource(data).then(function (result) {
             if (result.error) {
-                dispay_error(result.error.message, acquirer_id);
+                display_error(result.error.message, acquirer_id);
             } else {
-                $("#o_payment_form_pay").attr('disabled', 'disabled');
                 if (result.source.flow === 'redirect' || result.source.type === 'multibanco') {
                     window.location.href = result.source.redirect.url;
                 }
                 else if (result.source.type == 'wechat') {
-                    var $qrcode = $(".o_stripe_wechat");
-                    $qrcode.qrcode({
-                        width: 128,
-                        height: 128,
-                        style: "display= block",
-                        text: result.source.wechat.qr_code_url
-                    });
-                    $qrcode.children().css({display: 'block', margin:'auto'});
-                    $(".stripe_container").remove();
+                    rpc.query({
+                        route: '/stripe/generate_qrcode',
+                        params: {'qr_code_url': result.source.wechat.qr_code_url},
+                    }).then(function(res) {
+                        var wizard = $(qweb.render('stripe.payment.element', {type: result.source.type, qr_image: res}));
+                        wizard.appendTo($('body')).modal({'keyboard': true});
+                    })
+
                 }
             }
         });
     }
-    $.getScript("/payment_stripe/static/src/lib/jquery.qrcode.min.js");
-    $.getScript("https://js.stripe.com/v3/", function(data, textStatus, jqxhr) {
-        observer.observe(document.body, {childList: true});
-        do_stripe_payment($('form[provider="stripe"]'));
-    });
+
+    if (!window.strip_loaded) {
+        $.getScript("https://js.stripe.com/v3/", function(data, textStatus, jqxhr) {
+            observer.observe(document.body, {childList: true});
+            do_stripe_payment($('form[provider="stripe"]'));
+            window.strip_loaded = true;
+        });
+    }
 });

@@ -1,6 +1,5 @@
 # coding: utf-8
 
-import json
 import logging
 import requests
 import pprint
@@ -46,18 +45,18 @@ class PaymentAcquirerStripe(models.Model):
         temp_stripe_tx_values = {
             'amount': tx_values['amount'],  # Mandatory
             'currency': tx_values['currency'].name,  # Mandatory anyway
-            'email': tx_values.get('partner_email'),
+            'line1': tx_values.get('partner_address'),
             'city': tx_values.get('partner_city'),
+            'state': tx_values.get('partner_state').code,
             'country': tx_values.get('partner_country').code,
+            'postal_code': tx_values.get('partner_zip'),
+            'email': tx_values.get('partner_email'),
             'name': tx_values.get('partner_name'),
             'reference': tx_values.get('reference'),
             'return_url': tx_values.get('return_url'),
             'redirect_url': urls.url_join(base_url, '/payment/stripe/return?acquirer_id=' + str(self.id)),
-            'city': tx_values.get('partner_city'),
-            'line1': tx_values.get('partner_address'),
-            'postal_code': tx_values.get('partner_zip'),
-            'state': tx_values.get('partner_state').code
         }
+
         temp_stripe_tx_values['returndata'] = stripe_tx_values.pop('return_url', '')
         stripe_tx_values.update(temp_stripe_tx_values)
         return stripe_tx_values
@@ -113,103 +112,7 @@ class PaymentTransactionStripe(models.Model):
 
     stripe_payment_type = fields.Char(string='Stripe Payment Type', groups='base.group_user')
 
-    def get_stripe_resp(self, data, req_type):
-        headers = {'AUTHORIZATION': 'Bearer %s' % self.acquirer_id.stripe_secret_key}
-        url = "%s/%s" % (self.acquirer_id.get_stripe_url(), req_type)
-        resp = requests.post(url, data=data, headers=headers)
-        return json.loads(resp.text)
-
-    def _do_generic_stripe_payment(self, **kwargs):
-        self = self.search([('reference', '=', kwargs.get('metadata', {}).get('reference'))])
-        charge_data = {
-            'amount': kwargs.get('amount'),
-            'currency': kwargs.get('currency'),
-            'source': kwargs.get('id'),
-        }
-        charge_resp = self.get_stripe_resp(charge_data, 'charges')
-        _logger.info('Stripe: take charge %s %s' % (charge_resp.get('source', {}).get('type'), pprint.pformat(charge_resp.get('source'))))
-        return charge_resp.get('source')
-
-    def get_stripe_source_data(self, **kwargs):
-        return {
-            "type": kwargs.get('type'),
-            'amount': kwargs.get('amount'),
-            'currency': kwargs.get('currency'),
-            'metadata[return_url]': kwargs.get('metadata[return_url]'),
-            'metadata[reference]':  kwargs.get('metadata[reference]'),
-            'owner[name]': kwargs.get('owner[name]'),
-            'owner[address][city]': kwargs.get('owner[address][city]'),
-            'owner[address][line1]': kwargs.get('owner[address][line1]'),
-            'owner[address][state]': kwargs.get('owner[address][state]'),
-            'owner[address][country]': kwargs.get('owner[address][country]'),
-            'owner[address][postal_code]': kwargs.get('owner[address][postal_code]'),
-        }
-
-    def _do_card_stripe_payment(self, **kwargs):
-        source_data = self.get_stripe_source_data(**kwargs)
-        source_data.update({
-            'card[number]': kwargs.get('card[number]'),
-            'card[exp_month]': kwargs.get('card[exp_month]'),
-            'card[exp_year]': kwargs.get('card[exp_year]'),
-            'card[cvc]': kwargs.get('card[cvc]'),
-        })
-        source_resp = self.get_stripe_resp(source_data, 'sources')
-        if not source_resp.get('id'):
-            raise ValidationError(_('Stripe: cannot create token card %s' % pprint.pformat(source_resp)))
-        _logger.info('Stripe: create token card %s' % pprint.pformat(source_resp))
-        charge_data = {
-            'amount': kwargs.get('amount'),
-            'currency': kwargs.get('currency'),
-            'source': source_resp.get('id'),
-        }
-        charge_resp = self.get_stripe_resp(charge_data, 'charges')
-        if not charge_resp.get('id'):
-            raise ValidationError(_('Stripe: cannot take charge card %s' % pprint.pformat(charge_resp)))
-        _logger.info('Stripe: take charge card  %s' % pprint.pformat(charge_resp))
-        self.form_feedback(charge_resp.get('source'), 'stripe')
-        return_url = charge_resp.get('source').get('metadata', {}).get('return_url') or "/"
-        return return_url
-
-    def _do_sepa_debit_stripe_payment(self, **kwargs):
-        source_data = self.get_stripe_source_data(**kwargs)
-        source_data.update({
-            "sepa_debit[iban]": kwargs.get('sepa_debit[iban]'),
-        })
-        source_resp = self.get_stripe_resp(source_data, 'sources')
-        if not source_resp.get('id'):
-            raise ValidationError(_('Stripe: cannot create source sepa debit %s' % pprint.pformat(source_resp)))
-        _logger.info('Stripe: create source sepa debit %s' % pprint.pformat(source_resp))
-        cust_data = {
-            'email': self.env.user.partner_id.email,
-            'source': source_resp.get('id')
-        }
-        cust_resp = self.get_stripe_resp(cust_data, 'customers')
-        if not cust_resp.get('id'):
-            raise ValidationError(_('Stripe: cannot create customer sepa debit %s' % pprint.pformat(cust_resp)))
-        _logger.info('Stripe: create customer sepa debit %s' % pprint.pformat(cust_resp))
-        charge_data = {
-            'amount': kwargs.get('amount'),
-            'currency': kwargs.get('currency'),
-            'source': source_resp.get('id'),
-            'customer': cust_resp.get('id')
-        }
-        response_data = self.get_stripe_resp(charge_data, 'charges')
-        if not response_data.get('id'):
-            raise ValidationError(_('Stripe: cannot take charge sepa debit %s' % pprint.pformat(response_data)))
-        _logger.info('Stripe: take charge sepa debit %s' % pprint.pformat(response_data))
-        self.form_feedback(response_data.get('source'), 'stripe')
-        return_url = response_data.get('source').get('metadata', {}).get('return_url') or "/"
-        return return_url
-
-    def do_stripe_payment(self, **kwargs):
-        if kwargs.get('type') == 'card':
-            return self._do_card_stripe_payment(**kwargs)
-        elif kwargs.get('type') == 'sepa_debit':
-            return self._do_sepa_debit_stripe_payment(**kwargs)
-        else:
-            return self._do_generic_stripe_payment(**kwargs)
-
-    def _create_stripe_charge(self, acquirer_ref=None, tokenid=None, email=None):
+    def _create_stripe_charge(self, acquirer_ref=None, tokenid=None, email=None, source=None):
         api_url_charge = '%s/charges' % (self.acquirer_id._get_stripe_api_url())
         charge_params = {
             'amount': int(self.amount if self.currency_id.name in INT_CURRENCIES else float_round(self.amount * 100, 2)),
@@ -223,6 +126,8 @@ class PaymentTransactionStripe(models.Model):
             charge_params['card'] = str(tokenid)
         if email:
             charge_params['receipt_email'] = email.strip()
+        if source:
+            charge_params['source'] = source
 
         _logger.info('_create_stripe_charge: Sending values to URL %s, values:\n%s', api_url_charge, pprint.pformat(charge_params))
         r = requests.post(api_url_charge,
