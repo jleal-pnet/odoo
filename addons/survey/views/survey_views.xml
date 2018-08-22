@@ -235,6 +235,7 @@
                     <field name="public_url" />
                     <field name="activity_ids" />
                     <field name="activity_state" />
+                    <progressbar field="activity_state" colors='{"planned": "success", "today": "warning", "overdue": "danger"}'/>
                     <templates>
                         <div t-name="kanban-box" t-attf-class="oe_kanban_color_#{kanban_getcolor(record.color.raw_value)} oe_kanban_card oe_kanban_global_click">
                             <div class="o_dropdown_kanban dropdown" t-if="widget.editable">
