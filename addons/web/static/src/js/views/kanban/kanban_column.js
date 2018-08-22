@@ -80,7 +80,8 @@ var KanbanColumn = Widget.extend({
 
         if (options.group_by_tooltip) {
             this.tooltipInfo = _.map(options.group_by_tooltip, function (help, field) {
-                return (data.tooltipData && data.tooltipData[field] && "<div>" + help + "<br>" + data.tooltipData[field] + "</div>") || '';
+                help = (field === "description") ? "" : (help + "<br>");
+                return (data.tooltipData && data.tooltipData[field] && "<div>" + help + data.tooltipData[field] + "</div>") || '';
             }).join('');
         }
     },
