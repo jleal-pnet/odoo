@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Deactivates the default when on demo -->
+        <record id="base.main_company" model="res.company">
+            <field name="invoice_is_snailmail" eval="False"/>
+        </record>
+
+    </data>
+</odoo>
