@@ -300,7 +300,7 @@ var KanbanModel = BasicModel.extend({
      * @override
      */
     _load: function (dataPoint, options) {
-        if (dataPoint.progressBar) {
+        if (dataPoint.progressBar && dataPoint.groupedBy.length) {
             return this._readProgressBarGroup(dataPoint, options);
         }
         return this._super.apply(this, arguments);
