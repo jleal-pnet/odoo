@@ -110,7 +110,7 @@
             <field name="view_mode">tree,form</field>
             <field name="help" type="html">
               <p class="o_view_nocontent_smiling_face">
-                Define a new transfer
+                Define a new operation
               </p>
             </field>
 
@@ -198,7 +198,7 @@
             <field name="model">stock.picking</field>
             <field eval="12" name="priority"/>
             <field name="arch" type="xml">
-                <form string="Transfer">
+                <form string="Operation">
                 <header>
                     <field name="id" invisible="1"/>
                     <field name="is_locked" invisible="1"/>
@@ -386,7 +386,7 @@
         </record>
 
         <record id="action_picking_tree_all" model="ir.actions.act_window">
-            <field name="name">Transfers</field>
+            <field name="name">Operations</field>
             <field name="res_model">stock.picking</field>
             <field name="type">ir.actions.act_window</field>
             <field name="view_type">form</field>
@@ -399,15 +399,15 @@
             <field name="search_view_id" ref="view_picking_internal_search"/>
             <field name="help" type="html">
               <p class="o_view_nocontent_smiling_face">
-                Define a new transfer
+                Define a new operation
               </p>
             </field>
         </record>
 
-        <menuitem id="all_picking" name="Transfers" parent="menu_stock_warehouse_mgmt" sequence="5" action="action_picking_tree_all" groups="stock.group_stock_manager,stock.group_stock_user"/>
+        <menuitem id="all_picking" name="Operations" parent="menu_stock_warehouse_mgmt" sequence="5" action="action_picking_tree_all" groups="stock.group_stock_manager,stock.group_stock_user"/>
 
         <record id="stock_picking_action_picking_type" model="ir.actions.act_window">
-            <field name="name">All Transfers</field>
+            <field name="name">All Operations</field>
             <field name="res_model">stock.picking</field>
             <field name="type">ir.actions.act_window</field>
             <field name="view_type">form</field>
@@ -422,13 +422,13 @@
             <field name="search_view_id" ref="view_picking_internal_search"/>
             <field name="help" type="html">
               <p class="o_view_nocontent_smiling_face">
-                Define a new transfer
+                Define a new operation
               </p>
             </field>
         </record>
 
         <record id="action_picking_tree_done" model="ir.actions.act_window">
-            <field name="name">Done Transfers</field>
+            <field name="name">Done Operations</field>
             <field name="res_model">stock.picking</field>
             <field name="type">ir.actions.act_window</field>
             <field name="view_type">form</field>
@@ -444,7 +444,7 @@
             <field name="search_view_id" ref="view_picking_internal_search"/>
             <field name="help" type="html">
               <p class="o_view_nocontent_smiling_face">
-                Define a new transfer
+                Define a new operation
               </p>
             </field>
         </record>
@@ -466,13 +466,13 @@
             <field name="search_view_id" ref="view_picking_internal_search"/>
              <field name="help" type="html">
               <p class="o_view_nocontent_smiling_face">
-                Define a new transfer
+                Define a new operation
               </p>
             </field>
        </record>
 
         <record id="action_picking_tree_done_grouped" model="ir.actions.act_window">
-            <field name="name">Done Transfers by Date</field>
+            <field name="name">Done Operations by Date</field>
             <field name="res_model">stock.picking</field>
             <field name="type">ir.actions.act_window</field>
             <field name="view_type">form</field>
@@ -489,13 +489,13 @@
             <field name="search_view_id" ref="view_picking_internal_search"/>
             <field name="help" type="html">
               <p class="o_view_nocontent_smiling_face">
-                Define a new transfer
+                Define a new operation
               </p>
             </field>
         </record>
 
         <record id="action_picking_tree_waiting" model="ir.actions.act_window">
-            <field name="name">Waiting Transfers</field>
+            <field name="name">Waiting Operations</field>
             <field name="res_model">stock.picking</field>
             <field name="type">ir.actions.act_window</field>
             <field name="view_type">form</field>
@@ -511,13 +511,13 @@
             <field name="search_view_id" ref="view_picking_internal_search"/>
             <field name="help" type="html">
               <p class="o_view_nocontent_smiling_face">
-                Define a new transfer
+                Define a new operation
               </p>
             </field>
         </record>
 
         <record id="action_picking_tree_late" model="ir.actions.act_window">
-            <field name="name">Late Transfers</field>
+            <field name="name">Late Operations</field>
             <field name="res_model">stock.picking</field>
             <field name="type">ir.actions.act_window</field>
             <field name="view_type">form</field>
@@ -534,7 +534,7 @@
             <field name="search_view_id" ref="view_picking_internal_search"/>
             <field name="help" type="html">
               <p class="o_view_nocontent_smiling_face">
-                Define a new transfer
+                Define a new operation
               </p>
             </field>
         </record>
@@ -557,13 +557,13 @@
             <field name="search_view_id" ref="view_picking_internal_search"/>
             <field name="help" type="html">
               <p class="o_view_nocontent_smiling_face">
-                Define a new transfer
+                Define a new operation
               </p>
             </field>
         </record>
 
         <record id="action_picking_tree" model="ir.actions.act_window">
-            <field name="name">Transfers</field>
+            <field name="name">Operations</field>
             <field name="res_model">stock.picking</field>
             <field name="type">ir.actions.act_window</field>
             <field name="view_type">form</field>
@@ -589,7 +589,7 @@
 
 
         <record id="action_picking_form" model="ir.actions.act_window">
-            <field name="name">New Transfer</field>
+            <field name="name">New Operation</field>
             <field name="res_model">stock.picking</field>
             <field name="type">ir.actions.act_window</field>
             <field name="view_type">form</field>
@@ -604,7 +604,7 @@
             <field name="search_view_id" ref="view_picking_internal_search"/>
             <field name="help" type="html">
               <p class="o_view_nocontent_smiling_face">
-                Define a new transfer
+                Define a new operation
               </p>
             </field>
         </record>
@@ -651,7 +651,7 @@
                                                 <button class="btn btn-primary" name="get_action_picking_tree_ready" type="object">
                                                     <span t-if="record.code.raw_value =='incoming'"><t t-esc="record.count_picking_ready.value"/> To Receive</span>
                                                     <span t-if="record.code.raw_value =='outgoing'"><t t-esc="record.count_picking_ready.value"/> To Do</span>
-                                                    <span t-if="record.code.raw_value =='internal'"><t t-esc="record.count_picking_ready.value"/> Transfers</span>
+                                                    <span t-if="record.code.raw_value =='internal'"><t t-esc="record.count_picking_ready.value"/> Operations</span>
                                                 </button>
                                             </div>
                                             <div class="col-6 o_kanban_primary_right">
@@ -713,10 +713,10 @@
                                                     <span>New</span>
                                                 </div>
                                                 <div role="menuitem">
-                                                    <a name="%(action_picking_form)d" type="action" context="{'default_immediate_transfer': True}">Immediate Transfer</a>
+                                                    <a name="%(action_picking_form)d" type="action" context="{'default_immediate_transfer': True}">Immediate Operation</a>
                                                 </div>
                                                 <div role="menuitem">
-                                                    <a name="%(action_picking_form)d" type="action">Planned Transfer</a>
+                                                    <a name="%(action_picking_form)d" type="action">Planned Operation</a>
                                                 </div>
                                             </div>
                                         </div>
