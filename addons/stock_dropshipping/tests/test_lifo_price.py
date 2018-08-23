@@ -41,7 +41,7 @@ class TestLifoPrice(common.TransactionCase):
         # product_form.valuation = 'real_time'
         # product_form.cost_method = 'fifo'
         product_form.categ_id.property_stock_account_input_categ_id = self.env.ref('stock_dropshipping.o_expense')
-        product_form.property_stock_account_output = self.env.ref('stock_dropshipping.o_income')
+        product_form.categ_id.property_stock_account_output_categ_id = self.env.ref('stock_dropshipping.o_income')
         product_lifo_icecream = product_form.save()
 
         # I create a draft Purchase Order for first in move for 10 pieces at 60 euro

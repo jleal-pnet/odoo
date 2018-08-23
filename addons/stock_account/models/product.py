@@ -12,13 +12,8 @@ class ProductTemplate(models.Model):
     _name = 'product.template'
     _inherit = 'product.template'
 
-    valuation = fields.Char(compute='_compute_valuation_type')
+    valuation = fields.Char(compute='_compute_valuation_type', inverse='_set_valuation_type')
     cost_method = fields.Char(compute='_compute_cost_method')
-    property_stock_account_output = fields.Many2one(
-        'account.account', 'Stock Output Account',
-        company_dependent=True, domain=[('deprecated', '=', False)],
-        help="When doing real-time inventory valuation, counterpart journal items for all outgoing stock moves will be posted in this account, unless "
-             "there is a specific valuation account set on the destination location. When not set on the product, the one from the product category is used.")
 
     @api.one
     @api.depends('categ_id.property_valuation')
@@ -46,10 +41,14 @@ class ProductTemplate(models.Model):
         res = self._get_asset_accounts()
         accounts.update({
             'stock_input': res['stock_input'] or self.categ_id.property_stock_account_input_categ_id,
-            'stock_output': res['stock_output'] or self.property_stock_account_output or self.categ_id.property_stock_account_output_categ_id,
+            'stock_output': res['stock_output'] or self.categ_id.property_stock_account_output_categ_id,
             'stock_valuation': self.categ_id.property_stock_valuation_account_id or False,
         })
         return accounts
+
+    @api.one
+    def _set_valuation_type(self):
+        return self.categ_id.write({'property_valuation': self.valuation})
 
     @api.multi
     def action_open_product_moves(self):
