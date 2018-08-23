@@ -48,14 +48,6 @@
                             class="oe_link oe_read_only"/>
                         </div>
                     </field>
-                    <group name="accounting" position="inside">
-                        <group name="property_inventory_valuation"  string="Stock Valuation" attrs="{'invisible': ['|', ('type','=','service'), ('valuation', '!=', 'real_time')]}" groups="account.group_account_user">
-                            <field name="property_stock_account_input"
-                                domain="[('deprecated', '=', False)]"/>
-                            <field name="property_stock_account_output"
-                                domain="[('deprecated', '=', False)]"/>
-                        </group>
-                    </group>
                 </data>
             </field>
         </record>
