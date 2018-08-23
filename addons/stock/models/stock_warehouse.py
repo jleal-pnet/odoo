@@ -171,7 +171,15 @@ class Warehouse(models.Model):
                 to_add = new_resupply_whs - old_resupply_whs[warehouse.id]
                 to_remove = old_resupply_whs[warehouse.id] - new_resupply_whs
                 if to_add:
-                    warehouse.create_resupply_routes(to_add)
+                    exisiting_route = Route.search([
+                        ('supplied_wh_id', '=', warehouse.id),
+                        ('supplier_wh_id', 'in', to_remove.ids),
+                        ('active', '=', False)
+                    ])
+                    if exisiting_route:
+                        exisiting_route.write({'active': True})
+                    else:
+                        warehouse.create_resupply_routes(to_add)
                 if to_remove:
                     Route.search([('supplied_wh_id', '=', warehouse.id), ('supplier_wh_id', 'in', to_remove.ids)]).write({'active': False})
                     # TDE FIXME: shouldn't we remove stock rules also ? because this could make them global (not sure)
