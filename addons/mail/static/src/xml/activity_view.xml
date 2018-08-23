@@ -15,4 +15,20 @@
     </th>
 </t>
 
+<t t-name="mail.NoScheduldedActivity">
+    <div class="o_content">
+        <div class="o_view_controller">
+            <div>
+                <div class="o_view_nocontent">
+                    <div class="o_nocontent_help">
+                        <p class="o_view_nocontent_smiling_face">
+                            There is no schedulded activity.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</t>
+
 </templates>
