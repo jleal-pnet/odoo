@@ -488,6 +488,9 @@ ListRenderer.include({
         } else {
             newIndex = this.state.groupedBy.length ? (indexPos === 0) && recordIDList.length - 1 || indexPos - 1 : indexPos - 1;
         }
+        if (newIndex > recordIDList.length - 1 || newIndex < 0) {
+            return -1;
+        }
         var $row = this.getRow(recordIDList[newIndex]);
         var rowIndex = $row.prop('rowIndex') - 1;
         return rowIndex;
