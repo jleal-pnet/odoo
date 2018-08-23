@@ -685,6 +685,26 @@ class Website(models.Model):
             return self.env.ref('website.backend_dashboard').read()[0]
         return self.env.ref('website.action_website').read()[0]
 
+    def button_website_add_features(self):
+        return {
+            'name': 'Apps',
+            'type': 'ir.actions.act_window',
+            'view_mode': 'kanban,tree,form',
+            'res_model': 'ir.module.module',
+            'res_id': self.id,
+            'context': dict(
+                search_default_category_id=self.env.ref('base.module_category_website').id
+            ),
+        }
+
+    def button_go_website(self):
+        self._force()
+        return {
+            'type': 'ir.actions.act_url',
+            'url': '/',
+            'target': 'self',
+        }
+
 
 class SeoMetadata(models.AbstractModel):
 
