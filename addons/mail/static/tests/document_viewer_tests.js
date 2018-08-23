@@ -44,6 +44,7 @@ var createViewer = function (params) {
                 return mockRPC.apply(this, arguments);
             }
         },
+        intercepts: params.intercepts || {},
     });
     var $target = $("#qunit-fixture");
     if (params.debug) {
@@ -100,7 +101,7 @@ QUnit.module('DocumentViewer', {
     });
 
     QUnit.test('Document Viewer PDF', function (assert) {
-        assert.expect(5);
+        assert.expect(6);
 
         var viewer = createViewer({
             attachmentID: 1,
@@ -111,6 +112,11 @@ QUnit.module('DocumentViewer', {
                     return $.when();
                 }
                 return this._super.apply(this, arguments);
+            },
+            intercepts: {
+                document_viewer_attachment_changed: function (ev) {
+                    assert.ok(true, "should trigger document_viewer_attachment_changed event");
+                }
             },
         });
 
@@ -123,8 +129,7 @@ QUnit.module('DocumentViewer', {
 
         viewer.$('.o_split_btn').click();
 
-        assert.ok(viewer.isDestroyed(), 'viewer should be destroyed')
-
+        assert.ok(viewer.isDestroyed(), 'viewer should be destroyed');
     });
 
     QUnit.test('Document Viewer Youtube', function (assert) {
@@ -196,6 +201,42 @@ QUnit.module('DocumentViewer', {
             "there should be a video player");
 
         viewer.destroy();
+    });
+
+    QUnit.test('is closable by button', function (assert) {
+        assert.expect(3);
+
+        var viewer = createViewer({
+            attachmentID: 6,
+            attachments: this.attachments,
+        });
+
+        assert.strictEqual(viewer.$('.o_viewer_content').length, 1,
+            "should have a document viewer");
+        assert.strictEqual(viewer.$('.o_close_btn').length, 1,
+            "should have a close button");
+
+        viewer.$('.o_close_btn').click();
+
+        assert.ok(viewer.isDestroyed(), 'viewer should be destroyed');
+    });
+
+    QUnit.test('is closable by clicking on the wrapper', function (assert) {
+        assert.expect(3);
+
+        var viewer = createViewer({
+            attachmentID: 6,
+            attachments: this.attachments,
+        });
+
+        assert.strictEqual(viewer.$('.o_viewer_content').length, 1,
+            "should have a document viewer");
+        assert.strictEqual(viewer.$('.o_viewer_img_wrapper').length, 1,
+            "should have a wrapper");
+
+        viewer.$('.o_viewer_img_wrapper').click();
+
+        assert.ok(viewer.isDestroyed(), 'viewer should be destroyed');
     });
 });
 });

@@ -336,6 +336,7 @@ var DocumentViewer = Widget.extend({
             method: 'split_pdf',
             args: [this.activeAttachment.id, indices, remainder],
         }).always(function () {
+            self.trigger_up('document_viewer_attachment_changed');
             self.destroy();
         });
     },
