@@ -12,13 +12,7 @@ class ProductTemplate(models.Model):
     _name = 'product.template'
     _inherit = 'product.template'
 
-    property_valuation = fields.Selection([
-        ('manual_periodic', 'Periodic (manual)'),
-        ('real_time', 'Perpetual (automated)')], string='Inventory Valuation',
-        company_dependent=True, copy=True, default='manual_periodic',
-        help="""Manual: The accounting entries to value the inventory are not posted automatically.
-        Automated: An accounting entry is automatically created to value the inventory when a product enters or leaves the company.""")
-    valuation = fields.Char(compute='_compute_valuation_type', inverse='_set_valuation_type')
+    valuation = fields.Char(compute='_compute_valuation_type')
     cost_method = fields.Char(compute='_compute_cost_method')
     property_stock_account_input = fields.Many2one(
         'account.account', 'Stock Input Account',
@@ -32,13 +26,9 @@ class ProductTemplate(models.Model):
              "there is a specific valuation account set on the destination location. When not set on the product, the one from the product category is used.")
 
     @api.one
-    @api.depends('property_valuation', 'categ_id.property_valuation')
+    @api.depends('categ_id.property_valuation')
     def _compute_valuation_type(self):
-        self.valuation = self.property_valuation or self.categ_id.property_valuation
-
-    @api.one
-    def _set_valuation_type(self):
-        return self.write({'property_valuation': self.valuation})
+        self.valuation = self.categ_id.property_valuation
 
     @api.one
     @api.depends('categ_id.property_cost_method')
@@ -156,7 +146,7 @@ class ProductProduct(models.Model):
         return sum(moves.mapped('remaining_value')), moves
 
     @api.multi
-    @api.depends('stock_move_ids.product_qty', 'stock_move_ids.state', 'stock_move_ids.remaining_value', 'product_tmpl_id.cost_method', 'product_tmpl_id.standard_price', 'product_tmpl_id.property_valuation', 'product_tmpl_id.categ_id.property_valuation')
+    @api.depends('stock_move_ids.product_qty', 'stock_move_ids.state', 'stock_move_ids.remaining_value', 'product_tmpl_id.cost_method', 'product_tmpl_id.standard_price', 'product_tmpl_id.categ_id.property_valuation')
     def _compute_stock_value(self):
         StockMove = self.env['stock.move']
         to_date = self.env.context.get('to_date')
