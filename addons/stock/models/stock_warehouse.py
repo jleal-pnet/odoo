@@ -171,13 +171,13 @@ class Warehouse(models.Model):
                 to_add = new_resupply_whs - old_resupply_whs[warehouse.id]
                 to_remove = old_resupply_whs[warehouse.id] - new_resupply_whs
                 if to_add:
-                    exisiting_route = Route.search([
+                    existing_route = Route.search([
                         ('supplied_wh_id', '=', warehouse.id),
                         ('supplier_wh_id', 'in', to_remove.ids),
                         ('active', '=', False)
                     ])
-                    if exisiting_route:
-                        exisiting_route.write({'active': True})
+                    if existing_route:
+                        existing_route.write({'active': True})
                     else:
                         warehouse.create_resupply_routes(to_add)
                 if to_remove:
@@ -188,30 +188,19 @@ class Warehouse(models.Model):
 
     def toggle_active(self):
         for warehouse in self:
-            rule_ids = warehouse._get_warehouse_rules()
+            rule_ids = warehouse._get_warehouse_rules(active=warehouse.active)
             # Only modify route that apply on this warehouse.
             route_ids = warehouse._get_warehouse_routes().filtered(lambda r: len(r.warehouse_ids) == 1)
-            picking_type_ids = warehouse._get_warehouse_picking_type()
+            picking_type_ids = warehouse._get_warehouse_picking_type(active=warehouse.active)
             move_ids = self.env['stock.move'].search([
                 ('picking_type_id', 'in', picking_type_ids.ids)
             ])
             if move_ids:
                 raise UserError('You still have ongoing operations for picking\
-                types %s in warehouse %s' %
-                (', '.join(move_ids.mapped('picking_type_id.name')), warehouse.name))
+                    types %s in warehouse %s' %
+                    (', '.join(move_ids.mapped('picking_type_id.name')), warehouse.name))
 
-            location_ids = warehouse._get_warehouse_locations()
-            quant_ids = self.env['stock.quant'].search([
-                ('location_id', 'in', location_ids.filtered(lambda l: l.usage == 'internal').ids),
-                '&',
-                    ('quantity', '!=', 0),
-                    ('reserved_quantity', '!=', 0),
-            ])
-            if quant_ids:
-                raise UserError('You still have some product in warehouse \
-                %s. You have to empty the location(s) %s.' %
-                (warehouse.name, quant_ids.mapped('location_id.name')))
-
+            location_ids = warehouse._get_warehouse_locations(active=warehouse.active)
             picking_type_using_locations = self.env['stock.picking.type'].search([
                 ('default_location_src_id', 'in', location_ids.ids),
                 ('default_location_dest_id', 'in', location_ids.ids),
@@ -220,15 +209,14 @@ class Warehouse(models.Model):
             ])
             if picking_type_using_locations:
                 raise UserError('%s use default source or destination locations\
-                from warehouse %s that will be archived.') % (', '.join(picking_type_using_locations.mapped('name')), warehouse.name)
-
+                    from warehouse %s that will be archived.' %
+                    (', '.join(picking_type_using_locations.mapped('name')), warehouse.name))
             super(Warehouse, warehouse).toggle_active()
             # Active/archive all warehouse components.
-            picking_type_ids.with_context(active_test=False).write({'active': warehouse.active})
-            location_ids.with_context(active_test=False).write({'active': warehouse.active})
-            route_ids.filtered(lambda r: not r.warehouse_ids - self).with_context(active_test=False).write({'active': warehouse.active})
-            rule_ids.with_context(active_test=False).write({'active': warehouse.active})
-            warehouse.with_context(active_test=False).resupply_route_ids.write({'active': warehouse.active})
+            picking_type_ids.toggle_active()
+            warehouse.view_location_id.toggle_active()
+            route_ids.filtered(lambda r: not r.warehouse_ids - self).toggle_active()
+            rule_ids.toggle_active()
             # If the warehouse is actived we need to configure picking_types,
             # routes, rules and locations since they all became active.
             if warehouse.active:
@@ -243,7 +231,7 @@ class Warehouse(models.Model):
     # GETTER
     # ------------------------------------------------------------
 
-    def _get_warehouse_picking_type(self):
+    def _get_warehouse_picking_type(self, active=True):
         picking_type_ids = self.env['stock.picking.type']
         # Find picking_type defined on the warehouse fields
         for field in self._get_picking_type_update_values():
@@ -251,17 +239,19 @@ class Warehouse(models.Model):
 
         # Get custom picking types
         picking_type_ids |= self.env['stock.picking.type'].search([
-            ('warehouse_id', '=', self.id)
+            ('warehouse_id', '=', self.id),
+            ('active', '=', active)
         ])
         return picking_type_ids
 
-    def _get_warehouse_rules(self):
+    def _get_warehouse_rules(self, active=True):
         rule_ids = self.env['stock.rule']
         for rule_field in self._get_global_route_rules_values():
             rule_ids |= self[rule_field]
 
         rule_ids |= self.env['stock.rule'].search([
-            ('warehouse_id', '=', self.id)
+            ('warehouse_id', '=', self.id),
+            ('active', '=', active)
         ])
         return rule_ids
 
@@ -273,13 +263,10 @@ class Warehouse(models.Model):
         route_ids |= self.route_ids
         return route_ids
 
-    def _get_warehouse_locations(self):
-        location_ids = self.env['stock.location']
-        for location_field in self._get_locations_values({}):
-            location_ids |= self[location_field]
-
-        location_ids |= self.env['stock.location'].search([
-            ('location_id', 'child_of', self.view_location_id.id)
+    def _get_warehouse_locations(self, active=True):
+        location_ids = self.env['stock.location'].search([
+            ('location_id', 'child_of', self.view_location_id.id),
+            ('active', '=', active)
         ])
         return location_ids
 

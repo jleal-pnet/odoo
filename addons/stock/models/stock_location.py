@@ -98,6 +98,22 @@ class Location(models.Model):
                 ))
         return super(Location, self).write(values)
 
+    def toggle_active(self):
+        for location in self:
+            location.with_context(active_test=False).child_ids\
+                .filtered(lambda l: l.active == location.active)\
+                .toggle_active()
+        quant_ids = self.env['stock.quant'].search([
+            ('location_id', 'in', self.filtered(lambda l: l.usage == 'internal').ids),
+            '&',
+            ('quantity', '!=', 0),
+            ('reserved_quantity', '!=', 0),
+        ])
+        if quant_ids:
+            raise UserError('You still have some product in locations %s' %
+                (quant_ids.mapped('location_id.name')))
+        super(Location, self).toggle_active()
+
     def name_get(self):
         ret_list = []
         for location in self:
