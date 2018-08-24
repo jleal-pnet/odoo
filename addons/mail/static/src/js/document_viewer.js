@@ -44,10 +44,13 @@ var DocumentViewer = Widget.extend({
     init: function (parent, attachments, activeAttachmentID) {
         this._super.apply(this, arguments);
         this.attachment = _.filter(attachments, function (attachment) {
-        var match = attachment.url ? attachment.url.match("(youtu)") : attachment.mimetype.match("(image|video|application/pdf|text)");
+        var match = attachment.url ? attachment.url.match("(youtu)") || attachment.url.match("(.png|.jpg|.gif)") : attachment.mimetype.match("(image|video|application/pdf|text)");
 
             if (match) {
                 attachment.type = match[1];
+                if (match[1].match("(.png|.jpg|.gif)")) {
+                    attachment.type = 'image';
+                }
                 if (match[1] === 'youtu') {
                     var youtube_array = attachment.url.split('/');
                     var youtube_token = youtube_array[youtube_array.length-1];

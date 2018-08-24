@@ -366,7 +366,7 @@ class IrHttp(models.AbstractModel):
             if not mimetype:
                 mimetype = guess_mimetype(base64.b64decode(content), default=default_mimetype)
 
-        if force_ext and (mimetype != default_mimetype):
+        if force_ext and (mimetype != default_mimetype) and obj.type == 'binary':
             dot_index = filename.rfind('.')
             if dot_index > -1:
                 if filename[dot_index:] not in mimetypes.guess_all_extensions(mimetype):
