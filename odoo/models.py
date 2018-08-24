@@ -2999,7 +2999,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                     return
                 _logger.info('Access Denied by record rules for operation: %s on record ids: %r, uid: %s, model: %s', operation, forbidden_ids, self._uid, self._name)
                 raise AccessError(_('The requested operation cannot be completed due to security restrictions. Please contact your system administrator.\n\n(Document type: %s, Operation: %s)') % \
-                                    (self._description, operation))
+                                  (self._description, operation))
             else:
                 # If we get here, the missing_ids are not in the database
                 if operation in ('read','unlink'):
@@ -3026,8 +3026,15 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
            :raise UserError: * if current ir.rules do not permit this operation.
            :return: None if the operation is allowed
         """
+        self._filter_access_rule(operation, raise_exception=True)
+
+    def _filter_access_rule(self, operation, raise_exception=True):
+        """ Private implementation of ir.rules check related to ``operation``
+        on record set for current user. Filter the record set to return only valid records. This is used
+        if you want to be able to have the subset of valid records, not just
+        an exception that does not allow caller to know which record has failed. """
         if self._uid == SUPERUSER_ID:
-            return
+            return self
 
         if self.is_transient():
             # Only one single implicit access rule for transient models: owner only!
@@ -3039,16 +3046,30 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
             self._cr.execute(query, (tuple(self.ids),))
             uids = [x[0] for x in self._cr.fetchall()]
             if len(uids) != 1 or uids[0] != self._uid:
-                raise AccessError(_('For this kind of document, you may only access records you created yourself.\n\n(Document type: %s)') % (self._description,))
+                if raise_exception:
+                    raise AccessError(_('For this kind of document, you may only access records you created yourself.\n\n(Document type: %s)') % (self._description,))
+                return self.env[self._name]
+            return self
         else:
             where_clause, where_params, tables = self.env['ir.rule'].domain_get(self._name, operation)
             if where_clause:
+                valid = self.env[self._name]
                 query = "SELECT %s.id FROM %s WHERE %s.id IN %%s AND " % (self._table, ",".join(tables), self._table)
                 query = query + " AND ".join(where_clause)
                 for sub_ids in self._cr.split_for_in_conditions(self.ids):
                     self._cr.execute(query, [sub_ids] + where_params)
                     returned_ids = [x[0] for x in self._cr.fetchall()]
-                    self.browse(sub_ids)._check_record_rules_result_count(returned_ids, operation)
+                    if raise_exception:
+                        self.browse(sub_ids)._check_record_rules_result_count(returned_ids, operation)
+                    valid += self.browse(returned_ids)
+            else:
+                valid = self
+
+            if len(valid) < len(self):
+                # mark missing records in cache with a failed value
+                exc = MissingError(_("Record does not exist or has been deleted."))
+                self.env.cache.set_failed(self - valid, self._fields.values(), exc)
+            return valid
 
     @api.multi
     def unlink(self):
