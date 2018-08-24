@@ -607,12 +607,9 @@ class Import(models.TransientModel):
                 has_relational_match = any(len(match) > 1 for field, match in matches.items() if match)
                 advanced_mode = has_relational_header or has_relational_match
 
-            installed_langs = {
-                lang[0]: lang[1].split('/')[0].strip() for lang in self.env['res.lang'].get_installed()
-            }
             return {
                 'fields': fields,
-                'installed_langs': installed_langs,
+                'installed_langs': {lang[0]: lang[1].split('/')[0].strip() for lang in self.env['res.lang'].get_installed()},
                 'matches': matches or False,
                 'headers': headers or False,
                 'headers_type': header_types or False,

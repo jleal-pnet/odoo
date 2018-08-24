@@ -3325,7 +3325,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
         columns = []                    # list of (column_name, format, value)
         updated = []                    # list of updated or translated columns
         other_fields = []               # list of non-column fields
-        translated_term_fields = []
+        translated_term_fields = []     # list of translated term fields
         single_lang = len(self.env['res.lang'].get_installed()) <= 1
         has_translation = self.env.lang and self.env.lang != 'en_US'
 
@@ -3392,10 +3392,12 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
 
             for name in translated_term_fields:
                 splitted_name = name.split(':')
-                tname = '%s,%s' % (self._name, splitted_name[0])
-                val = vals[name]
-                for lang in splitted_name[1].split(','):
-                    Translations._set_ids(tname, 'model', lang, self.ids, val)
+                if splitted_name[0] in vals:
+                    tname = '%s,%s' % (self._name, splitted_name[0])
+                    val = vals[name]
+                    Translations._set_ids(tname, 'model', splitted_name[1], self.ids, val)
+                else:
+                    raise MissingError(_('Missing source value for the field %s') % splitted_name[0])
 
         # mark fields to recompute; do this before setting other fields, because
         # the latter can require the value of computed fields, e.g., a one2many
@@ -3589,7 +3591,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
         ids = []                        # ids of created records
         other_fields = set()            # non-column fields
         translated_fields = set()       # translated fields
-        translated_term_fields = []
+        translated_term_fields = set()  # translated terms fields
 
         # column names, formats and values (for common fields)
         columns0 = [('id', "nextval(%s)", self._sequence)]
@@ -3606,7 +3608,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                 splitted_name = name.split(':')
                 field = self._fields[splitted_name[0]]
                 if len(splitted_name) > 1 and field.translate is True:
-                    translated_term_fields.append(name)
+                    translated_term_fields.add(name)
                     continue
                 field = self._fields[name]
                 assert field.store
@@ -3679,13 +3681,14 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
 
         for name in translated_term_fields:
             splitted_name = name.split(':')
-            tname = '%s,%s' % (self._name, splitted_name[0])
             for data in data_list:
-                if name in data['stored']:
+                if splitted_name[0] in data['stored'] and name in data['stored']:
+                    tname = '%s,%s' % (self._name, splitted_name[0])
                     record = data['record']
                     val = data['stored'][name]
-                    for lang in splitted_name[1].split(','):
-                        Translations._set_ids(tname, 'model', lang, record.ids, val)
+                    Translations._set_ids(tname, 'model', splitted_name[1], record.ids, val)
+                else:
+                    raise MissingError(_('Missing source value for the field %s') % splitted_name[0])
 
         return records
 
