@@ -148,7 +148,7 @@
         <button t-if="scheduleActivityButton" class="btn btn-link o_chatter_button_schedule_activity" title="Log or schedule an activity">
             <i class="fa fa-clock-o" role="img" aria-label="Dates" title="Dates"/> <t t-if="isMobile">Activity</t><t t-else="">Schedule activity</t>
         </button>
-        <button t-if="attachmentButton" class="btn btn-sm btn-link o_chatter_button_attachment" title="View all attachments">
+        <button t-if="attachmentButton" class="btn btn-sm btn-link o_chatter_button_attachment dropdown-toggle" title="View all the attachments of the current record">
             <i class="fa fa-folder"/><span> Attachments</span>
         </button>
     </t>
