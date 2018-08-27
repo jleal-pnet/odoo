@@ -48,6 +48,7 @@ var Chatter = Widget.extend({
     init: function (parent, record, mailFields, options) {
         this._super.apply(this, arguments);
         this._setState(record);
+        this._record = record;
 
         this._dp = new concurrency.DropPrevious();
 
@@ -65,7 +66,7 @@ var Chatter = Widget.extend({
             this.fields.followers = new Followers(this, mailFields.mail_followers, record, options);
         }
 
-        this.fields.attachments = new AttachmentBox(this, "chatter_attachment_ids", record, options);
+        this.fields.attachments = new AttachmentBox(this, record, options);
         this.attachOpened = false;
 
         if (mailFields.mail_thread) {
@@ -81,15 +82,26 @@ var Chatter = Widget.extend({
      */
     start: function () {
         this._$topbar = this.$('.o_chatter_topbar');
-
+        var self = this;
         // render and append the buttons
         this._$topbar.append(QWeb.render('mail.chatter.Buttons', {
             newMessageButton: !!this.fields.thread,
             logNoteButton: this.hasLogButton,
             scheduleActivityButton: !!this.fields.activity,
-            attachmentButton: !!this.fields.attachments,
             isMobile: config.device.isMobile,
         }));
+
+        // render and append the attachment button
+        this._rpc({
+            model: 'ir.attachment',
+            method: 'search_count',
+            args: [[["res_id", "=", this._record.res_id], ["res_model", "=", this._record.model]]],
+        })
+        .then(function (count) {
+            self._$topbar.append(QWeb.render('mail.chatter.Attachment.Button', {
+                count: count,
+            }));
+        });
 
         // start and append the widgets
         var fieldDefs = _.invoke(this.fields, 'appendTo', $('<div>'));
@@ -334,7 +346,12 @@ var Chatter = Widget.extend({
                 self.fields.activity.$el.appendTo(self.$el);
             }
             if (self.fields.followers) {
-                self.fields.followers.$el.appendTo(self._$topbar);
+                if (self.fields.attachments) {
+                    self.fields.followers.$el.insertBefore($('.o_chatter_button_attachment'));
+                }
+                else {
+                    self.fields.followers.$el.appendTo(self._$topbar);
+                }
             }
             if (self.fields.thread) {
                 self.fields.thread.$el.appendTo(self.$el);

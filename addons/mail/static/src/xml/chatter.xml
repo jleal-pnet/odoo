@@ -145,12 +145,18 @@
         <button t-if="logNoteButton" class="btn btn-link o_chatter_button_log_note" title="Log a note. Followers will not be notified." disabled="disabled">
             Log note
         </button>
-        <button t-if="scheduleActivityButton" class="btn btn-link o_chatter_button_schedule_activity" title="Log or schedule an activity">
+        <button t-if="scheduleActivityButton" class="btn btn-link o_chatter_button_schedule_activity" title="Log or schedule an activity" disabled="disabled">
             <i class="fa fa-clock-o" role="img" aria-label="Dates" title="Dates"/> <t t-if="isMobile">Activity</t><t t-else="">Schedule activity</t>
         </button>
-        <button t-if="attachmentButton" class="btn btn-sm btn-link o_chatter_button_attachment dropdown-toggle" title="View all the attachments of the current record">
-            <i class="fa fa-folder"/><span> Attachments</span>
+
+    </t>
+
+    <t t-name="mail.chatter.Attachment.Button">
+        <span class="o_attachment_button_area">
+        <button class="btn btn-sm btn-link o_chatter_button_attachment" title="View all the attachments of the current record">
+            <span><i class="fa fa-paperclip"/><t t-esc="' ('+count+')'"/></span>
         </button>
+        </span>
     </t>
 
     <!--

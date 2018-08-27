@@ -137,53 +137,16 @@ QUnit.module('Chatter', {
             },
             'ir.attachment': {
                 fields:{
-                    name:{
-                        type:'char',
-                        string:"attachment name",
-                        required:true,
-                    },
-                    url:{
-                        type:'char',
-                        string:'url',
-                    },
-                    type:{
-                        type:'selection',
-                        selection:[['url',"URL"],['binary',"BINARY"]],
-                    },
-                    mimetype:{
-                        type:'char',
-                        string:"mimetype",
-                    },
-                    datas_fname:{
-                        type:'char',
-                        string:"filename",
-                    },
+                    name:{type:'char', string:"attachment name", required:true},
+                    url:{type:'char', string:'url'},
+                    type:{ type:'selection', selection:[['url',"URL"],['binary',"BINARY"]]},
+                    mimetype:{type:'char', string:"mimetype"},
+                    datas_fname:{type:'char', string:"filename"},
                 },
                 records:[
-                    {
-                        id:1,
-                        name:"name1",
-                        type:'url',
-                        mimetype:'image/png',
-                        datas_fname:'filename.jpg',
-                        res_id: 7,
-                    },
-                    {
-                        id:2,
-                        name:"name2",
-                        type:'binary',
-                        mimetype:"application/x-msdos-program",
-                        datas_fname:"file2.txt",
-                        res_id: 7,
-                    },
-                    {
-                        id:3,
-                        name:"name2",
-                        type:'binary',
-                        mimetype:"application/x-msdos-program",
-                        datas_fname:"file2.txt",
-                        res_id: 5,
-                    },
+                    {id:1, name:"name1", type:'url', mimetype:'image/png', datas_fname:'filename.jpg', res_id: 7},
+                    {id:2, name:"name2", type:'binary', mimetype:"application/x-msdos-program", datas_fname:"file2.txt", res_id: 7},
+                    {id:3, name:"name2", type:'binary', mimetype:"application/x-msdos-program", datas_fname:"file2.txt", res_id: 5},
                 ],
             },
         };
