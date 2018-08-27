@@ -68,7 +68,7 @@ var PartnerField = FieldMany2One.extend({
 
                 if (suggestions && suggestions.length) {
                     choices.push({
-                        label: _t('Create and Edit from Autocomplete :'),
+                        label: _t('Create and Edit from Autocomplete:'),
                     });
                     _.each(suggestions, function (suggestion) {
                         choices.push({
