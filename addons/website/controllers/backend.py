@@ -25,6 +25,7 @@ class WebsiteBackend(http.Controller):
         }
 
         current_website = website_id and Website.browse(website_id) or Website.get_current_website()
+        current_website._force()
         dashboard_data['websites'] = request.env['website'].search_read([], ['id', 'name'])
         for website in dashboard_data['websites']:
             if website['id'] == current_website.id:
