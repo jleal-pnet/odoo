@@ -33,7 +33,6 @@
                 <t t-set="partner_country_id" t-value="acq.env['res.partner'].browse(partner_id).sudo().country_id.id"/>
                 <div class="pull-right ml-4">
                     <select class="form-control stripe_payment_type d-none">
-                        <option value="select_payment_type">Select Payment Type</option>
                         <t t-foreach="acq.payment_method_ids" t-as="payment_type">
                             <t t-if="partner_country_id in payment_type.country_ids.ids or not payment_type.country_ids.ids">
                                 <option t-att-value="payment_type.name"><t t-esc="payment_type.name"/></option>

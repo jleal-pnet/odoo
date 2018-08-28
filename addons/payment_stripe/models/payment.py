@@ -35,7 +35,9 @@ class PaymentAcquirerStripe(models.Model):
         help="A relative or absolute URL pointing to a square image of your "
              "brand or product. As defined in your Stripe profile. See: "
              "https://stripe.com/docs/checkout")
-    payment_method_ids = fields.Many2many('stripe.payment.method', string="Payment Method")
+    payment_method_ids = fields.Many2many(
+        'stripe.payment.method', string="Payment Method",
+        required_if_provider="stripe", default=lambda self: self.env.ref('payment_stripe.stripe_payment_method_card'))
 
     @api.multi
     def stripe_form_generate_values(self, tx_values):

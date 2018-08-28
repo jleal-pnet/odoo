@@ -99,10 +99,6 @@ odoo.define('payment_stripe.stripe', function(require) {
         $('#payment_error').remove();
         var $select = payment_form.find('.stripe_payment_type');
         var type = $select.val().toLowerCase().replace(/\ /g, '_');
-        if (type == 'select_payment_type') {
-            display_error('Please select any Payment method.', acquirer_id);
-            return;
-        }
         var stripe = Stripe(get_input_value('stripe_key'));
         if (_.contains(['card', 'sepa_debit'], type)) {
             return create_stripe_token(stripe, provider_form, type);
