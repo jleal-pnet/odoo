@@ -3800,15 +3800,15 @@ QUnit.module('Views', {
         // change pager limit
         list.pager.$('.o_pager_value').click();
         list.pager.$('.o_pager_value .o_input').val('1-2').blur();
-         list.$('thead .o_list_record_selector input').click();
+        list.$('thead .o_list_record_selector input').click();
         assert.strictEqual(list.$('.o_list_view_select_all').length, 1,
             "Display selection bar to select all records");
         // unselect one record
-        list.$('tbody .o_list_record_selector .o_checkbox input').eq(1).click();
+        list.$('tbody .o_list_record_selector .custom-control-input').eq(1).click();
         assert.strictEqual(list.$('.o_list_view_select_all').length, 0,
             "Don't display selection bar if single record of page is unselected");
         // select record
-        list.$('tbody .o_list_record_selector .o_checkbox input').eq(1).click();
+        list.$('tbody .o_list_record_selector .custom-control-input').eq(1).click();
         assert.strictEqual(list.$('.o_list_view_select_action').data('action-type'), 'select_all',
             "Display action to select all records of current domain");
         list.$('.o_list_view_select_action[data-action-type="select_all"]').click();
@@ -3857,7 +3857,7 @@ QUnit.module('Views', {
         assert.expect(7);
          // add active field on foo model and make all records active
         this.data.foo.fields.active = {string: 'Active', type: 'boolean', default: true};
-         var list = createView({
+        var list = createView({
             View: ListView,
             model: 'foo',
             data: this.data,
@@ -3867,7 +3867,7 @@ QUnit.module('Views', {
             mockRPC: function (route, args) {
                 if (route === '/web/dataset/call_kw_with_domain') {
                     assert.ok(args.kwargs.context.active_domain, "Must have 'active_domain' in context");
-                    assert.deepEqual(args.kwargs.context.active_domain, [["active", "=", true],['bar', '=', true]],
+                    assert.deepEqual(args.kwargs.context.active_domain, [['bar', '=', true]],
                         "should be called with correct domain");
                 }
                 assert.step(route);

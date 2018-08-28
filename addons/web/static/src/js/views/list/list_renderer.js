@@ -65,6 +65,7 @@ var ListRenderer = BasicRenderer.extend({
                 return py.parse(py.tokenize(value));
             }).value();
         this.hasSelectors = params.hasSelectors;
+        this.hasSelectionBar = params.hasSelectionBar;
         this.selection = params.selectedRecords || [];
         this.pagers = []; // instantiated pagers (only for grouped lists)
         this.allSelected = false;
@@ -820,8 +821,9 @@ var ListRenderer = BasicRenderer.extend({
      * @param {MouseEvent} event
      */
     _onClickSelectAll: function (event) {
+        event.preventDefault();
         var actionType = $(event.currentTarget).data('action-type');
-        if (actionType == 'select_all') {
+        if (actionType === 'select_all') {
             this.allSelected = true;
             this.$el.find('.o_list_view_select_all').remove();
             // make thead input checked if all records are selected. so that we can get domain while exporting records.
