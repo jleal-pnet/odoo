@@ -190,7 +190,7 @@ class Warehouse(models.Model):
         for warehouse in self:
             rule_ids = warehouse._get_warehouse_rules(active=warehouse.active)
             # Only modify route that apply on this warehouse.
-            route_ids = warehouse._get_warehouse_routes().filtered(lambda r: len(r.warehouse_ids) == 1)
+            route_ids = warehouse._get_warehouse_routes(active=warehouse.active).filtered(lambda r: len(r.warehouse_ids) == 1)
             picking_type_ids = warehouse._get_warehouse_picking_type(active=warehouse.active)
             move_ids = self.env['stock.move'].search([
                 ('picking_type_id', 'in', picking_type_ids.ids)
@@ -220,12 +220,21 @@ class Warehouse(models.Model):
             # If the warehouse is actived we need to configure picking_types,
             # routes, rules and locations since they all became active.
             if warehouse.active:
-                warehouse.write({
-                    'resupply_route_ids': [(4, route.id) for route in self.resupply_route_ids]
-                })
-                warehouse._create_or_update_sequences_and_picking_types()
-                warehouse._create_or_update_route()
-                warehouse._create_or_update_global_routes_rules()
+                # Catch all warehouse fields that trigger a modfication on
+                # routes, rules, picking types and locations (e.g the reception
+                # steps). The purpose is to write on it in order to let the
+                # write method set the correct field to active or archive.
+                depends = set([])
+                for rule_item in warehouse._get_global_route_rules_values().values():
+                    for depend in rule_item.get('depends', []):
+                        depends.add(depend)
+                for rule_item in warehouse._get_routes_values().values():
+                    for depend in rule_item.get('depends', []):
+                        depends.add(depend)
+                values = {'resupply_route_ids': [(4, route.id) for route in self.resupply_route_ids]}
+                for depend in depends:
+                    values.update({depend: self[depend]})
+                warehouse.write(values)
 
     # ------------------------------------------------------------
     # GETTER
@@ -235,7 +244,8 @@ class Warehouse(models.Model):
         picking_type_ids = self.env['stock.picking.type']
         # Find picking_type defined on the warehouse fields
         for field in self._get_picking_type_update_values():
-            picking_type_ids |= self[field]
+            if self[field].active == active:
+                picking_type_ids |= self[field]
 
         # Get custom picking types
         picking_type_ids |= self.env['stock.picking.type'].search([
@@ -247,7 +257,8 @@ class Warehouse(models.Model):
     def _get_warehouse_rules(self, active=True):
         rule_ids = self.env['stock.rule']
         for rule_field in self._get_global_route_rules_values():
-            rule_ids |= self[rule_field]
+            if self[rule_field].active == active:
+                rule_ids |= self[rule_field]
 
         rule_ids |= self.env['stock.rule'].search([
             ('warehouse_id', '=', self.id),
@@ -255,10 +266,11 @@ class Warehouse(models.Model):
         ])
         return rule_ids
 
-    def _get_warehouse_routes(self):
+    def _get_warehouse_routes(self, active=True):
         route_ids = self.env['stock.location.route']
         for route_field in self._get_routes_values():
-            route_ids |= self[route_field]
+            if self[route_field].active == active:
+                route_ids |= self[route_field]
 
         route_ids |= self.route_ids
         return route_ids
@@ -458,7 +470,8 @@ class Warehouse(models.Model):
                 'routing_key': self.reception_steps,
                 'depends': ['reception_steps'],
                 'route_update_values': {
-                    'name': self._format_routename(route_type=self.reception_steps)
+                    'name': self._format_routename(route_type=self.reception_steps),
+                    'active': self.active,
                 },
                 'route_create_values': {
                     'product_categ_selectable': True,
@@ -476,7 +489,8 @@ class Warehouse(models.Model):
                 'routing_key': self.delivery_steps,
                 'depends': ['delivery_steps'],
                 'route_update_values': {
-                    'name': self._format_routename(route_type=self.delivery_steps)
+                    'name': self._format_routename(route_type=self.delivery_steps),
+                    'active': self.active,
                 },
                 'route_create_values': {
                     'product_categ_selectable': True,
@@ -757,26 +771,12 @@ class Warehouse(models.Model):
             warehouse.int_type_id.sequence_id.write(sequence_data['int_type_id'])
 
     def _update_location_reception(self, new_reception_step):
-        switch_warehouses = self.filtered(lambda wh: wh.reception_steps != new_reception_step and not wh._location_used(wh.wh_input_stock_loc_id))
-        if switch_warehouses:
-            (switch_warehouses.mapped('wh_input_stock_loc_id') + switch_warehouses.mapped('wh_qc_stock_loc_id')).write({'active': False})
-        if new_reception_step == 'three_steps':
-            self.mapped('wh_qc_stock_loc_id').write({'active': True})
-        if new_reception_step != 'one_step':
-            self.mapped('wh_input_stock_loc_id').write({'active': True})
+        self.mapped('wh_qc_stock_loc_id').write({'active': new_reception_step == 'three_steps'})
+        self.mapped('wh_input_stock_loc_id').write({'active': new_reception_step != 'one_step'})
 
     def _update_location_delivery(self, new_delivery_step):
-        switch_warehouses = self.filtered(lambda wh: wh.delivery_steps != new_delivery_step)
-        loc_warehouse = switch_warehouses.filtered(lambda wh: not wh._location_used(wh.wh_output_stock_loc_id))
-        if loc_warehouse:
-            loc_warehouse.mapped('wh_output_stock_loc_id').write({'active': False})
-        loc_warehouse = switch_warehouses.filtered(lambda wh: not wh._location_used(wh.wh_pack_stock_loc_id))
-        if loc_warehouse:
-            loc_warehouse.mapped('wh_pack_stock_loc_id').write({'active': False})
-        if new_delivery_step == 'pick_pack_ship':
-            self.mapped('wh_pack_stock_loc_id').write({'active': True})
-        if new_delivery_step != 'ship_only':
-            self.mapped('wh_output_stock_loc_id').write({'active': True})
+        self.mapped('wh_pack_stock_loc_id').write({'active': new_delivery_step == 'pick_pack_ship'})
+        self.mapped('wh_output_stock_loc_id').write({'active': new_delivery_step != 'ship_only'})
 
     def _location_used(self, location):
         rules = self.env['stock.rule'].search_count([
