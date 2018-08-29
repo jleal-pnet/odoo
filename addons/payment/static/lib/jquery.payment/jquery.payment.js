@@ -494,9 +494,4 @@
     }
   };
 
-  $.payment.validateBIC = function(bic) {
-    bic = $.trim(bic);
-    return /^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(bic);
-  };
-
 }).call(this);

@@ -62,17 +62,4 @@ $(document).ready(function () {
         $('.acquirer[data-acquirer-id="'+acquirer_id+'"]').removeClass('d-none');
     });
 
-    $('input#bic').on('focusout', function (e) {
-        var valid_value = $.payment.validateBIC(this.value);
-        if (valid_value) {
-            $(this).parent('.form-group').addClass('o_has_success').find('.form-control, .custom-select').addClass('is-valid');
-            $(this).parent('.form-group').removeClass('o_has_error').find('.form-control, .custom-select').removeClass('is-invalid');
-            $(this).siblings('.o_invalid_field').remove();
-        }
-        else {
-            $(this).parent('.form-group').addClass('o_has_error').find('.form-control, .custom-select').addClass('is-invalid');
-            $(this).parent('.form-group').removeClass('o_has_success').find('.form-control, .custom-select').removeClass('is-valid');
-        }
-    });
-
 });
