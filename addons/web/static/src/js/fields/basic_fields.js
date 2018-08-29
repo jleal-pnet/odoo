@@ -1121,6 +1121,9 @@ var HandleWidget = AbstractField.extend({
 
 var FieldEmail = InputField.extend({
     className: 'o_field_email',
+    events: _.extend({}, InputField.prototype.events, {
+        'click': '_onClick',
+    }),
     prefix: 'mailto',
     supportedFieldTypes: ['char'],
 
@@ -1150,6 +1153,16 @@ var FieldEmail = InputField.extend({
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
+
+    /**
+     * Prevent the URL click from opening the record (when used on a list).
+     *
+     * @param {MouseEvent} event
+     * @private
+     */
+    _onClick: function (event) {
+        event.stopPropagation();
+    },
 
     /**
      * In readonly, emails should be a mailto: link with proper formatting.
@@ -1188,6 +1201,9 @@ var FieldPhone = FieldEmail.extend({
 
 var UrlWidget = InputField.extend({
     className: 'o_field_url',
+    events: _.extend({}, InputField.prototype.events, {
+        'click': '_onClick',
+    }),
     supportedFieldTypes: ['char'],
 
     /**
@@ -1216,6 +1232,20 @@ var UrlWidget = InputField.extend({
     //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
+
+    //--------------------------------------------------------------------------
+    // Handlers
+    //--------------------------------------------------------------------------
+
+    /**
+     * Prevent the URL click from opening the record (when used on a list).
+     *
+     * @param {MouseEvent} event
+     * @private
+     */
+    _onClick: function (event) {
+        event.stopPropagation();
+    },
 
     /**
      * In readonly, the widget needs to be a link with proper href and proper
