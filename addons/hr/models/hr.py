@@ -257,6 +257,10 @@ class Employee(models.Model):
                 self.env['res.partner.bank'].browse(account_id).partner_id = vals['address_home_id']
         if vals.get('user_id'):
             vals.update(self._sync_user(self.env['res.users'].browse(vals['user_id'])))
+        if 'department_id' in vals:
+            # When added to a department, subscribe to the channels auto-subscribed by department
+            department_auto_channels = self.env['mail.channel'].sudo().search([('public', '=', 'department'), ('department_id', '=', vals['department_id'])])
+            department_auto_channels.write({'channel_partner_ids': [(4, partner_id) for partner_id in self.mapped('user_id').mapped('partner_id').ids]})
         tools.image_resize_images(vals)
         return super(Employee, self).write(vals)
 
