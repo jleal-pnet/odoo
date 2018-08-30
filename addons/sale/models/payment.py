@@ -63,9 +63,7 @@ class PaymentTransaction(models.Model):
         super(PaymentTransaction, self)._set_transaction_pending()
 
         for record in self:
-            sales_orders = record.sale_order_ids.filtered(lambda so: so.state == 'draft')
-            sales_orders.force_quotation_send()
-
+            sales_orders = record.sale_order_ids.filtered(lambda so: so.state in ['draft', 'sent'])
             if record.acquirer_id.provider == 'transfer':
                 for so in sales_orders:
                     so.reference = record._compute_sale_order_reference(so)
@@ -76,9 +74,7 @@ class PaymentTransaction(models.Model):
         # Override of '_set_transaction_authorized' in the 'payment' module
         # to confirm the quotations automatically.
         super(PaymentTransaction, self)._set_transaction_authorized()
-        sales_orders = self.mapped('sale_order_ids').filtered(lambda so: so.state == 'draft')
-        sales_orders.force_quotation_send()
-        sales_orders = self.mapped('sale_order_ids').filtered(lambda so: so.state == 'sent')
+        sales_orders = self.mapped('sale_order_ids').filtered(lambda so: so.state in ['draft', 'sent'])
         for so in sales_orders:
             # For loop because some override of action_confirm are ensure_one.
             so.action_confirm()
