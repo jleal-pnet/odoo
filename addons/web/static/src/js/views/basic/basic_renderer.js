@@ -184,7 +184,7 @@ var BasicRenderer = AbstractRenderer.extend({
 
         var recordWidgets = this.allFieldWidgets[record.id] || [];
         for (var i = 0 ; i < recordWidgets.length ; i++) {
-            var activated = recordWidgets[currentIndex].activate({event: options.event});
+            var activated = recordWidgets[currentIndex].activate({event: options.event, noAutomaticCreate : options.noAutomaticCreate});
             if (activated) {
                 return currentIndex;
             }
@@ -215,9 +215,9 @@ var BasicRenderer = AbstractRenderer.extend({
      * @param {integer} currentIndex
      * @return {integer}
      */
-    _activateNextFieldWidget: function (record, currentIndex) {
+    _activateNextFieldWidget: function (record, currentIndex, options) {
         currentIndex = (currentIndex + 1) % (this.allFieldWidgets[record.id] || []).length;
-        return this._activateFieldWidget(record, currentIndex, {inc: 1});
+        return this._activateFieldWidget(record, currentIndex, _.extend({}, {inc: 1}, options));
     },
     /**
      * This is a wrapper of the {@see _activateFieldWidget} function to select

@@ -74,7 +74,7 @@ var FormRenderer = BasicRenderer.extend({
             }
         }
         if (focusWidget) {
-            return focusWidget.activate({noselect: true});
+            return focusWidget.activate({noselect: true, noAutomaticCreate: true});
         }
     },
     /**
@@ -165,7 +165,8 @@ var FormRenderer = BasicRenderer.extend({
      * field.
      */
     focusLastActivatedWidget: function () {
-        this._activateNextFieldWidget(this.state, this.lastActivatedFieldIndex - 1);
+        this._activateNextFieldWidget(this.state, this.lastActivatedFieldIndex - 1,
+            { noAutomaticCreate: true });
     },
     /**
      * returns the active tab pages for each notebook
@@ -237,7 +238,7 @@ var FormRenderer = BasicRenderer.extend({
     /**
      * @override
      */
-    _activateNextFieldWidget: function (record, currentIndex) {
+    _activateNextFieldWidget: function (record, currentIndex, options) {
         //if we are the last widget, we should give the focus to the first Primary Button in the form
         //else do the default behavior
         if ( (currentIndex + 1) >= (this.allFieldWidgets[record.id] || []).length) {

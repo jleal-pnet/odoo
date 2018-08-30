@@ -828,7 +828,12 @@ var FieldX2Many = AbstractField.extend({
             this.$buttons.find(".o-kanban-button-new").focus();
         }
         if (this.view.arch.tag === 'tree') {
-            this.renderer.$('.o_field_x2many_list_row_add a').focus();
+            if (options.noAutomaticCreate) {
+                this.renderer.$('.o_field_x2many_list_row_add a:first').focus();
+            }
+            else {
+                this.renderer.$('.o_field_x2many_list_row_add a:first').click();
+            }
         }
         return true;
     },
