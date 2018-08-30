@@ -235,6 +235,16 @@ class SaleOrder(models.Model):
             },
         }
 
+    @api.multi
+    def send_order_confirmation_mail(self, transaction=False):
+        # send order confirmation mail when payment done through the ecommerce
+        super(SaleOrder, self).send_order_confirmation_mail(transaction=transaction)
+        confirmation_template = self.env['ir.config_parameter'].sudo().get_param('website_sale.ecommerce_confirmation_template', False)
+        if confirmation_template:
+            for order in self.filtered(lambda so: so.team_id.team_type == 'website'):
+                self.env['mail.template'].browse(int(confirmation_template)).with_context(transaction=transaction, has_carrier=hasattr(order, 'carrier_id'), access_url=order._get_share_url()).send_mail(order.id, notif_layout='mail.mail_notification_light')
+
+
     def _set_demo_create_date(self, create_date):
         self.env.cr.execute("""UPDATE sale_order SET create_date=%s WHERE id IN %s """, (create_date, tuple(self.ids)))
         self.modified(['create_date'])
