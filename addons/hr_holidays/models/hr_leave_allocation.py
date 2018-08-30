@@ -294,11 +294,24 @@ class HolidaysAllocation(models.Model):
     @api.multi
     def name_get(self):
         res = []
-        for leave in self:
-            if leave.type_request_unit == 'hour':
-                res.append((leave.id, _("Allocation of %s : %.2f hour(s) To %s") % (leave.holiday_status_id.name, leave.number_of_hours, leave.employee_id.name)))
+        for allocation in self:
+            if allocation.holiday_type == 'company':
+                target = allocation.mode_company_id.name
+            elif allocation.holiday_type == 'department':
+                target = allocation.department_id.name
+            elif allocation.holiday_type == 'category':
+                target = allocation.category_id.name
             else:
-                res.append((leave.id, _("Allocation of %s : %.2f day(s) To %s") % (leave.holiday_status_id.name, leave.number_of_days_temp, leave.employee_id.name)))
+                target = allocation.employee_id.name
+
+            res.append(
+                (allocation.id,
+                 _("Allocation of %s : %.2f %s to %s") %
+                 (allocation.holiday_status_id.name,
+                  allocation.number_of_hours if allocation.type_request_unit == 'hour' else allocation.number_of_days_temp,
+                  allocation.type_request_unit == 'hour' and 'hours' or 'days',
+                  target))
+            )
         return res
 
     @api.multi
