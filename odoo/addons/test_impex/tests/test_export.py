@@ -5,6 +5,7 @@ import itertools
 import pstats
 from cProfile import Profile
 
+from odoo import fields
 from odoo.tests import common
 from odoo.tools import pycompat
 
@@ -43,7 +44,7 @@ class test_xids(CreatorCase):
         record.invalidate_cache()
         self.assertEqual(
             record._export_rows([['id'], ['value']]),
-            [[u'x', u'True']]
+            [[u'x', True]]
         )
 
 class test_boolean_field(CreatorCase):
@@ -52,7 +53,7 @@ class test_boolean_field(CreatorCase):
     def test_true(self):
         self.assertEqual(
             self.export(True),
-            [[u'True']])
+            [[True]])
 
     def test_false(self):
         """ ``False`` value to boolean fields is unique in being exported as a
@@ -60,7 +61,7 @@ class test_boolean_field(CreatorCase):
         """
         self.assertEqual(
             self.export(False),
-            [[u'False']])
+            [[False]])
 
 
 class test_integer_field(CreatorCase):
@@ -73,22 +74,22 @@ class test_integer_field(CreatorCase):
     def test_0(self):
         self.assertEqual(
             self.export(0),
-            [[u'0']])
+            [[0]])
 
     def test_basic_value(self):
         self.assertEqual(
             self.export(42),
-            [[u'42']])
+            [[42]])
 
     def test_negative(self):
         self.assertEqual(
             self.export(-32),
-            [[u'-32']])
+            [[-32]])
 
     def test_huge(self):
         self.assertEqual(
             self.export(2**31-1),
-            [[pycompat.text_type(2**31-1)]])
+            [[2147483647]])
 
 
 class test_float_field(CreatorCase):
@@ -97,27 +98,27 @@ class test_float_field(CreatorCase):
     def test_0(self):
         self.assertEqual(
             self.export(0.0),
-            [[u'0.0']])
+            [[0.0]])
 
     def test_epsilon(self):
         self.assertEqual(
             self.export(0.000000000027),
-            [[u'2.7e-11']])
+            [[0.000000000027]])
 
     def test_negative(self):
         self.assertEqual(
             self.export(-2.42),
-            [[u'-2.42']])
+            [[-2.42]])
 
     def test_positive(self):
         self.assertEqual(
             self.export(47.36),
-            [[u'47.36']])
+            [[47.36]])
 
     def test_big(self):
         self.assertEqual(
             self.export(87654321.4678),
-            [[u'87654321.4678']])
+            [[87654321.4678]])
 
 
 class test_decimal_field(CreatorCase):
@@ -126,28 +127,28 @@ class test_decimal_field(CreatorCase):
     def test_0(self):
         self.assertEqual(
             self.export(0.0),
-            [[u'0.0']])
+            [[0.0]])
 
     def test_epsilon(self):
         """ epsilon gets sliced to 0 due to precision
         """
         self.assertEqual(
             self.export(0.000000000027),
-            [[u'0.0']])
+            [[0.0]])
 
     def test_negative(self):
         self.assertEqual(
             self.export(-2.42),
-            [[u'-2.42']])
+            [[-2.42]])
 
     def test_positive(self):
         self.assertEqual(
             self.export(47.36),
-            [[u'47.36']])
+            [[47.36]])
 
     def test_big(self):
         self.assertEqual(
-            self.export(87654321.4678), [[u'87654321.468']])
+            self.export(87654321.4678), [[87654321.468]])
 
 
 class test_string_field(CreatorCase):
@@ -231,7 +232,7 @@ class test_date(CreatorCase):
     def test_basic(self):
         self.assertEqual(
             self.export('2011-11-07'),
-            [[u'2011-11-07']])
+            [[fields.Date.from_string('2011-11-07')]])
 
 
 class test_datetime(CreatorCase):
@@ -245,7 +246,7 @@ class test_datetime(CreatorCase):
     def test_basic(self):
         self.assertEqual(
             self.export('2011-11-07 21:05:48'),
-            [[u'2011-11-07 21:05:48']])
+            [[fields.Datetime.from_string('2011-11-07 21:05:48')]])
 
     def test_tz(self):
         """ Export ignores the timezone and always exports to UTC
@@ -255,7 +256,7 @@ class test_datetime(CreatorCase):
         # NOTE: ignores user timezone, always exports to UTC
         self.assertEqual(
             self.export('2011-11-07 21:05:48', context={'tz': 'Pacific/Norfolk'}),
-            [[u'2011-11-07 21:05:48']])
+            [[fields.Datetime.from_string('2011-11-07 21:05:48')]])
 
 
 class test_selection(CreatorCase):
@@ -269,7 +270,7 @@ class test_selection(CreatorCase):
     def test_empty(self):
         self.assertEqual(
             self.export(False),
-            [[False]])
+            [['']])
 
     def test_value(self):
         """ selections export the *label* for their value
@@ -338,7 +339,7 @@ class test_m2o(CreatorCase):
         record = self.env['export.integer'].create({'value': 42})
         self.assertEqual(
             self.export(record.id, fields=['value/.id', 'value/value']),
-            [[pycompat.text_type(record.id), u'42']])
+            [[pycompat.text_type(record.id), 42]])
 
     def test_external_id(self):
         record = self.env['export.integer'].create({'value': 42})
@@ -394,30 +395,30 @@ class test_o2m(CreatorCase):
         self.assertEqual(
             self.export([(0, False, {'value': 42})],
                         fields=['value', 'value/value']),
-            [[u'export.one2many.child:42', u'42']])
+            [[u'export.one2many.child:42', 42]])
 
     def test_integrate_one_in_parent(self):
         self.assertEqual(
             self.export([(0, False, {'value': 42})],
                         fields=['const', 'value/value']),
-            [[u'4', u'42']])
+            [[4, 42]])
 
     def test_multiple_records(self):
         self.assertEqual(
             self.export(self.commands, fields=['const', 'value/value']),
             [
-                [u'4', u'4'],
-                [u'', u'42'],
-                [u'', u'36'],
-                [u'', u'4'],
-                [u'', u'13'],
+                [4, 4],
+                [u'', 42],
+                [u'', 36],
+                [u'', 4],
+                [u'', 13],
             ])
 
     def test_multiple_records_name(self):
         self.assertEqual(
             self.export(self.commands, fields=['const', 'value']),
             [
-                [u'4', u'export.one2many.child:4'],
+                [4, u'export.one2many.child:4'],
                 [u'', u'export.one2many.child:42'],
                 [u'', u'export.one2many.child:36'],
                 [u'', u'export.one2many.child:4'],
@@ -430,7 +431,7 @@ class test_o2m(CreatorCase):
         self.assertEqual(
             export,
             [
-                ['4', str(records[0].id)],
+                [4, str(records[0].id)],
                 ['', str(records[1].id)],
                 ['', str(records[2].id)],
                 ['', str(records[3].id)],
@@ -441,44 +442,44 @@ class test_o2m(CreatorCase):
         self.assertEqual(
             self.export(self.commands, fields=['const', 'value', 'value/value']),
             [
-                [u'4', u'export.one2many.child:4', u'4'],
-                ['', u'export.one2many.child:42', u'42'],
-                ['', u'export.one2many.child:36', u'36'],
-                ['', u'export.one2many.child:4', u'4'],
-                ['', u'export.one2many.child:13', u'13'],
+                [4, u'export.one2many.child:4', 4],
+                ['', u'export.one2many.child:42', 42],
+                ['', u'export.one2many.child:36', 36],
+                ['', u'export.one2many.child:4', 4],
+                ['', u'export.one2many.child:13', 13],
             ])
 
     def test_multiple_records_with_name_after(self):
         self.assertEqual(
             self.export(self.commands, fields=['const', 'value/value', 'value']),
             [
-                [u'4', u'4', u'export.one2many.child:4'],
-                ['', u'42', u'export.one2many.child:42'],
-                ['', u'36', u'export.one2many.child:36'],
-                ['', u'4', u'export.one2many.child:4'],
-                ['', u'13', u'export.one2many.child:13'],
+                [4, 4, u'export.one2many.child:4'],
+                ['', 42, u'export.one2many.child:42'],
+                ['', 36, u'export.one2many.child:36'],
+                ['', 4, u'export.one2many.child:4'],
+                ['', 13, u'export.one2many.child:13'],
             ])
 
     def test_multiple_subfields_neighbour(self):
         self.assertEqual(
             self.export(self.commands, fields=['const', 'value/str','value/value']),
             [
-                [u'4', u'record1', u'4'],
-                ['', u'record2', u'42'],
-                ['', u'record3', u'36'],
-                ['', u'record4', u'4'],
-                ['', u'record5', u'13'],
+                [4, u'record1', 4],
+                ['', u'record2', 42],
+                ['', u'record3', 36],
+                ['', u'record4', 4],
+                ['', u'record5', 13],
             ])
 
     def test_multiple_subfields_separated(self):
         self.assertEqual(
             self.export(self.commands, fields=['value/str', 'const', 'value/value']),
             [
-                [u'record1', u'4', u'4'],
-                [u'record2', '', u'42'],
-                [u'record3', '', u'36'],
-                [u'record4', '', u'4'],
-                [u'record5', '', u'13'],
+                [u'record1', 4, 4],
+                [u'record2', '', 42],
+                [u'record3', '', 36],
+                [u'record4', '', 4],
+                [u'record5', '', 13],
             ])
 
 
@@ -518,18 +519,18 @@ class test_o2m_multiple(CreatorCase):
         self.assertEqual(
             self.export(child1=False, child2=[(0, False, {'value': 42})],
                         fields=fields),
-            [[u'36', False, u'42']])
+            [[36, False, 42]])
 
         self.assertEqual(
             self.export(child1=[(0, False, {'value': 43})], child2=False,
                         fields=fields),
-            [[u'36', u'43', False]])
+            [[36, 43, False]])
 
         self.assertEqual(
             self.export(child1=[(0, False, {'value': 43})],
                         child2=[(0, False, {'value': 42})],
                         fields=fields),
-            [[u'36', u'43', u'42']])
+            [[36, 43, 42]])
 
     def test_multiple(self):
         """ With two "concurrent" o2ms, exports the first line combined, then
@@ -544,35 +545,35 @@ class test_o2m_multiple(CreatorCase):
         self.assertEqual(
             self.export(child1=child1, child2=False, fields=fields),
             [
-                [u'36', u'4', False],
-                ['', u'42', ''],
-                ['', u'36', ''],
-                ['', u'4', ''],
-                ['', u'13', ''],
+                [36, 4, False],
+                ['', 42, ''],
+                ['', 36, ''],
+                ['', 4, ''],
+                ['', 13, ''],
             ])
         self.assertEqual(
             self.export(child1=False, child2=child2, fields=fields),
             [
-                [u'36', False, u'8'],
-                ['', '', u'12'],
-                ['', '', u'8'],
-                ['', '', u'55'],
-                ['', '', u'33'],
-                ['', '', u'13'],
+                [36, False, 8],
+                ['', '', 12],
+                ['', '', 8],
+                ['', '', 55],
+                ['', '', 33],
+                ['', '', 13],
             ])
         self.assertEqual(
             self.export(child1=child1, child2=child2, fields=fields),
             [
-                [u'36', u'4', u'8'],
-                ['', u'42', ''],
-                ['', u'36', ''],
-                ['', u'4', ''],
-                ['', u'13', ''],
-                ['', '', u'12'],
-                ['', '', u'8'],
-                ['', '', u'55'],
-                ['', '', u'33'],
-                ['', '', u'13'],
+                [36, 4, 8],
+                ['', 42, ''],
+                ['', 36, ''],
+                ['', 4, ''],
+                ['', 13, ''],
+                ['', '', 12],
+                ['', '', 8],
+                ['', '', 55],
+                ['', '', 33],
+                ['', '', 13],
             ])
 
 
@@ -605,30 +606,30 @@ class test_m2m(CreatorCase):
         self.assertEqual(
             self.export([(0, False, {'value': 42})],
                         fields=['value', 'value/value']),
-            [[u'export.many2many.other:42', u'42']])
+            [[u'export.many2many.other:42', 42]])
 
     def test_integrate_one_in_parent(self):
         self.assertEqual(
             self.export([(0, False, {'value': 42})],
                         fields=['const', 'value/value']),
-            [[u'4', u'42']])
+            [[4, 42]])
 
     def test_multiple_records(self):
         self.assertEqual(
             self.export(self.commands, fields=['const', 'value/value']),
             [
-                [u'4', u'4'],
-                [u'', u'42'],
-                [u'', u'36'],
-                [u'', u'4'],
-                [u'', u'13'],
+                [4, 4],
+                [u'', 42],
+                [u'', 36],
+                [u'', 4],
+                [u'', 13],
             ])
 
     def test_multiple_records_name(self):
         self.assertEqual(
             self.export(self.commands, fields=['const', 'value']),
             [
-                [u'4', u'export.many2many.other:4'],
+                [4, u'export.many2many.other:4'],
                 ['', u'export.many2many.other:42'],
                 ['', u'export.many2many.other:36'],
                 ['', u'export.many2many.other:4'],
@@ -666,21 +667,21 @@ class test_m2m(CreatorCase):
         self.assertEqual(
             r.with_context(import_compat=False)._export_rows([['id'], ['value', 'id'], ['value', 'value']]),
             [
-                [xid, u'__t__.record000', u'4'],
-                [u'', u'__t__.record001', u'42'],
-                [u'', u'__t__.record010', u'36'],
-                [u'', u'__t__.record011', u'4'],
-                [u'', u'__t__.record100', u'13']
+                [xid, u'__t__.record000', 4],
+                [u'', u'__t__.record001', 42],
+                [u'', u'__t__.record010', 36],
+                [u'', u'__t__.record011', 4],
+                [u'', u'__t__.record100', 13]
             ]
         )
         self.assertEqual(
             r.with_context(import_compat=False)._export_rows([['id'], ['value', 'value'], ['value', 'id']]),
             [
-                [xid, u'4', u'__t__.record000'],
-                [u'', u'42', u'__t__.record001'],
-                [u'', u'36', u'__t__.record010'],
-                [u'', u'4', u'__t__.record011'],
-                [u'', u'13', u'__t__.record100']
+                [xid, 4, u'__t__.record000'],
+                [u'', 42, u'__t__.record001'],
+                [u'', 36, u'__t__.record010'],
+                [u'', 4, u'__t__.record011'],
+                [u'', 13, u'__t__.record100']
             ]
         )
 
@@ -693,7 +694,7 @@ class test_function(CreatorCase):
         """
         self.assertEqual(
             self.export(42),
-            [[u'3']])
+            [[3]])
 
 
 @common.tagged('-standard', 'bench')
