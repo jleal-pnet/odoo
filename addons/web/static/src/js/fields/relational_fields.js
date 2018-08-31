@@ -141,7 +141,7 @@ var FieldMany2One = AbstractField.extend({
         // List of autocomplete sources
         this._autocompleteSources = [];
         // Add default search method for M20 (name_search)
-        this._addAutocompleteSource(this._search, 'Loading...', 1);
+        this._addAutocompleteSource(this._search, {placeholder: _t('Loading...'), order: 1});
 
         // use a DropPrevious to properly handle related record quick creations,
         // and store a createDef to be able to notify the environment that there
