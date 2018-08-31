@@ -389,7 +389,7 @@ var StatementModel = BasicModel.extend({
                 fields: ['code'],
             })
             .then(function (accounts) {
-                self.accounts = _.object(_.pluck(accounts, 'id') , _.pluck(accounts, 'code'));
+                self.accounts = _.object(_.pluck(accounts, 'id'), _.pluck(accounts, 'code'));
             });
         self.taxes = {};
         var def_taxes = this._rpc({
