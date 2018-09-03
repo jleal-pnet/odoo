@@ -9,7 +9,7 @@
                 <field name="employee_id" type="row"/>
                 <field name="holiday_status_id" type="row"/>
                 <field name="date_from" type="col"/>
-                <field name="number_of_days" type="measure"/>
+                <field name="number_of_days_temp" type="measure"/>
             </graph>
          </field>
     </record>
@@ -468,7 +468,7 @@
             <pivot string="Leaves Summary">
                 <field name="employee_id" type="row"/>
                 <field name="date_from" type="col"/>
-                <field name="number_of_days" type="measure"/>
+                <field name="number_of_days_temp" type="measure"/>
             </pivot>
         </field>
     </record>
@@ -480,7 +480,7 @@
         <field name="arch" type="xml">
             <graph string="Leaves Summary">
                 <field name="employee_id"/>
-                <field name="number_of_days" type="measure"/>
+                <field name="number_of_days_temp" type="measure"/>
             </graph>
         </field>
     </record>

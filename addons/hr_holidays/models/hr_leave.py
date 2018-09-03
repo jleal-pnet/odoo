@@ -92,11 +92,13 @@ class HolidaysRequest(models.Model):
     date_to = fields.Datetime(
         'End Date', readonly=True, copy=False, required=True,
         states={'draft': [('readonly', False)], 'confirm': [('readonly', False)]}, track_visibility='onchange')
+    number_of_days_interface = fields.Float(
+        'Duration', copy=False, readonly=True,
+        help='Interface readonly field for display purpose only.')
     number_of_days_temp = fields.Float(
         'Duration (Days)', copy=False, readonly=True,
         states={'draft': [('readonly', False)], 'confirm': [('readonly', False)]},
         help='Number of days of the leave request according to your working schedule.')
-    number_of_days = fields.Float('Number of Days', compute='_compute_number_of_days', store=True, track_visibility='onchange')
     number_of_hours = fields.Float(
         'Duration (Hours)', copy=False, readonly=True, compute='_compute_number_of_hours',
         help='Number of hours of the leave request according to your working schedule.')
@@ -267,12 +269,6 @@ class HolidaysRequest(models.Model):
     def _onchange_employee_id(self):
         self.manager_id = self.employee_id and self.employee_id.parent_id
         self.department_id = self.employee_id.department_id
-
-    @api.multi
-    @api.depends('number_of_days_temp')
-    def _compute_number_of_days(self):
-        for holiday in self:
-            holiday.number_of_days = -holiday.number_of_days_temp
 
     @api.multi
     @api.depends('number_of_days_temp')
