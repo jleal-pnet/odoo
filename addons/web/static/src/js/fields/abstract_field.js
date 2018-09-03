@@ -541,18 +541,18 @@ var AbstractField = Widget.extend({
                 ev.stopPropagation();
                 this.trigger_up('navigation_move', {direction: 'up'});
                 break;
-            case $.ui.keyCode.RIGHT:
-                ev.stopPropagation();
-                this.trigger_up('navigation_move', {direction: 'right'});
-                break;
+            // case $.ui.keyCode.RIGHT:
+            //     ev.stopPropagation();
+            //     this.trigger_up('navigation_move', {direction: 'right'});
+            //     break;
             case $.ui.keyCode.DOWN:
                 ev.stopPropagation();
                 this.trigger_up('navigation_move', {direction: 'down'});
                 break;
-            case $.ui.keyCode.LEFT:
-                ev.stopPropagation();
-                this.trigger_up('navigation_move', {direction: 'left'});
-                break;
+            // case $.ui.keyCode.LEFT:
+            //     ev.stopPropagation();
+            //     this.trigger_up('navigation_move', {direction: 'left'});
+            //     break;
         }
     },
     /**
