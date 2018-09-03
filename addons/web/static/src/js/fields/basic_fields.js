@@ -334,7 +334,9 @@ var InputField = DebouncedField.extend({
             }
             if (ev.data.direction ==='next' &&
                 this.attrs.modifiersValue &&
-                this.attrs.modifiersValue.required) {
+                this.attrs.modifiersValue.required &&
+                this.getParent().viewType &&
+                this.getParent().viewType !== "list") {
                 if (!this.$input.val()){
                     this.setInvalidClass();
                     ev.stopPropagation();
