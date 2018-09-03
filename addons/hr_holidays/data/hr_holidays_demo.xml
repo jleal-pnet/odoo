@@ -24,7 +24,6 @@
         <field name="color_name">wheat</field>
         <field name="validity_start" eval="time.strftime('%Y-01-01')"/>
         <field name="validity_stop" eval="time.strftime('%Y-12-31')"/>
-        <field name="accrual" eval="True"/>
     </record>
 
     <record id="hr_holidays_employee1_allocation_cl" model="hr.leave.allocation">

@@ -57,9 +57,9 @@ class HolidaysType(models.Model):
         compute='_compute_leaves', string='Virtual Remaining Leaves',
         help='Maximum Leaves Allowed - Leaves Already Taken - Leaves Waiting Approval')
     group_days_allocation = fields.Float(
-        compute='_compute_group_days_allocation', string='Group Days Allocated')
+        compute='_compute_group_days_allocation', string='Days Allocated')
     group_days_leave = fields.Float(
-        compute='_compute_group_days_leave', string='Group Days Allocated')
+        compute='_compute_group_days_leave', string='Group Leaves')
     company_id = fields.Many2one('res.company', string='Company', default=lambda self: self.env.user.company_id)
     validation_type = fields.Selection([
         ('hr', 'Human Resource officer'),
