@@ -27,6 +27,7 @@ var ListController = BasicController.extend({
         selection_changed: '_onSelectionChanged',
         toggle_column_order: '_onToggleColumnOrder',
         toggle_group: '_onToggleGroup',
+        navigation_move: '_onNavigationMove',
     }),
     /**
      * @constructor
@@ -400,6 +401,10 @@ var ListController = BasicController.extend({
     _onButtonClicked: function (event) {
         event.stopPropagation();
         this._callButtonAction(event.data.attrs, event.data.record);
+    },
+    _onNavigationMove: function(event) {
+        debugger;
+        this.isDirty();
     },
     /**
      * When the user clicks on the 'create' button, two things can happen. We

@@ -38,6 +38,7 @@ var BasicController = AbstractController.extend(FieldManagerMixin, {
         FieldManagerMixin.init.call(this, this.model);
         this.handle = params.initialState.id;
         this.mode = params.mode || 'readonly';
+
     },
     /**
      * @override
