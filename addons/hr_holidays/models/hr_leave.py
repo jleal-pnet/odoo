@@ -92,16 +92,16 @@ class HolidaysRequest(models.Model):
     date_to = fields.Datetime(
         'End Date', readonly=True, copy=False, required=True,
         states={'draft': [('readonly', False)], 'confirm': [('readonly', False)]}, track_visibility='onchange')
-    number_of_days_interface = fields.Float(
-        'Duration', copy=False, readonly=True,
-        help='Interface readonly field for display purpose only.')
     number_of_days_temp = fields.Float(
-        'Duration (Days)', copy=False, readonly=True,
+        'Duration (Days)', copy=False, readonly=True, track_visibility='onchange',
         states={'draft': [('readonly', False)], 'confirm': [('readonly', False)]},
         help='Number of days of the leave request according to your working schedule.')
-    number_of_hours = fields.Float(
-        'Duration (Hours)', copy=False, readonly=True, compute='_compute_number_of_hours',
-        help='Number of hours of the leave request according to your working schedule.')
+    number_of_days_display = fields.Float(
+        'Duration in days', compute='_compute_number_of_days_display', copy=False, readonly=True,
+        help='Number of days of the leave request. Used for interface.')
+    number_of_hours_display = fields.Float(
+        'Duration in hours', compute='_compute_number_of_hours_display', copy=False, readonly=True, 
+        help='Number of hours of the leave request according to your working schedule. Used for interface.')
     # details
     meeting_id = fields.Many2one('calendar.event', string='Meeting')
     parent_id = fields.Many2one('hr.leave', string='Parent', copy=False)
@@ -272,9 +272,15 @@ class HolidaysRequest(models.Model):
 
     @api.multi
     @api.depends('number_of_days_temp')
-    def _compute_number_of_hours(self):
+    def _compute_number_of_days_display(self):
         for holiday in self:
-            holiday.number_of_hours = holiday.number_of_days_temp * self.employee_id.resource_calendar_id.hours_per_day
+            holiday.number_of_days_display = holiday.number_of_days_temp
+
+    @api.multi
+    @api.depends('number_of_days_temp')
+    def _compute_number_of_hours_display(self):
+        for holiday in self:
+            holiday.number_of_hours_display = holiday.number_of_days_temp * self.employee_id.resource_calendar_id.hours_per_day
 
     @api.multi
     def _compute_can_reset(self):
