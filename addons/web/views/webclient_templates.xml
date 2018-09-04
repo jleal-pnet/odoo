@@ -150,6 +150,7 @@
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/webclient_layout.scss"/>
 
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/webclient.scss"/>
+        <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/menu.scss"/>
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/domain_selector.scss"/>
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/model_field_selector.scss"/>
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/progress_bar.scss"/>
@@ -235,6 +236,7 @@
         <script type="text/javascript" src="/web/static/src/js/widgets/switch_company_menu.js"></script>
         <script type="text/javascript" src="/web/static/src/js/chrome/user_menu.js"></script>
         <script type="text/javascript" src="/web/static/src/js/chrome/menu.js"></script>
+        <script type="text/javascript" src="/web/static/src/js/chrome/apps_menu.js"></script>
         <script type="text/javascript" src="/web/static/src/js/views/search/search_view.js"></script>
         <script type="text/javascript" src="/web/static/src/js/views/search/search_view_mobile.js"></script>
         <script type="text/javascript" src="/web/static/src/js/views/search/search_filters.js"></script>
@@ -757,23 +759,6 @@
             </t>
             <t t-set="head" t-value="head_web + (head or '')"/>
             <t t-set="body_classname" t-value="'o_web_client'"/>
-
-            <header id="oe_main_menu_navbar">
-                <nav class="navbar navbar-expand-md navbar-dark bg-dark" groups="base.group_user,base.group_portal">
-                    <button type="button" class="navbar-toggler" data-toggle="collapse" data-target=".navbar-collapse">
-                        <span class="navbar-toggler-icon"/>
-                    </button>
-                    <div class="navbar-collapse collapse">
-                        <t t-call="web.menu"/>
-                    </div>
-                </nav>
-            </header>
-            <div class="o_main">
-                <aside class="o_sub_menu" groups="base.group_user,base.group_portal" aria-label="Submenu">
-                    <t t-call="web.menu_secondary"/>
-                </aside>
-                <main class="o_main_content"/>
-            </div>
         </t>
     </template>
 
