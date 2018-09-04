@@ -146,11 +146,10 @@ class ManyToOne(models.AbstractModel):
     @api.model
     def attributes(self, record, field_name, options, values):
         attrs = super(ManyToOne, self).attributes(record, field_name, options, values)
-        if options.get('inherit_branding'):
-            many2one = getattr(record, field_name)
-            if many2one:
-                attrs['data-oe-many2one-id'] = many2one.id
-                attrs['data-oe-many2one-model'] = many2one._name
+        many2one = getattr(record, field_name)
+        if many2one:
+            attrs['data-oe-many2one-id'] = many2one.id
+            attrs['data-oe-many2one-model'] = many2one._name
         return attrs
 
     @api.model
@@ -176,9 +175,8 @@ class Contact(models.AbstractModel):
     @api.model
     def attributes(self, record, field_name, options, values):
         attrs = super(Contact, self).attributes(record, field_name, options, values)
-        if options.get('inherit_branding'):
-            options.pop('template_options') # remove options not specific to this widget
-            attrs['data-oe-contact-options'] = json.dumps(options)
+        options.pop('template_options') # remove options not specific to this widget
+        attrs['data-oe-contact-options'] = json.dumps(options)
         return attrs
 
     # helper to call the rendering of contact field
@@ -194,8 +192,7 @@ class Date(models.AbstractModel):
     @api.model
     def attributes(self, record, field_name, options, values):
         attrs = super(Date, self).attributes(record, field_name, options, values)
-        if options.get('inherit_branding'):
-            attrs['data-oe-original'] = record[field_name]
+        attrs['data-oe-original'] = record[field_name]
         return attrs
 
     @api.model
@@ -214,15 +211,14 @@ class DateTime(models.AbstractModel):
     @api.model
     def attributes(self, record, field_name, options, values):
         attrs = super(DateTime, self).attributes(record, field_name, options, values)
-        if options.get('inherit_branding'):
-            value = record[field_name]
-            if isinstance(value, pycompat.string_types):
-                value = fields.Datetime.from_string(value)
-            if value:
-                # convert from UTC (server timezone) to user timezone
-                value = fields.Datetime.context_timestamp(self, timestamp=value)
-                value = fields.Datetime.to_string(value)
-            attrs['data-oe-original'] = value
+        value = record[field_name]
+        if isinstance(value, pycompat.string_types):
+            value = fields.Datetime.from_string(value)
+        if value:
+            # convert from UTC (server timezone) to user timezone
+            value = fields.Datetime.context_timestamp(self, timestamp=value)
+            value = fields.Datetime.to_string(value)
+        attrs['data-oe-original'] = value
         return attrs
 
     @api.model
@@ -402,8 +398,7 @@ class Duration(models.AbstractModel):
     @api.model
     def attributes(self, record, field_name, options, values):
         attrs = super(Duration, self).attributes(record, field_name, options, values)
-        if options.get('inherit_branding'):
-            attrs['data-oe-original'] = record[field_name]
+        attrs['data-oe-original'] = record[field_name]
         return attrs
 
     @api.model

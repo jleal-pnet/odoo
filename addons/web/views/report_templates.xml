@@ -178,9 +178,9 @@
             <div class="clearfix mb8"/>
         </div>
 
-        <div class="article o_report_layout_background" t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id">
-            <t t-call="web.address_layout"/>
-            <t t-raw="0"/>
+        <div class="article o_report_layout_background">
+            <t t-call="web.address_layout" />
+            <t t-raw="0" />
         </div>
 
         <div class="footer o_background_footer">
@@ -218,9 +218,9 @@
             </div>
         </div>
 
-        <div class="article o_report_layout_boxed" t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id">
-            <t t-call="web.address_layout"/>
-            <t t-raw="0"/>
+        <div class="article o_report_layout_boxed">
+            <t t-call="web.address_layout" />
+            <t t-raw="0" />
         </div>
 
         <div class="footer o_boxed_footer">
@@ -257,9 +257,9 @@
             </div>
         </div>
 
-        <div class="article o_report_layout_clean" t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id">
-            <t t-call="web.address_layout"/>
-            <t t-raw="0"/>
+        <div class="article o_report_layout_clean">
+            <t t-call="web.address_layout" />
+            <t t-raw="0" />
         </div>
 
         <div class="footer o_clean_footer">
@@ -305,9 +305,9 @@
             </div>
         </div>
 
-        <div class="article o_report_layout_standard" t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id">
-            <t t-call="web.address_layout"/>
-            <t t-raw="0"/>
+        <div class="article o_report_layout_standard">
+            <t t-call="web.address_layout" />
+            <t t-raw="0" />
         </div>
 
         <div class="footer o_standard_footer">
@@ -354,19 +354,13 @@
     </template>
 
     <template id="internal_layout">
-        <t t-if="not o" t-set="o" t-value="doc"/>
-
-        <t t-if="not company">
-            <!-- Multicompany -->
-            <t t-if="company_id">
-                <t t-set="company" t-value="company_id"/>
-            </t>
-            <t t-elif="o and 'company_id' in o">
-                <t t-set="company" t-value="o.company_id.sudo()"/>
-            </t>
-            <t t-else="else">
-                <t t-set="company" t-value="res_company"/>
-            </t>
+        <!-- Multicompany -->
+        <t t-if="company_id">
+            <t t-set="company" t-value="company_id"/>
+            <t t-set="res_company" t-value="company_id"/>
+        </t>
+        <t t-if="not company_id">
+            <t t-set="company" t-value="res_company"/>
         </t>
 
         <div class="header">
@@ -386,17 +380,15 @@
                 </div>
             </div>
         </div>
-        <div class="article" t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id">
-          <t t-raw="0"/>
+        <div class="article">
+          <t t-raw="0" />
         </div>
     </template>
 
     <template id="basic_layout">
-        <t t-if="not o" t-set="o" t-value="doc"/>
-
         <t t-call="web.html_container">
-            <div class="article" t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id">
-                <t t-raw="0"/>
+            <div class="article">
+                <t t-raw="0" />
             </div>
         </t>
     </template>
