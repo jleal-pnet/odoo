@@ -1,0 +1,62 @@
+.swissqr_body {
+    zoom: 1.25;
+    background-color: white;
+    border-color:black;
+    border-width: 2pt;
+    border-style: solid;
+    height: 105mm;
+    width: 148mm;
+    position: absolute;
+    top: 140mm;
+    left: 62mm;
+}
+
+.swissqr{
+    position: absolute;
+    height: 56mm;
+    width: 56mm;
+    top: 24.5mm;
+    left: 1mm;
+}
+
+.swissqr_text{
+    font-family: OCR-B, Arial, Frutiger, Helvetica;
+    color: black;
+    zoom: 1;
+}
+
+.swissqr_text.title{
+    font-size: 10pt;
+    font-weight: bold;
+}
+
+.swissqr_text.title.title_zone{
+    font-size: 11pt;
+    font-weight: bold;
+}
+
+.swissqr_text.content{
+    font-size: 12pt;
+}
+
+.swissqr_column_left{
+    position: absolute;
+    left: 5mm;
+}
+
+.swissqr_column_right{
+    position: absolute;
+    left: 60mm;
+}
+
+.procedure_zone{
+    top: 11mm;
+}
+
+.title_zone{
+    top: 3mm;
+}
+
+.indication_zone{
+    top: 5mm;
+}

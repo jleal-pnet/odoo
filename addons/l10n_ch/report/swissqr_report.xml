@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <template id="l10n_ch_swissqr_template" inherit_id="account.report_invoice_document">
+            <xpath expr="//p[@id='qrcode']" position="after">
+                <link rel="stylesheet" type="text/scss" href="/l10n_ch/static/src/scss/report_swissqr.scss"/>
+                <div class="swissqr_body">
+                    <div id="title_zone" class="swissqr_column_left title_zone">
+                        <span class="swissqr_text title title_zone">QR-bill payment part</span><br/>
+                    </div>
+                    <div id="procedure_zone" class="swissqr_column_left procedure_zone">
+                        <span class="swissqr_text title">Supports</span><br/>
+                        <span class="swissqr_text content">Credit transfer</span>
+                    </div>
+                    <img class="swissqr" t-att-src="o.company_id.qr_code_payment_journal_id.bank_account_id.build_swiss_code_url(o.residual,(o.reference) if (o.reference) else o.number, o.partner_id, 'QRR')"/>
+                    <div id="indications_zone" class="swissqr_column_right indication_zone">
+                        <span class="swissqr_text title">Account</span><br/>
+                        <span class="swissqr_text content" t-field="o.company_id.qr_code_payment_journal_id.bank_account_id.acc_number"/><br/>
+                        <span class="swissqr_text title">Creditor</span><br/>
+                        <span class="swissqr_text content" t-field="o.reference"/><br/>
+                        <span class="swissqr_text title">Reference number</span><br/>
+                        <span class="swissqr_text content" t-field="o.reference"/><br/>
+                        <span class="swissqr_text title">Additional information</span><br/>
+                        <t t-if="o.company_id.qr_code_payment_journal_id.bank_account_id.currency_id.name == 'EUR'">
+                            <span class="swissqr_text content" t-field="o.company_id.qr_code_payment_journal_id.bank_id.l10n_ch_postal_eur"/><br/>
+                        </t>
+                        <t t-elif="o.company_id.qr_code_payment_journal_id.bank_account_id.currency_id.name == 'CHF'">
+                            <span class="swissqr_text content" t-field="o.company_id.qr_code_payment_journal_id.bank_id.l10n_ch_postal_chf"/><br/>
+                        </t>
+                        <span class="swissqr_text title">Debtor</span><br/>
+                        <span class="swissqr_text content" t-field="o.reference"/><br/>
+                        <span class="swissqr_text title">Due date</span><br/>
+                        <span class="swissqr_text content" t-field="o.reference"/><br/>
+                    </div>
+                    <div id="amount_zone">
+                    </div>
+                </div>
+            </xpath>
+        </template>
+    </data>
+</odoo>

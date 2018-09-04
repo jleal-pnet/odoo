@@ -6,6 +6,7 @@ import re
 from odoo import api, fields, models, _
 from odoo.tools.misc import mod10r
 
+import werkzeug.urls
 
 def _is_l10n_ch_postal(account_ref):
     """ Returns True iff the string account_ref is a valid postal account number,
@@ -64,3 +65,44 @@ class ResPartnerBank(models.Model):
             if _is_l10n_ch_postal(iban[-12:]):
                 return iban[-12:]
         return None
+
+    @api.model
+    def build_swiss_code_url(self, amount, comment, debitor, ref_type):
+        communication = ""
+        if comment:
+            communication = (comment[:137] + '...') if len(comment) > 140 else comment
+        number = [int(s) for s in self.company_id.street.split() if s.isdigit()]
+        number_deb = [int(s) for s in debitor.street.split() if s.isdigit()]
+
+        qr_code_string = 'SPC\n0100\n1\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s' % (
+                          self.acc_number,
+                          self.company_id.name,
+                          self.company_id.street.replace(str(number[0]),'').strip(),
+                          number[0],
+                          self.company_id.zip,
+                          self.company_id.city,
+                          self.company_id.country_id.code,
+                          amount,
+                          self.currency_id.name,
+                          debitor.name,
+                          debitor.street.replace(str(number_deb[0]),'').strip(),
+                          number_deb[0],
+                          debitor.zip,
+                          debitor.city,
+                          debitor.country_id.code,
+                          ref_type,
+                          communication)
+        qr_code_url = '/report/barcode/?type=%s&value=%s&width=%s&height=%s&humanreadable=1' % ('QR', werkzeug.url_quote_plus(qr_code_string), 256, 256)
+        return qr_code_url
+
+    @api.multi 
+    def _validate_qr_code_arguments(self):
+        for bank in self:
+            if bank.currency_id.name == False:
+                currency = bank.company_id.currency_id
+            else:
+                currency = bank.currency_id
+            bank.qr_code_valid = (bank.bank_bic
+                                            and bank.company_id.name
+                                            and bank.acc_number
+                                            and (currency.name == 'EUR'))
