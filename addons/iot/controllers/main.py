@@ -1,10 +1,18 @@
 # -*- coding: utf-8 -*-
 from odoo import http
 from odoo.http import request
+import json
 
 class IoTController(http.Controller):
 
-    #get base url (might be used for authentication too)
+
+    @http.route('/iot/check_trigger', type='json', auth='none')
+    def check_trigger(self, device_id, key=None):
+        workcenter_id = False
+        # Call function to check in work
+        result = self.env['iot.box'].check_trigger_devices(device_id, key)
+
+    #get base url (might be used for authentication feature too)
     @http.route('/iot/base_url', type='json', auth='user')
     def get_base_url(self):
         config = request.env['ir.config_parameter'].search([('key', '=', 'web.base.url')], limit=1)
@@ -34,6 +42,7 @@ class IoTController(http.Controller):
         else:
             box = request.env['iot.box'].sudo().create({'name': data['name'], 'identifier': data['identifier'], 'ip': data['ip'], })
 
+        trigger_dict = {}
         # Update or create devices
         for device_identifier in data['devices']:
             data_device = data['devices'][device_identifier]
@@ -48,3 +57,8 @@ class IoTController(http.Controller):
                     'type': data_device['type'],
                     'connection': data_device['connection'],
                 })
+            # Return trigger-devices
+            triggers = request.env['iot.trigger'].sudo().search([('device_id', '=', device.id)], limit=1)
+            trigger_dict[device_identifier] = triggers and True or False
+        return trigger_dict#json.dumps(trigger_dict).encode('utf8')
+

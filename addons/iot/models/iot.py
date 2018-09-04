@@ -19,6 +19,25 @@ class IotBox(models.Model):
         for box in self:
             box.ip_url = 'http://' + box.ip + ':8069'
 
+
+class IotTrigger(models.Model):
+    _name = 'iot.trigger'
+
+    device_id = fields.Many2one('iot.device', 'Device')
+    key = fields.Char('Key')
+
+    def check_trigger_devices(self, device_identifier, key):
+        domain = [('device_id.identifier', '=', device_identifier)]
+        if key:
+            domain += ['|', ('key', '=', key),('key', '=', False)]
+        self.env['iot.trigger'].search(domain, limit=1)
+        #If there are multiple...
+        return self.execute_trigger()
+
+    def execute_trigger(self):
+        return ''
+
+
 class IotDevice(models.Model):
     _name = 'iot.device'
 

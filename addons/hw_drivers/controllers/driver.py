@@ -19,8 +19,33 @@ from uuid import getnode as get_mac
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(name)s: %(message)s')
 _logger = logging.getLogger('dispatcher')
 
+to_reload = {}
 
 class StatusController(http.Controller):
+
+
+    @http.route('/box/check_reload', type='http', auth='none', cors='*')
+    def connect_box(self, tab_id, workcenter_id):
+        if not tab_id:
+            #check new id
+            tab_id = max(to_reload.keys() + 1)
+            return tab_id
+        if tab_id and workcenter_id:
+            if to_reload.get[tab_id]:
+                if to_reload[tab_id].get(workcenter_id):
+                    if to_reload[tab_id][workcenter_id]:
+                        result = to_reload[tab_id][workcenter_id]
+                        to_reload[tab_id][workcenter_id] = ''
+                    else:
+                        to_reload[tab_id][workcenter_id] = ''
+
+
+    def click_pedal(self, path):
+        # use urllib3
+        # Call server with pedal
+        # server.check_pedal(device_id)
+        pass
+
 
     @http.route('/box/connect', type='http', auth='none', cors='*', csrf=False)
     def connect_box(self, url):
@@ -88,8 +113,10 @@ class StatusController(http.Controller):
 # Driver common interface
 #----------------------------------------------------------
 class Driver(Thread):
-#    def __init__(self, path):
-#        pass
+
+    trigger = False
+    def setTrigger(self, trigger):
+        self.trigger = trigger
 
     def supported(self):
         pass
@@ -187,12 +214,17 @@ class KeyboardUSBDriver(USBDriver):
         for event in device.read_loop():
             if event.type == evdev.ecodes.EV_KEY:
                 data = evdev.categorize(event)
+                
                 if data.scancode == 96:
                     return {}
                 elif data.scancode == 28:
                     self.value = ''
                 elif data.keystate:
                     self.value += data.keycode.replace('KEY_','')
+                # Trigger action
+                if self.trigger:
+                    check_trigger(data.scancode)
+
 
     def action(self, action):
         pass
@@ -266,6 +298,10 @@ class USBDeviceManager(Thread):
                 send_iot_box_device(send_printer = first_time)
                 first_time = False
             time.sleep(3)
+            
+
+
+
 
 def send_iot_box_device(send_printer):
     maciotbox = subprocess.check_output("/sbin/ifconfig eth0 |grep -Eo ..\(\:..\){5}", shell=True).decode('utf-8').split('\n')[0]
@@ -297,6 +333,7 @@ def send_iot_box_device(send_printer):
             devicesList[path] = {'name': device_name,
                                  'type': 'device',
                                  'connection': device_connection}
+
 
 
         # Build camera JSON
@@ -366,6 +403,7 @@ def send_iot_box_device(send_printer):
         data_json = json.dumps(data).encode('utf8')
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
         http = urllib3.PoolManager()
+        req = False
         try:
             req = http.request('POST',
                                 url,
@@ -373,6 +411,42 @@ def send_iot_box_device(send_printer):
                                 headers=headers)
         except:
             _logger.warning('Could not reach configured server')
+        if req:
+            # recuperate json dict
+            # Could check status 200 also
+            data_json = json.loads(req.data.decode('utf-8'))
+            device_dict = data_json['result']
+            for dev in device_dict:
+                drivers[dev].setTrigger(device_dict[dev])
+
+
+def check_trigger(device, key):
+    server = ""  # read from file
+    try:
+        f = open('/home/pi/odoo-remote-server.conf', 'r')
+        for line in f:
+            server += line
+        f.close()
+    except:  # In case the file does not exist
+        server = ''
+    server = server.split('\n')[0]
+    if server:
+        url = server + "/iot/check_trigger"
+        data = {'device_id': device, 'key': key}
+        data_json = json.dumps(data).encode('utf8')
+        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        http = urllib3.PoolManager()
+        try:
+            req = http.request('POST',
+                                url,
+                                body=data_json,
+                                headers=headers)
+        except:
+            _logger.warning('Could not reach configured server')
+
+
+
+
 
 udm = USBDeviceManager()
 udm.daemon = True
@@ -450,7 +524,7 @@ class BtDriver(Driver, metaclass=BtMetaClass):
 class SylvacBtDriver(BtDriver):
 
     def supported(self):
-        return self.dev.alias() == "SY295"
+        return self.dev.alias() == "SY295" or self.dev.alias() == "SY276"
 
     def connect(self):
         self.gatt_device = GattSylvacBtDriver(mac_address=self.dev.mac_address, manager=bm.gatt_manager)
