@@ -64,12 +64,12 @@
                                             <small class='d-none d-md-block'><p t-field="wish.product_id.description_sale" class="text-muted"/></small>
                                             <button type="button" class="btn btn-link o_wish_rm no-decoration"><small><i class='fa fa-trash-o'></i> Remove</small></button>
                                         </td>
-                                        <td>
+                                        <td class="text-right">
                                             <t t-esc="wish.product_id.website_price" t-options="{'widget': 'monetary', 'display_currency': website.pricelist_id.currency_id}"/>
                                         </td>
                                         <td class='text-center td-wish-btn'>
                                             <input name="product_id" t-att-value="wish.product_id.id" type="hidden"/>
-                                            <button type="button" role="button" class="btn btn-secondary btn-block o_wish_add mb4" >Add <span class='d-none d-md-inline'>to Cart</span></button>
+                                            <button type="button" role="button" class="btn btn-secondary btn-block o_wish_add mb4"><i class="fa fa-shopping-cart"></i><span class='d-none d-md-inline'> Add to Cart</span></button>
                                         </td>
                                     </tr>
                                 </t>

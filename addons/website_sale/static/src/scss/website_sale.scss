@@ -22,6 +22,9 @@
             &:first-child {
                 padding-left: $grid-gutter-width*0.5;
             }
+            &:last-child {
+                padding-right: 0.75rem;
+            }
         }
     }
 
@@ -44,7 +47,7 @@
     }
 
     .td-qty {
-        width: 130px;
+        width: 140px;
         a.input-group-addon {
             background-color: transparent;
             border: 0px;
@@ -55,13 +58,12 @@
     }
 
     .td-price,
-    .td-price-total {
+    #cart_total tr td:last-child {
         width: 100px;
     }
 
     @include media-breakpoint-down(sm) {
-        .td-img,
-        .td-price-total {
+        .td-img {
             display: none;
         }
 
