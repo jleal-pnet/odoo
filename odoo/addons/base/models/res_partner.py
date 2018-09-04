@@ -619,8 +619,8 @@ class Partner(models.Model):
             name = "%s <%s>" % (name, partner.email)
         if self._context.get('html_format'):
             name = name.replace('\n', '<br/>')
-        if self._context.get('show_vat'):
-            name += "\n" + partner.vat
+        if self._context.get('show_vat') and partner.vat:
+            name = "%s - %s" % (name, partner.vat)
         return name
 
     @api.multi
