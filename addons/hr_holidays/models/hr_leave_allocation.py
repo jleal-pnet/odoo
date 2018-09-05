@@ -199,7 +199,7 @@ class HolidaysAllocation(models.Model):
                 # As we encode everything in days in the database we need to convert
                 # the number of hours into days for this we use the
                 # mean number of hours set on the employee's calendar
-                days_to_give = days_to_give / holiday.employee_id.resource_calendar_id.hours_per_day or HOURS_PER_DAY
+                days_to_give = days_to_give / (holiday.employee_id.resource_calendar_id.hours_per_day or HOURS_PER_DAY)
 
             values['number_of_days_temp'] = holiday.number_of_days_temp + days_to_give * prorata
 
@@ -217,7 +217,7 @@ class HolidaysAllocation(models.Model):
             number_of_days = holiday.number_of_days_temp
             if holiday.type_request_unit == 'hour':
                 # In this case we need the number of days to reflect the number of hours taken
-                number_of_days = holiday.number_of_hours / holiday.employee_id.resource_calendar_id.hours_per_day or HOURS_PER_DAY
+                number_of_days = holiday.number_of_hours / (holiday.employee_id.resource_calendar_id.hours_per_day or HOURS_PER_DAY)
             if holiday.accrual_limit > 0:
                 number_of_days = min(number_of_days, holiday.accrual_limit)
 
@@ -264,11 +264,11 @@ class HolidaysAllocation(models.Model):
 
     @api.onchange('number_of_days_temp')
     def _onchange_number_of_days_temp(self):
-        self.number_of_hours = self.number_of_days_temp * self.employee_id.resource_calendar_id.hours_per_day
+        self.number_of_hours = self.number_of_days_temp * (self.employee_id.resource_calendar_id.hours_per_day or HOURS_PER_DAY)
 
     @api.onchange('number_of_hours')
     def _onchange_number_of_hours(self):
-        self.number_of_days_temp = self.number_of_hours / self.employee_id.resource_calendar_id.hours_per_day
+        self.number_of_days_temp = self.number_of_hours / (self.employee_id.resource_calendar_id.hours_per_day or HOURS_PER_DAY)
 
     @api.onchange('holiday_status_id')
     def _onchange_holiday_status_id(self):
