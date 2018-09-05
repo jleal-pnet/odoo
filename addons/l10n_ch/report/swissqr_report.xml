@@ -12,27 +12,45 @@
                         <span class="swissqr_text title">Supports</span><br/>
                         <span class="swissqr_text content">Credit transfer</span>
                     </div>
-                    <img class="swissqr" t-att-src="o.company_id.qr_code_payment_journal_id.bank_account_id.build_swiss_code_url(o.residual,(o.reference) if (o.reference) else o.number, o.partner_id, 'QRR')"/>
+                    <img class="swissqr" t-att-src="o.partner_bank_id.build_swiss_code_url(o.residual, o.currency_id.name, o.date_due, o.partner_id, 'QRR',
+                    (o.partner_bank_id.bank_id.l10n_ch_postal_eur) if (o.partner_bank_id.currency_id.name == 'EUR') else o.partner_bank_id.bank_id.l10n_ch_postal_chf,
+                    (o.reference) if (o.reference) else o.number)"/>
+                    <img class="ch_cross" src="/l10n_ch/static/src/img/CH-Cross_7mm.png"/>
                     <div id="indications_zone" class="swissqr_column_right indication_zone">
                         <span class="swissqr_text title">Account</span><br/>
-                        <span class="swissqr_text content" t-field="o.company_id.qr_code_payment_journal_id.bank_account_id.acc_number"/><br/>
+                        <span class="swissqr_text content" t-field="o.partner_bank_id.acc_number"/><br/>
                         <span class="swissqr_text title">Creditor</span><br/>
-                        <span class="swissqr_text content" t-field="o.reference"/><br/>
+                        <span class="swissqr_text content" t-field="o.company_id.name"/><br/>
+                        <span class="swissqr_text content" t-field="o.company_id.street"/><br/>
+                        <span class="swissqr_text content" t-field="o.company_id.country_id.code"/>
+                        <span class="swissqr_text content" t-field="o.company_id.zip"/>
+                        <span class="swissqr_text content" t-field="o.company_id.city"/><br/>
                         <span class="swissqr_text title">Reference number</span><br/>
-                        <span class="swissqr_text content" t-field="o.reference"/><br/>
+                        <t t-if="o.partner_bank_id.currency_id.name == 'EUR'">
+                            <span class="swissqr_text content" t-field="o.partner_bank_id.bank_id.l10n_ch_postal_eur"/><br/>
+                        </t>
+                        <t t-elif="o.partner_bank_id.currency_id.name == 'CHF'">
+                            <span class="swissqr_text content" t-field="o.partner_bank_id.bank_id.l10n_ch_postal_chf"/><br/>
+                        </t>
                         <span class="swissqr_text title">Additional information</span><br/>
-                        <t t-if="o.company_id.qr_code_payment_journal_id.bank_account_id.currency_id.name == 'EUR'">
-                            <span class="swissqr_text content" t-field="o.company_id.qr_code_payment_journal_id.bank_id.l10n_ch_postal_eur"/><br/>
-                        </t>
-                        <t t-elif="o.company_id.qr_code_payment_journal_id.bank_account_id.currency_id.name == 'CHF'">
-                            <span class="swissqr_text content" t-field="o.company_id.qr_code_payment_journal_id.bank_id.l10n_ch_postal_chf"/><br/>
-                        </t>
+                        <span class="swissqr_text content" t-field="o.reference"/><br/>
                         <span class="swissqr_text title">Debtor</span><br/>
-                        <span class="swissqr_text content" t-field="o.reference"/><br/>
+                        <span class="swissqr_text content" t-field="o.partner_id.name"/><br/>
+                        <span class="swissqr_text content" t-field="o.partner_id.street"/><br/>
+                        <span class="swissqr_text content" t-field="o.partner_id.country_id.code"/>
+                        <span class="swissqr_text content" t-field="o.partner_id.zip"/>
+                        <span class="swissqr_text content" t-field="o.partner_id.city"/><br/>
                         <span class="swissqr_text title">Due date</span><br/>
-                        <span class="swissqr_text content" t-field="o.reference"/><br/>
+                        <span class="swissqr_text content" t-field="o.date_due"/><br/>
                     </div>
-                    <div id="amount_zone">
+                    <div id="amount_zone" class="swissqr_column_left amount_zone">
+                        <span class="swissqr_text title">Currency</span><br/>
+                        <span class="swissqr_text content" t-field="o.currency_id.name"/>
+                    </div>
+                    <div class="amount_zone amount">
+                        <span class="swissqr_text title">Amount</span><br/>
+                        <t t-set="formated_amount" t-value="('%.2f' % (o.residual)).split(' ')[0].replace(',',' ')"/>
+                        <span class="swissqr_text content" t-esc="formated_amount"/>
                     </div>
                 </div>
             </xpath>

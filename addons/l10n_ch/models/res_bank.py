@@ -67,14 +67,14 @@ class ResPartnerBank(models.Model):
         return None
 
     @api.model
-    def build_swiss_code_url(self, amount, comment, debitor, ref_type):
+    def build_swiss_code_url(self, amount, currency, date_due, debitor, ref_type, reference, comment):
         communication = ""
         if comment:
             communication = (comment[:137] + '...') if len(comment) > 140 else comment
         number = [int(s) for s in self.company_id.street.split() if s.isdigit()]
         number_deb = [int(s) for s in debitor.street.split() if s.isdigit()]
 
-        qr_code_string = 'SPC\n0100\n1\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s' % (
+        qr_code_string = 'SPC\n0100\n1\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s' % (
                           self.acc_number,
                           self.company_id.name,
                           self.company_id.street.replace(str(number[0]),'').strip(),
@@ -83,7 +83,8 @@ class ResPartnerBank(models.Model):
                           self.company_id.city,
                           self.company_id.country_id.code,
                           amount,
-                          self.currency_id.name,
+                          currency,
+                          date_due,
                           debitor.name,
                           debitor.street.replace(str(number_deb[0]),'').strip(),
                           number_deb[0],
@@ -91,6 +92,7 @@ class ResPartnerBank(models.Model):
                           debitor.city,
                           debitor.country_id.code,
                           ref_type,
+                          reference,
                           communication)
         qr_code_url = '/report/barcode/?type=%s&value=%s&width=%s&height=%s&humanreadable=1' % ('QR', werkzeug.url_quote_plus(qr_code_string), 256, 256)
         return qr_code_url
