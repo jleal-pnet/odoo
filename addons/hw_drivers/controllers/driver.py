@@ -46,6 +46,40 @@ class StatusController(http.Controller):
         # server.check_pedal(device_id)
         pass
 
+    owner_dict = {}
+
+    @http.route('/owner/check', type='json', auth='none', cors='*', csrf=False)
+    def check_cantakeowner(self, devices, tab=''):
+        for device in devices:
+            if self.owner_dict.get(device):
+                if tab and self.owner_dict[device] == tab:
+                    return True
+                else:
+                    return False
+            else:
+                return True
+
+    @http.route('/owner/take', type='json', auth='none', cors='*')
+    def take_ownership(self, devices, tab):
+        for device in devices:
+            self.owner_dict[device] = tab
+
+    @http.route('owner/ping', type='json', auth='none', cors='*')
+    def ping_trigger(self, tab):
+        for dev in self.owner_dict.keys():
+            if self.owner_dict[dev] == tab:
+                if drivers[dev].ping_value:
+                    result = drivers[dev].ping_value
+                    drivers[dev].ping_value = ''
+                    return result
+                else:
+                    return 'nothing'
+            else:
+                return "not_allowed"
+
+
+            # Change the tab with other systems
+
 
     @http.route('/box/connect', type='http', auth='none', cors='*', csrf=False)
     def connect_box(self, url):
@@ -221,10 +255,6 @@ class KeyboardUSBDriver(USBDriver):
                     self.value = ''
                 elif data.keystate:
                     self.value += data.keycode.replace('KEY_','')
-                # Trigger action
-                if self.trigger:
-                    check_trigger(data.scancode)
-
 
     def action(self, action):
         pass
@@ -411,13 +441,13 @@ def send_iot_box_device(send_printer):
                                 headers=headers)
         except:
             _logger.warning('Could not reach configured server')
-        if req:
-            # recuperate json dict
-            # Could check status 200 also
-            data_json = json.loads(req.data.decode('utf-8'))
-            device_dict = data_json['result']
-            for dev in device_dict:
-                drivers[dev].setTrigger(device_dict[dev])
+#        if req:
+#            # recuperate json dict
+#            # Could check status 200 also
+#            data_json = json.loads(req.data.decode('utf-8'))
+#            device_dict = data_json['result']
+#            for dev in device_dict:
+#                drivers[dev].setTrigger(device_dict[dev])
 
 
 def check_trigger(device, key):
