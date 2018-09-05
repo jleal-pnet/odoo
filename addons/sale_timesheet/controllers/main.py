@@ -322,7 +322,8 @@ class SaleTimesheetController(http.Controller):
         actions = []
         if len(projects) == 1:
             if request.env.user.has_group('sales_team.group_sale_salesman'):
-                if not projects.sale_line_id and not projects.tasks.mapped('sale_line_id'):
+                task_sale_line_exists = self.env['project.tasks'].sudo().search([('project_id', 'in', projects.ids), ('sale_line_id', '!=', False)])
+                if not projects.sale_line_id and not task_sale_line_exists:
                     actions.append({
                         'label': _("Create a Sales Order"),
                         'type': 'action',
