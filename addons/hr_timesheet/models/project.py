@@ -144,13 +144,14 @@ class Task(models.Model):
     def write(self, values):
         result = super(Task, self).write(values)
         # reassign project_id on related timesheet lines
-        if 'project_id' in values:
+        timesheet_sudo = self.sudo().mapped('timesheet_ids')
+        if 'project_id' in values and timesheet_sudo:
             project_id = values.get('project_id')
             # a timesheet must have an analytic account (and a project)
             if self and not project_id:
                 raise UserError(_('This task must be part of a project because they some timesheets are linked to it.'))
             account_id = self.env['project.project'].browse(project_id).sudo().analytic_account_id
-            self.sudo().mapped('timesheet_ids').write({
+            timesheet_sudo.write({
                 'project_id': project_id,
                 'account_id': account_id.id,
                 'company_id': account_id.company_id.id,
