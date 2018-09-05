@@ -210,17 +210,19 @@
                                     attrs="{'readonly': [('state', 'not in', ('draft', 'confirm'))]}"/>
                                 <field name="request_unit_half"
                                     attrs="{'readonly': [('state', 'not in', ('draft', 'confirm'))]}"/>
-                                <label for="request_unit_hours"
-                                    attrs="{'readonly': [('state', 'not in', ('draft', 'confirm'))]}"/>
-                                <field name="request_unit_hours"
-                                    attrs="{'readonly': [('state', 'not in', ('draft', 'confirm'))]}"/>
-                                <label for="request_unit_custom" attrs="{
+                                <label for="request_unit_hours" attrs="{
                                     'readonly': [('state', 'not in', ('draft', 'confirm'))],
-                                    'invisible': [('request_unit_custom', '=', False)]
+                                    'invisible': [('leave_type_request_unit', '!=', 'hour')]
                                 }"/>
-                                <field name="request_unit_custom" attrs="{
+                                <field name="request_unit_hours" attrs="{
                                     'readonly': [('state', 'not in', ('draft', 'confirm'))],
-                                    'invisible': [('request_unit_custom', '=', False)]
+                                    'invisible': [('leave_type_request_unit', '!=', 'hour')]
+                                }"/>
+                                <label for="request_unit_custom" invisible="1" attrs="{
+                                    'readonly': [('state', 'not in', ('draft', 'confirm'))],
+                                }"/>
+                                <field name="request_unit_custom" invisible="1" attrs="{
+                                    'readonly': [('state', 'not in', ('draft', 'confirm'))],
                                 }"/>
                             </div>
                             <div class="o_row o_row_readonly">

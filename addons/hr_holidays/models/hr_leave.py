@@ -167,7 +167,7 @@ class HolidaysRequest(models.Model):
     # request type
     request_unit_half = fields.Boolean('Half Day')
     request_unit_hours = fields.Boolean('Custom Hours')
-    request_unit_custom = fields.Boolean('MEGA POWER')
+    request_unit_custom = fields.Boolean('Days-long custom hours')
 
     _sql_constraints = [
         ('type_value',
