@@ -66,6 +66,8 @@ class ProductTemplate(models.Model):
             if not self.invoice_policy:
                 self.invoice_policy = 'order'
             self.service_type = 'manual'
+        if self.type in ['consu','product'] and self.env.user.company_id.anglo_saxon_accounting:
+            self.invoice_policy = 'delivery'
 
     @api.model
     def get_import_templates(self):
