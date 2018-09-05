@@ -229,17 +229,26 @@ class HolidaysRequest(models.Model):
             hour_to = float_to_time(attendance_to.hour_to)
 
         tz = self.env.user.tz if self.env.user.tz and not self.request_unit_custom else 'UTC'  # custom -> already in UTC
-        self.date_from = timezone(tz).localize(datetime.combine(self.request_date_from, hour_from)).astimezone(UTC)
-        self.date_to = timezone(tz).localize(datetime.combine(self.request_date_to, hour_to)).astimezone(UTC)
+        self.date_from = timezone(tz).localize(datetime.combine(self.request_date_from, hour_from)).astimezone(UTC).replace(tzinfo=None)
+        self.date_to = timezone(tz).localize(datetime.combine(self.request_date_to, hour_to)).astimezone(UTC).replace(tzinfo=None)
 
-    @api.onchange('request_unit_half', 'request_unit_hours', 'request_unit_custom')
-    def _onchange_request_unit(self):
-        option = False
-        for suffix in ('half', 'hours', 'custom'):
-            if self['request_unit_%s' % suffix]:
-                option = suffix
-        for suffix in ('half', 'hours', 'custom'):
-            self['request_unit_%s' % suffix] = option == suffix
+    @api.onchange('request_unit_half')
+    def _onchange_request_unit_half(self):
+        if self.request_unit_half:
+            self.request_unit_hours = False
+            self.request_unit_custom = False
+
+    @api.onchange('request_unit_hours')
+    def _onchange_request_unit_hours(self):
+        if self.request_unit_hours:
+            self.request_unit_half = False
+            self.request_unit_custom = False
+
+    @api.onchange('request_unit_custom')
+    def _onchange_request_unit_custom(self):
+        if self.request_unit_custom:
+            self.request_unit_half = False
+            self.request_unit_hours = False
 
     @api.onchange('holiday_type')
     def _onchange_type(self):
