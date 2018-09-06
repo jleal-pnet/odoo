@@ -1345,10 +1345,10 @@ class AccountMoveLine(models.Model):
         where_clause_params = []
         tables = ''
         if domain:
-            query = self._where_calc(domain)
+            # Don't bypass company access rights.
+            domain += [('company_id', 'in', self.env.user.company_ids.ids)]
 
-            # Wrap the query with 'company_id IN (...)' to avoid bypassing company access rights.
-            self._apply_ir_rules(query)
+            query = self._where_calc(domain)
 
             tables, where_clause, where_clause_params = query.get_sql()
         return tables, where_clause, where_clause_params
