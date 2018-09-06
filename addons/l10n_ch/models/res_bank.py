@@ -97,14 +97,23 @@ class ResPartnerBank(models.Model):
         qr_code_url = '/report/barcode/?type=%s&value=%s&width=%s&height=%s&humanreadable=1' % ('QR', werkzeug.url_quote_plus(qr_code_string), 256, 256)
         return qr_code_url
 
-    @api.multi 
-    def _validate_qr_code_arguments(self):
-        for bank in self:
-            if bank.currency_id.name == False:
-                currency = bank.company_id.currency_id
-            else:
-                currency = bank.currency_id
-            bank.qr_code_valid = (bank.bank_bic
-                                            and bank.company_id.name
-                                            and bank.acc_number
-                                            and (currency.name == 'EUR'))
+    @api.model
+    def validate_swiss_code_arguments(self, currency, debitor):
+        if(currency.name == 'EUR'):
+            return (self.bank_id.l10n_ch_postal_eur and
+                    self.company_id.zip and
+                    self.company_id.city and
+                    self.company_id.country_id.code and
+                    debitor.zip and
+                    debitor.city and
+                    debitor.country_id.code)
+        elif(currency.name == 'CHF'):
+            return (self.bank_id.l10n_ch_postal_chf and
+                    self.company_id.zip and
+                    self.company_id.city and
+                    self.company_id.country_id.code and
+                    debitor.zip and
+                    debitor.city and
+                    debitor.country_id.code)
+        else:
+            return False

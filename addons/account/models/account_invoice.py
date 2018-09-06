@@ -333,7 +333,7 @@ class AccountInvoice(models.Model):
 
     reconciled = fields.Boolean(string='Paid/Reconciled', store=True, readonly=True, compute='_compute_residual',
         help="It indicates that the invoice has been paid and the journal entry of the invoice has been reconciled with one or several journal entries of payment.")
-    partner_bank_id = fields.Many2one('res.partner.bank', string='Bank Account',
+    partner_bank_id = fields.Many2one('res.partner.bank', string='Bank Account', context="{'default_partner_id': company_id}",
         help='Bank Account Number to which the invoice will be paid. A Company bank account if this is a Customer Invoice or Vendor Credit Note, otherwise a Partner bank account number.',
         readonly=True, states={'draft': [('readonly', False)]}) #Default value computed in default_get for out_invoices
 
