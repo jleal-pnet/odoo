@@ -576,6 +576,64 @@ var FieldDateTime = FieldDate.extend({
     },
 });
 
+var FieldTime = FieldDate.extend({
+    supportedFieldTypes: ['float'],
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     * return the datepicker value
+     *
+     * @private
+     */
+    _getValue: function () {
+        var value = this.datewidget.getValue();
+        console.log('FieldTime _getValue', value);
+        return value;
+    },
+
+    /**
+     * @override
+     * @private
+     */
+    _isSameValue: function (value) {
+        if (value === false) {
+            return this.value === false;
+        }
+        return value.isSame(this.value);
+    },
+
+    /**
+     * Instantiates a new TimeWidget datepicker rather than DateWidget.
+     *
+     * @override
+     * @private
+     */
+    _makeDatePicker: function () {
+        return new datepicker.TimeWidget(
+            this,
+            _.defaults(
+                this.nodeOptions.datepicker || {},
+                {defaultDate: this.value}
+            )
+        );
+    },
+
+    /**
+     * Set the datepicker to the right value rather than the default one.
+     *
+     * @override
+     * @private
+     */
+    _renderEdit: function () {
+        console.log('FieldTime _renderEdit', this.value);
+        this.datewidget.setValue(this.value);
+        this.$input = this.datewidget.$input;
+    },
+});
+
 var FieldMonetary = InputField.extend({
     className: 'o_field_monetary o_field_number',
     tagName: 'span',
@@ -902,6 +960,7 @@ var FieldFloatTime = FieldFloat.extend({
         this.formatType = 'float_time';
     }
 });
+
 
 var FieldFloatFactor = FieldFloat.extend({
     supportedFieldTypes: ['float'],
@@ -2869,6 +2928,7 @@ return {
     LinkButton: LinkButton,
     FieldDate: FieldDate,
     FieldDateTime: FieldDateTime,
+    FieldTime: FieldTime,
     FieldDomain: FieldDomain,
     FieldFloat: FieldFloat,
     FieldFloatTime: FieldFloatTime,

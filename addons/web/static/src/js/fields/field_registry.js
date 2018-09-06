@@ -24,6 +24,7 @@ registry
     .add('boolean', basic_fields.FieldBoolean)
     .add('date', basic_fields.FieldDate)
     .add('datetime', basic_fields.FieldDateTime)
+    .add('time', basic_fields.FieldTime)
     .add('domain', basic_fields.FieldDomain)
     .add('text', basic_fields.FieldText)
     .add('html', basic_fields.FieldText)

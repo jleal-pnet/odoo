@@ -146,6 +146,23 @@
         </field>
     </record>
 
+    <record id="hr_leave_view_form_tmp" model="ir.ui.view">
+        <field name="name">hr.leave.view.form</field>
+        <field name="model">hr.leave</field>
+        <field name="priority">1</field>
+        <field name="arch" type="xml">
+            <form string="Leave Request">
+                <group>
+                    <field name="request_hour_from" widget="time"
+                        options="{'datepicker': {
+                            'format': 'HH:mm:00',
+                            'stepping': 10,
+                            }}"/>
+                </group>
+            </form>
+        </field>
+    </record>
+
     <record id="hr_leave_view_form" model="ir.ui.view">
         <field name="name">hr.leave.view.form</field>
         <field name="model">hr.leave</field>
@@ -228,15 +245,15 @@
                             <div class="o_row o_row_readonly">
                                 <label for="request_hour_from" string="From"
                                     attrs="{'invisible': [('request_unit_hours', '=', False)]}"/>
-                                <field name="request_hour_from" widget="float_time"
-                                    options="{'horizontal': True}"
+                                <field name="request_hour_from" widget="time"
+                                    options="{'datepicker': {'format': 'HH:mm'}}"
                                     attrs="{
                                         'readonly': [('state', '=', 'validate')],
                                         'invisible': [('request_unit_hours', '=', False)]}"/>
                                 <label for="request_hour_to" string="To"
                                     attrs="{'invisible': [('request_unit_hours', '=', False)]}"/>
-                                <field name="request_hour_to" widget="float_time"
-                                    options="{'horizontal': True}"
+                                <field name="request_hour_to" widget="time"
+                                    options="{'datepicker': {'format': 'HH:mm'}}"
                                     attrs="{
                                         'readonly': [('state', '=', 'validate')],
                                         'invisible': [('request_unit_hours', '=', False)]}"/>

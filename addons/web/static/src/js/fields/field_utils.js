@@ -142,6 +142,35 @@ function formatDateTime(value, field, options) {
 }
 
 /**
+ * Returns a string representing a datetime.  If the value is false, then we
+ * return an empty string.  Note that this is dependant on the localization
+ * settings
+ *
+ * @params {Moment|false}
+ * @param {Object} [field]
+ *        a description of the field (note: this parameter is ignored)
+ * @param {Object} [options] additional options
+ * @param {boolean} [options.timezone=true] use the user timezone when formating the
+ *        date
+ * @returns {string}
+ */
+function formatTime(value, field, options) {
+    var date_format = (options && options.format) || time.getLangTimeFormat();
+    console.log('formatTime: date_format', date_format, 'value', value, 'field', field, 'options', options);
+    if (value === false || value === 0) {
+        return "";
+    }
+    var duration = moment.duration(value, 'hours');
+    var hours = duration.hours();
+    var minutes = duration.minutes();
+    var prout = moment({hour: hours, minute: minutes});
+    var prout2 = prout.format(date_format);
+    console.log('formatTime: value', prout, 'value2', prout2);
+    // return prout2;
+    return prout.format(time.getLangDatetimeFormat());
+}
+
+/**
  * Returns a string representing a float.  The result takes into account the
  * user settings (to display the correct decimal separator).
  *
@@ -461,6 +490,69 @@ function parseDateTime(value, field, options) {
     throw new Error(_.str.sprintf(core._t("'%s' is not a correct datetime"), value));
 }
 
+
+/**
+ * Create an Date object
+ * The method toJSON return the formated value to send value server side
+ *
+ * @param {string} value
+ * @param {Object} [field]
+ *        a description of the field (note: this parameter is ignored)
+ * @param {Object} [options] additional options
+ * @param {boolean} [options.isUTC] the formatted date is utc
+ * @param {boolean} [options.timezone=false] format the date after apply the timezone
+ *        offset
+ * @returns {Moment|false} Moment date object
+ */
+function parseTime(value, field, options) {
+    if (!value) {
+        return false;
+    }
+    var timePattern;
+    if (options && options.format) {
+        timePattern = options.format;
+    }
+    else {
+        timePattern = time.getLangTimeFormat();
+    }
+    console.log('parseTime: timePattern', timePattern, 'value', value);
+    var duration = moment.duration(value);
+    console.log('parseTime: duration', duration, 'hours', duration.asHours());
+    var hours = duration.asHours();
+    return hours;
+    // var pattern1 = datePattern + ' ' + timePattern;
+    // var pattern2 = datePatternWoZero + ' ' + timePatternWoZero;
+    // var datetime;
+    // if (options && options.isUTC) {
+    //     // phatomjs crash if we don't use this format
+    //     datetime = moment.utc(value.replace(' ', 'T') + 'Z');
+    // } else {
+    //     datetime = moment.utc(value, [pattern1, pattern2, moment.ISO_8601], true);
+    //     if (options && options.timezone) {
+    //         datetime.add(-session.getTZOffset(datetime), 'minutes');
+    //     }
+    // }
+    // if (datetime.isValid()) {
+    //     if (datetime.year() === 0) {
+    //         datetime.year(moment.utc().year());
+    //     }
+    //     if (datetime.year() >= 1900) {
+    //         datetime.toJSON = function () {
+    //             return this.clone().locale('en').format('YYYY-MM-DD HH:mm:ss');
+    //         };
+    //         return datetime;
+    //     }
+    // }
+    // throw new Error(_.str.sprintf(core._t("'%s' is not a correct datetime"), value));
+
+
+    // var parsed = parseNumber(value);
+    // if (isNaN(parsed)) {
+    //     throw new Error(_.str.sprintf(core._t("'%s' is not a correct float"), value));
+    // }
+    // return parsed;
+}
+
 /**
  * Parse a String containing number in language formating
  *
@@ -622,6 +714,7 @@ return {
         char: formatChar,
         date: formatDate,
         datetime: formatDateTime,
+        time: formatTime,
         float: formatFloat,
         float_factor: formatFloatFactor,
         float_time: formatFloatTime,
@@ -642,6 +735,7 @@ return {
         char: _.identity, // todo
         date: parseDate, // todo
         datetime: parseDateTime, // todo
+        time: parseTime,
         float: parseFloat,
         float_factor: parseFloatFactor,
         float_time: parseFloatTime,

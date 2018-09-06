@@ -83,6 +83,7 @@ var DateWidget = Widget.extend({
      * set datetime value
      */
     changeDatetime: function () {
+        console.log('DateWidget: changeDatetime');
         if (this.isValid()) {
             var oldValue = this.getValue();
             this._setValueFromUi();
@@ -117,6 +118,7 @@ var DateWidget = Widget.extend({
      */
     isValid: function () {
         var value = this.$input.val();
+        console.log('DateWidget: isvalid, value', value);
         if (value === "") {
             return true;
         } else {
@@ -148,6 +150,7 @@ var DateWidget = Widget.extend({
      * @param {Moment|false} value
      */
     setValue: function (value) {
+        console.log('DateWidget: setValue', value);
         this.set({'value': value});
         var formatted_value = value ? this._formatClient(value) : null;
         this.$input.val(formatted_value);
@@ -210,7 +213,9 @@ var DateWidget = Widget.extend({
      */
     _setValueFromUi: function () {
         var value = this.$input.val() || false;
-        this.setValue(this._parseClient(value));
+        var parsed = this._parseClient(value);
+        console.log('DateWidget: _setValueFromUi', value, 'parsed', parsed);
+        this.setValue(parsed);
     },
 
     //--------------------------------------------------------------------------
@@ -252,6 +257,54 @@ var DateWidget = Widget.extend({
     },
 });
 
+var TimeWidget = DateWidget.extend({
+    type_of_date: 'time',
+
+    init: function (parent, options) {
+        this._super(parent, _.extend({
+            autoclose: true,
+            format: time.getLangTimeFormat(),
+            showClose: true,
+            showClear: true,
+        }, options || {}));
+        console.log('TimeWidget post init, options', this.options);
+    },
+
+    /**
+     * @param {Moment|false} value
+     */
+    setValue: function (value) {
+        this.set({'value': value});
+        var formatted_value = value ? this._formatClient(value) : null;
+        console.log('TimeWidget: setValue', value, 'formatted_value', formatted_value);
+        this.$input.val(value);
+        this.__libInput = true;
+        this.$input.datetimepicker('date', formatted_value || null);
+        this.__libInput = false;
+    },
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     * @private
+     * @param {Moment} v
+     * @returns {string}
+     */
+    _formatClient: function (v) {
+        return field_utils.format[this.type_of_date](v, null, {timezone: false, format: this.options.format});
+    },
+    /**
+     * @private
+     * @param {string|false} v
+     * @returns {Moment}
+     */
+    _parseClient: function (v) {
+        return field_utils.parse[this.type_of_date](v, null, {timezone: false, format: this.options.format});
+    },
+});
+
 var DateTimeWidget = DateWidget.extend({
     type_of_date: "datetime",
     init: function (parent, options) {
@@ -268,6 +321,7 @@ var DateTimeWidget = DateWidget.extend({
 return {
     DateWidget: DateWidget,
     DateTimeWidget: DateTimeWidget,
+    TimeWidget: TimeWidget,
 };
 
 });
