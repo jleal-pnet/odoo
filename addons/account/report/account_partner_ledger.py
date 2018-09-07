@@ -44,16 +44,19 @@ class ReportPartnerLedger(models.AbstractModel):
             full_account.append(r)
         return full_account
 
-    def _sum_partner(self, data, partner, field):
+    def _sum_partner(self, data, partner, field, currency, company):
         if field not in ['debit', 'credit', 'debit - credit']:
             return
         result = 0.0
         query_get_data = self.env['account.move.line'].with_context(data['form'].get('used_context', {}))._query_get()
         reconcile_clause = "" if data['form']['reconciled'] else ' AND "account_move_line".full_reconcile_id IS NULL '
 
-        params = [partner.id, tuple(data['computed']['move_state']), tuple(data['computed']['account_ids'])] + query_get_data[2]
-        query = """SELECT sum(""" + field + """)
-                FROM """ + query_get_data[0] + """, account_move AS m
+        params = [currency.id, company.id, partner.id, tuple(data['computed']['move_state']), tuple(data['computed']['account_ids'])] + query_get_data[2]
+        query = """ SELECT sum( (""" + field + """) * (COALESCE((SELECT r.rate FROM res_currency_rate r WHERE r.currency_id = %s
+                AND r.name <= m.date AND (r.company_id IS NULL OR r.company_id = %s)
+                ORDER BY r.company_id, r.name DESC LIMIT 1), 1.0) / COALESCE((SELECT r.rate FROM res_currency_rate r
+                WHERE r.currency_id = m.currency_id AND r.name <= m.date AND (r.company_id IS NULL OR r.company_id = m.company_id)
+                ORDER BY r.company_id, r.name DESC LIMIT 1), 1.0)) ) FROM """ + query_get_data[0] + """, account_move AS m
                 WHERE "account_move_line".partner_id = %s
                     AND m.id = "account_move_line".move_id
                     AND m.state IN %s
