@@ -508,8 +508,10 @@
                                         'default_country_id': country_id, 'default_function': function,
                                         'default_phone': phone, 'default_mobile': mobile,
                                         'default_email': email_from,
-                                        'default_user_id': user_id, 'default_team_id': team_id, 'default_website': website}
-                                        'show_vat': True,"/>
+                                        'default_user_id': user_id, 'default_team_id': team_id, 'default_website': website,
+                                        'show_vat': True,
+                                    }"
+                                />
                                 <field name="is_blacklisted" invisible="1"/>
                                 <field name="partner_is_blacklisted" invisible="1"/>
                                 <label for="email_from" class="oe_inline"/>
