@@ -319,14 +319,13 @@ class PaymentAcquirer(models.Model):
         if not partner:
             partner = self.env.user.partner_id
         active_acquirers = self.sudo().search([('website_published', '=', True), ('company_id', '=', company.id)])
-        form_acquirers = active_acquirers.filtered(lambda acq: acq.payment_flow == 'form' and acq.view_template_id)
-        s2s_acquirers = active_acquirers.filtered(lambda acq: acq.payment_flow == 's2s' and acq.registration_view_template_id)
+        form_acquirers = active_acquirers.filtered(lambda acq: (acq.payment_flow == 'form' and acq.view_template_id) or
+                                                               (acq.payment_flow == 's2s' and acq.registration_view_template_id))
         return {
             'form_acquirers': form_acquirers,
-            's2s_acquirers': s2s_acquirers,
             'pms': self.env['payment.token'].search([
                 ('partner_id', '=', partner.id),
-                ('acquirer_id', 'in', s2s_acquirers.ids)]),
+                ('acquirer_id', 'in', form_acquirers.filtered(lambda acq: acq.payment_flow == 's2s').ids)]),
         }
 
     @api.multi
@@ -571,7 +570,8 @@ class PaymentTransaction(models.Model):
         ('pending', 'Pending'),
         ('authorized', 'Authorized'),
         ('done', 'Done'),
-        ('cancel', 'Canceled')],
+        ('cancel', 'Canceled'),
+        ('error', 'Error'),],
         string='Status', copy=False, default='draft', required=True, readonly=True)
     state_message = fields.Text(string='Message', readonly=True,
                                 help='Field used to store error and/or validation messages for information')
@@ -740,6 +740,18 @@ class PaymentTransaction(models.Model):
         self._log_payment_transaction_received()
 
     @api.multi
+    def _set_transaction_error(self, msg):
+        '''Move the transaction to the error state (Third party returning error e.g. Paypal).'''
+        if any(trans.state != 'draft' for trans in self):
+            raise ValidationError(_('Only draft transaction can be processed.'))
+
+        self.write({
+            'state': 'error',
+            'date': datetime.now().strftime(DEFAULT_SERVER_DATETIME_FORMAT),
+            'state_message': msg,
+        })
+
+    @api.multi
     def _post_process_after_done(self):
         # Validate invoices automatically upon the transaction is posted.
         invoices = self.mapped('invoice_ids').filtered(lambda inv: inv.state == 'draft')
@@ -772,7 +784,7 @@ class PaymentTransaction(models.Model):
                             ])
         for tx in self:
             try:
-                tx._post_process_after_done()                
+                tx._post_process_after_done()
                 self.env.cr.commit()
             except Exception as e:
                 _logger.error("Transaction post processing failed, reason \"%s\"", e)
