@@ -18,6 +18,12 @@
             </xpath>
         </template>
 
+        <template id="assets_common" inherit_id="web.assets_common" name="Project Common Assets">
+            <xpath expr="." position="inside">
+                <script type="text/javascript" src="/project/static/src/js/tour_portal.js"></script>
+            </xpath>
+        </template>
+
         <template id="assets_public_project" name="Project Portal Assets">
             <link rel="stylesheet" type="text/css" href="/project/static/src/css/project_portal.css"/>
             <script type="text/javascript" src="/project/static/src/js/portal_webclient_view.js"></script>

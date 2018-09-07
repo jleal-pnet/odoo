@@ -5,6 +5,7 @@
  */
 
 odoo.define('web.web_client', function (require) {
+    var TourManager = require('web_tour.TourManager');
     var WebClient = require('web.WebClient');
 
     /**
@@ -40,6 +41,23 @@ odoo.define('web.web_client', function (require) {
             this._waitHijackRPCs.resolve();
         },
     });
+
+    TourManager.include({
+        /**
+         * Disables console logs so as to avoid confusion,
+         * given that the tour manager won't perform.
+         */
+        init: function (parent, consumed_tours) {
+            console.log = function() {};
+            this._super.apply(this, arguments);
+        },
+        /**
+         * Disables tours altogether.
+         *
+         * @override
+         */
+        _register_all: function (do_update) {},
+    })
 
     return new ProjectWebClient();
 });
