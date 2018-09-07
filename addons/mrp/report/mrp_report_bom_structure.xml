@@ -17,6 +17,7 @@
                     </div>
                 </div>
                 <t t-set="currency" t-value="data['currency']"/>
+                <t t-set="product_currency" t-value="data['product'].currency_id"/>
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="mt16">
@@ -43,10 +44,10 @@
                                         <td><span><t t-esc="data['bom_qty']" t-options='{"widget": "float", "decimal_precision": "Product Unit of Measure"}'/></span></td>
                                         <td groups="uom.group_uom"><span><t t-esc="data['bom'].product_uom_id.name"/></span></td>
                                         <td t-if="data['report_structure'] != 'bom_cost'" class="o_mrp_prod_cost">
-                                            <span><t t-esc="data['price']" t-options='{"widget": "monetary", "display_currency": currency}'/></span>
+                                            <span><t t-esc="data['price']" t-options='{"widget": "monetary", "from_currency": product_currency, "display_currency": currency, "date": data["bom"].create_date, "company_id": data["bom"].company_id}'/></span>
                                         </td>
                                         <td t-if="data['report_structure'] != 'bom_structure'" class="o_mrp_bom_cost">
-                                            <span><t t-esc="data['total']" t-options='{"widget": "monetary", "display_currency": currency}'/></span>
+                                            <span><t t-esc="data['total']" t-options='{"widget": "monetary", "from_currency": product_currency, "display_currency": currency, "date": data["bom"].create_date, "company_id": data["bom"].company_id}'/></span>
                                         </td>
                                         <td t-if="data['report_type'] == 'html'">
                                             <span>
@@ -66,10 +67,10 @@
                                         <td><span><strong>Unit Cost</strong></span></td>
                                         <td groups="uom.group_uom"></td>
                                         <td t-if="data['report_structure'] != 'bom_cost'" class="o_mrp_prod_cost">
-                                            <span><t t-esc="data['price']/data['bom_qty']" t-options='{"widget": "monetary", "display_currency": currency}'/></span>
+                                            <span><t t-esc="data['price']/data['bom_qty']" t-options='{"widget": "monetary", "from_currency": product_currency, "display_currency": currency, "date": data["bom"].create_date, "company_id": data["bom"].company_id}'/></span>
                                         </td>
                                         <td t-if="data['report_structure'] != 'bom_structure'" class="o_mrp_bom_cost">
-                                            <span><t t-esc="data['total']/data['bom_qty']" t-options='{"widget": "monetary", "display_currency": currency}'/></span>
+                                            <span><t t-esc="data['total']/data['bom_qty']" t-options='{"widget": "monetary", "from_currency": product_currency, "display_currency": currency, "date": data["bom"].create_date, "company_id": data["bom"].company_id}'/></span>
                                         </td>
                                     </tr>
                                 </tfoot>
@@ -109,10 +110,10 @@
                 <td><span><t t-esc="l['prod_qty']" t-options='{"widget": "float", "decimal_precision": "Product Unit of Measure"}'/></span></td>
                 <td groups="uom.group_uom"><span><t t-esc="l['prod_uom']"/></span></td>
                 <td class="o_mrp_prod_cost">
-                    <span t-esc="l['prod_cost']" t-options='{"widget": "monetary", "display_currency": currency}'/>
+                    <span t-esc="l['prod_cost']" t-options='{"widget": "monetary", "from_currency": product_currency, "display_currency": currency, "date": l["date"], "company_id": l["company_id"]}'/>
                 </td>
                 <td class="o_mrp_bom_cost">
-                    <span t-esc="l['total']" t-options='{"widget": "monetary", "display_currency": currency}'/>
+                    <span t-esc="l['total']" t-options='{"widget": "monetary", "from_currency": product_currency, "display_currency": currency, "date": l["date"], "company_id": l["company_id"]}'/>
                 </td>
                 <td>
                     <span>
@@ -139,7 +140,7 @@
                 <td class="o_mrp_prod_cost">
                 </td>
                 <td class="o_mrp_bom_cost">
-                    <span t-esc="data['operations_cost']" t-options='{"widget": "monetary", "display_currency": currency}'/>
+                    <span t-esc="data['operations_cost']" t-options='{"widget": "monetary", "from_currency": product_currency, "display_currency": currency, "date": data["bom"].create_date, "company_id": data["bom"].company_id}'/>
                 </td>
                 <td/>
             </tr>
@@ -162,7 +163,7 @@
               <td groups="uom.group_uom"><span>Minutes</span></td>
               <td class="o_mrp_prod_cost"></td>
               <td class="o_mrp_bom_cost">
-                  <span t-esc="op['total']" t-options='{"widget": "monetary", "display_currency": currency}'/>
+                  <span t-esc="op['total']" t-options='{"widget": "monetary", "from_currency": product_currency, "display_currency": currency, "date": data["bom"].create_date, "company_id": data["bom"].currency_id}'/>
               </td>
               <td/>
           </tr>
@@ -196,10 +197,10 @@
               </td>
               <td groups="uom.group_uom"><span><t t-esc="l['uom']"/></span></td>
               <td t-if="data['report_structure'] != 'bom_cost'" class="o_mrp_prod_cost">
-                  <span t-if="'prod_cost' in l" t-esc="l['prod_cost']" t-options='{"widget": "monetary", "display_currency": currency}'/>
+                  <span t-if="'prod_cost' in l" t-esc="l['prod_cost']" t-options='{"widget": "monetary", "from_currency": product_currency, "display_currency": currency, "date": data["bom"].create_date, "company_id": data["bom"].currency_id}'/>
               </td>
               <td t-if="data['report_structure'] != 'bom_structure'" class="o_mrp_bom_cost">
-                  <span t-esc="l['bom_cost']" t-options='{"widget": "monetary", "display_currency": currency}'/>
+                  <span t-esc="l['bom_cost']" t-options='{"widget": "monetary", "from_currency": product_currency, "display_currency": currency, "date": data["bom"].create_date, "company_id": data["bom"].currency_id}'/>
               </td>
           </tr>
       </t>

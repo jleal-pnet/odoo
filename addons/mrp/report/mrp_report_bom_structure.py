@@ -138,6 +138,8 @@ class ReportBomStructure(models.AbstractModel):
                 'prod_cost': price,
                 'parent_id': bom.id,
                 'line_id': line.id,
+                'date': line.create_date,
+                'company_id': bom.company_id,
                 'level': level or 0,
                 'total': sub_total,
                 'child_bom': line.child_bom_id.id,
