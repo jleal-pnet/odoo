@@ -21,15 +21,15 @@
                         </thead>
                         <tr t-foreach="lines['sale']" t-as="line">
                             <td><span t-esc="line.get('name')"/></td>
-                            <td><span t-att-style="style" t-esc="line.get('net')" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/></td>
-                            <td><span t-att-style="style" t-esc="line.get('tax')" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/></td>
+                            <td><span t-att-style="style" t-esc="line.get('net')" t-options="{'widget': 'monetary', 'from_currency': company_id.currency_id, 'display_currency': res_company.currency_id}"/></td>
+                            <td><span t-att-style="style" t-esc="line.get('tax')" t-options="{'widget': 'monetary', 'from_currency': company_id.currency_id, 'display_currency': res_company.currency_id}"/></td>
                         </tr>
                         <tr><td colspan="3"><strong>Purchase</strong></td>
                         </tr>
                         <tr t-foreach="lines['purchase']" t-as="line">
                             <td><span t-esc="line.get('name')"/></td>
-                            <td><span t-att-style="style" t-esc="line.get('net')" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/></td>
-                            <td><span t-att-style="style" t-esc="line.get('tax')" t-options="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/></td>
+                            <td><span t-att-style="style" t-esc="line.get('net')" t-options="{'widget': 'monetary', 'from_currency': company_id.currency_id, 'display_currency': res_company.currency_id}"/></td>
+                            <td><span t-att-style="style" t-esc="line.get('tax')" t-options="{'widget': 'monetary', 'from_currency': company_id.currency_id, 'display_currency': res_company.currency_id}"/></td>
                         </tr>
                     </table>
                 </div>
