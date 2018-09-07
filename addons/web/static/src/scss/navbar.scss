@@ -37,6 +37,7 @@
         font-size: 22px;
         font-weight: 500;
         line-height: $o-navbar-height;
+        cursor: pointer;
 
         @include media-breakpoint-down(xs) {
             float: none;

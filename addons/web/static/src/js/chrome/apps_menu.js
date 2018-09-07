@@ -43,11 +43,15 @@ var AppsMenu = Widget.extend({
         return this._apps;
     },
     /**
+     * Open the given app
+     */
+    openApp: function () {},
+    /**
      * Open the first app in the list of apps
      */
     openFirstApp: function () {
         var firstApp = this._apps[0];
-        this._clickApp(firstApp);
+        this._openApp(firstApp);
     },
 
     //--------------------------------------------------------------------------
@@ -58,7 +62,7 @@ var AppsMenu = Widget.extend({
      * @private
      * @param {Object} app
      */
-    _clickApp: function (app) {
+    _openApp: function (app) {
         this._setActiveApp(app);
         this.trigger_up('app_clicked', {
             action_id: app.actionID,
@@ -89,7 +93,7 @@ var AppsMenu = Widget.extend({
         var actionID = $target.data('action-id');
         var menuID = $target.data('menu-id');
         var app = _.findWhere(this._apps, { actionID: actionID, menuID: menuID });
-        this._clickApp(app);
+        this._openApp(app);
     },
 
 });

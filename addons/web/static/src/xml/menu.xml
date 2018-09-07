@@ -4,7 +4,7 @@
 <header t-name="Menu">
     <nav class="o_main_navbar">
         <ul class="o_menu_apps"/>
-        <a href="#" class="o_menu_brand" role="button"/>
+        <a class="o_menu_brand" role="button"/>
         <ul class="o_menu_sections" role="menu"/>
         <ul class="o_menu_systray" role="menu"/>
     </nav>
