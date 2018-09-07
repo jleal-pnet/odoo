@@ -5,7 +5,6 @@ var core = require('web.core');
 var Widget = require('web.Widget');
 var registry = require('web.field_registry');
 var widget_registry = require('web.widget_registry');
-var Widget = require('web.Widget');
 var FieldFloat = require('web.basic_fields').InputField;
 
 
