@@ -96,9 +96,10 @@ class ReportGeneralLedger(models.AbstractModel):
             res['name'] = account.name
             res['move_lines'] = move_lines[account.id]
             for line in res.get('move_lines'):
-                res['debit'] += line['debit']
-                res['credit'] += line['credit']
-                res['balance'] = line['balance']
+                params = self.env.user.company_id.currency_id, account.company_id, line['ldate']
+                res['debit'] += currency._convert(line['debit'], *params)
+                res['credit'] += currency._convert(line['credit'], *params)
+                res['balance'] = currency._convert(line['balance'], *params)
             if display_account == 'all':
                 account_res.append(res)
             if display_account == 'movement' and res.get('move_lines'):
