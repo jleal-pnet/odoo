@@ -8,8 +8,8 @@ var _t = core._t;
 
 tour.register('project_tour', {
     url: "/web",
-}, [tour.STEPS.MENU_MORE, {
-    trigger: '.o_app[data-menu-xmlid="project.menu_main_pm"], .oe_menu_toggler[data-menu-xmlid="project.menu_main_pm"]',
+}, [tour.STEPS.SHOW_APPS_MENU_ITEM, {
+    trigger: '.o_app[data-menu-xmlid="project.menu_main_pm"], .o_apps_menu_item[data-menu-xmlid="project.menu_main_pm"]',
     content: _t('Want a better way to <b>manage your projects</b>? <i>It starts here.</i>'),
     position: 'bottom',
 }, {

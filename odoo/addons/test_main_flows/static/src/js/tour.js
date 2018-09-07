@@ -9,19 +9,18 @@ var _t = core._t;
 tour.register('main_flow_tour', {
     test: true,
     url: "/web",
-}, [tour.STEPS.MENU_MORE, {
-    trigger: '.o_app[data-menu-xmlid="sale.sale_menu_root"], .oe_menu_toggler[data-menu-xmlid="sale.sale_menu_root"]',
+}, [tour.STEPS.SHOW_APPS_MENU_ITEM, {
+    trigger: '.o_app[data-menu-xmlid="sale.sale_menu_root"], .o_apps_menu_item[data-menu-xmlid="sale.sale_menu_root"]',
     content: _t('Organize your sales activities with the <b>Sales app</b>.'),
     position: 'bottom',
 }, {
 // Add Stockable product
-    edition: "enterprise",
     trigger: ".o_menu_sections a:contains('Products')",
     extra_trigger: '.o_main_navbar',
     content: _t("Let\'s create products."),
     position: "bottom",
 }, {
-    trigger: ".o_menu_sections a:has(span:contains('Products')), .oe_secondary_submenu .oe_menu_text:contains('Products'):first",
+    trigger: ".o_menu_sections a:has(span:contains('Products'))",
     content: _t("Let\'s create products."),
     position: "bottom"
 }, {
@@ -269,8 +268,8 @@ tour.register('main_flow_tour', {
     trigger: '.o_menu_toggle',
     content: _t('Go back to the home menu'),
     position: 'bottom',
-}, {
-    trigger: '.o_app[data-menu-xmlid="crm.crm_menu_root"], .oe_menu_toggler[data-menu-xmlid="crm.crm_menu_root"]',
+}, tour.STEPS.SHOW_APPS_MENU_ITEM, {
+    trigger: '.o_app[data-menu-xmlid="crm.crm_menu_root"], .o_apps_menu_item[data-menu-xmlid="crm.crm_menu_root"]',
     content: _t('Organize your sales activities with the <b>CRM app</b>.'),
     position: 'bottom',
 }, {
@@ -390,17 +389,16 @@ tour.register('main_flow_tour', {
     trigger: '.o_menu_toggle',
     content: _t('Go back to the home menu'),
     position: 'bottom',
-}, {
-    trigger: '.o_app > div:contains("Inventory"), .oe_menu_toggler:contains("Inventory")',
+}, tour.STEPS.SHOW_APPS_MENU_ITEM, {
+    trigger: '.o_app > div:contains("Inventory"), .o_apps_menu_item:contains("Inventory")',
     content: _t('Go to Inventory'),
     position: 'bottom',
 }, {
-    edition: "enterprise",
     trigger: ".o_menu_sections a:contains('Master Data')",
     content: _t("Go to Master Data"),
     position: "bottom"
 }, {
-    trigger: ".o_menu_sections a[data-menu-xmlid='stock.menu_reordering_rules_config'], .oe_secondary_submenu a[data-menu-xmlid='stock.menu_reordering_rules_config']",
+    trigger: ".o_menu_sections a[data-menu-xmlid='stock.menu_reordering_rules_config']",
     content: _t("Reordering Rules"),
     position: "bottom"
 }, {
@@ -431,12 +429,11 @@ tour.register('main_flow_tour', {
     position: "bottom"
 }, {
 // Run the schedulers
-    edition: "enterprise",
     trigger: ".o_menu_sections a:contains('Operations')",
     content: _t("Go to Run Schedulers"),
     position: "bottom"
 },{
-    trigger: ".o_menu_sections a[data-menu-xmlid='stock.menu_procurement_compute'], .oe_secondary_submenu a[data-menu-xmlid='stock.menu_procurement_compute']",
+    trigger: ".o_menu_sections a[data-menu-xmlid='stock.menu_procurement_compute']",
     content: _t("Click on schedulers"),
     position: "bottom"
 }, {
@@ -450,8 +447,8 @@ tour.register('main_flow_tour', {
     trigger: '.o_menu_toggle',
     content: _t('Go back to the home menu'),
     position: 'bottom',
-}, {
-    trigger: '.o_app > div:contains("Purchase"), .oe_menu_toggler:contains("Purchase")',
+}, tour.STEPS.SHOW_APPS_MENU_ITEM, {
+    trigger: '.o_app > div:contains("Purchase"), .o_apps_menu_item:contains("Purchase")',
     content: _t('Go to Purchase'),
     position: 'bottom',
 }, {
@@ -507,17 +504,15 @@ tour.register('main_flow_tour', {
     trigger: '.o_menu_toggle',
     content: _t('Go back to the home menu'),
     position: 'bottom',
-}, {
-    trigger: '.o_app > div:contains("Manufacturing"), .oe_menu_toggler:contains("Manufacturing")',
+}, tour.STEPS.SHOW_APPS_MENU_ITEM, {
+    trigger: '.o_app > div:contains("Manufacturing"), .o_apps_menu_item:contains("Manufacturing")',
     content: _t('Go to Manufacturing'),
     position: 'bottom',
 }, {
-    edition: "enterprise",
     trigger: ".o_menu_sections a[data-menu-xmlid='mrp.menu_mrp_manufacturing']",
     content: _t('Click on Operations menuitem'),
     position: 'bottom',
 }, {
-    edition: "enterprise",
     trigger: ".o_menu_sections a[data-menu-xmlid='mrp.menu_mrp_production_action']",
     content: _t('Open manufacturing orders'),
     position: 'bottom',
@@ -546,17 +541,16 @@ tour.register('main_flow_tour', {
     trigger: '.o_menu_toggle',
     content: _t('Go back to the home menu'),
     position: 'bottom',
-}, {
-    trigger: '.o_app[data-menu-xmlid="sale.sale_menu_root"], .oe_menu_toggler[data-menu-xmlid="sale.sale_menu_root"]',
+}, tour.STEPS.SHOW_APPS_MENU_ITEM, {
+    trigger: '.o_app[data-menu-xmlid="sale.sale_menu_root"], .o_apps_menu_item[data-menu-xmlid="sale.sale_menu_root"]',
     content: _t('Organize your sales activities with the <b>Sales app</b>.'),
     position: 'bottom',
 }, {
-    edition: "enterprise",
     trigger: ".o_menu_sections a[data-menu-xmlid='sale.sale_order_menu']",
     content: _t("Go to Sales menu"),
     position: "bottom"
 }, {
-    trigger: ".o_menu_sections a[data-menu-xmlid='sale.menu_sale_order'], .oe_secondary_submenu a[data-menu-xmlid='sale.menu_sale_order']",
+    trigger: ".o_menu_sections a[data-menu-xmlid='sale.menu_sale_order']",
     content: _t("Go to the sales orders"),
     position: "bottom"
 }, {
@@ -641,7 +635,7 @@ tour.register('main_flow_tour', {
     position: 'bottom',
 }, {
     edition: "enterprise",
-    trigger: '.o_app[data-menu-xmlid="account.menu_finance"], .oe_menu_toggler[data-menu-xmlid="account.menu_finance"]',
+    trigger: '.o_app[data-menu-xmlid="account.menu_finance"], .o_apps_menu_item[data-menu-xmlid="account.menu_finance"]',
     content: _t('Go to Accounting'),
     position: 'bottom',
 }, {

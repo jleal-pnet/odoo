@@ -22,6 +22,7 @@ var AppsMenu = Widget.extend({
                 actionID: parseInt(appMenuData.action.split(',')[1]),
                 menuID: appMenuData.id,
                 name: appMenuData.name,
+                xmlID: appMenuData.xmlid,
             };
         });
     },
