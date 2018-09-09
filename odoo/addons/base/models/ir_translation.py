@@ -43,6 +43,7 @@ class IrTranslationImport(object):
         self._model_table = model._table
         self._overwrite = model._context.get('overwrite', False)
         self._debug = False
+        self._buffer = []
 
         # Note that Postgres will NOT inherit the constraints or indexes
         # of ir_translation, so this copy will be much faster.
@@ -88,18 +89,28 @@ class IrTranslationImport(object):
             params['name'] = 'ir.ui.view,arch_db'
             params['imd_model'] = "ir.ui.view"
 
-        query = """ INSERT INTO %s (name, lang, res_id, src, type, imd_model, module, imd_name, value, state, comments)
-                    VALUES (%%(name)s, %%(lang)s, %%(res_id)s, %%(src)s, %%(type)s, %%(imd_model)s, %%(module)s,
-                            %%(imd_name)s, %%(value)s, %%(state)s, %%(comments)s) """ % self._table
-        self._cr.execute(query, params)
+        self._buffer.append(
+            self._cr.mogrify(
+                """(%(name)s, %(lang)s, %(res_id)s, %(src)s, %(type)s, %(imd_model)s, %(module)s,
+                    %(imd_name)s, %(value)s, %(state)s, %(comments)s) """,
+                params).decode()
+        )
 
     def finish(self):
         """ Transfer the data from the temp table to ir.translation """
         cr = self._cr
         if self._debug:
-            cr.execute("SELECT count(*) FROM %s" % self._table)
-            count = cr.fetchone()[0]
-            _logger.debug("ir.translation.cursor: We have %d entries to process", count)
+            _logger.debug("ir.translation.cursor: We have %d entries to process", len(self._todo))
+
+        if self._buffer:
+            buffer_values = "VALUES " + ", ".join(self._buffer)
+            self._cr.execute(
+                """
+                INSERT INTO tmp_ir_translation_import
+                    (name, lang, res_id, src, type, imd_model, module, imd_name, value, state, comments)
+                """ + buffer_values
+            )
+            del self._buffer
 
         # Step 1: resolve ir.model.data references to res_ids
         cr.execute(""" UPDATE %s AS ti
