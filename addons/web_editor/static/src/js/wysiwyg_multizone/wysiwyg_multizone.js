@@ -107,20 +107,6 @@ var WysiwygMultizone = Wysiwyg.extend({
         this.savingMutex = new concurrency.Mutex();
     },
     /**
-     * @override
-     */
-    willStart: function () {
-        var $target = this.$el;
-        var id = $target.attr('id');
-        var className = $target.attr('class');
-        $target.off('.WysiwygFrontend');
-        $target.attr('data-id', id).removeAttr('id');
-        return this._super().then(function () {
-            this.$el.attr('id', id).addClass(className);
-            this.$editables = this.$('.o_editable');
-        }.bind(this));
-    },
-    /**
      * Prevent some default features for the editable area.
      *
      * @private
@@ -362,6 +348,20 @@ var WysiwygMultizone = Wysiwyg.extend({
     _getFocusedEditable: function () {
         return $(this._focusedNode).closest(this.$editables)[0];
     },
+    /**
+     * @override
+     */
+    _loadInstance: function () {
+        var $target = this.$target;
+        var id = $target.attr('id');
+        var className = $target.attr('class');
+        $target.off('.WysiwygFrontend');
+        $target.attr('data-id', id).removeAttr('id');
+        return this._super().then(function () {
+            this.$el.attr('id', id).addClass(className);
+            this.$editables = this.$('.o_editable');
+        }.bind(this));
+    },
 
     //--------------------------------------------------------------------------
     // Handler
@@ -383,6 +383,19 @@ var WysiwygMultizone = Wysiwyg.extend({
         this._focusedNode = node;
     },
 });
+
+//--------------------------------------------------------------------------
+// Public helper
+//--------------------------------------------------------------------------
+
+/**
+ * Load wysiwyg assets if needed
+ *
+ * @see Wysiwyg.createReadyFunction
+ * @param {Widget} parent
+ * @returns {$.Promise}
+*/
+Wysiwyg.createReadyFunction(WysiwygMultizone);
 
 return WysiwygMultizone;
 });

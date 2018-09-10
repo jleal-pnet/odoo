@@ -1,19 +1,14 @@
 odoo.define('web_editor.summernote.plugin.editor', function (require) {
 'use strict';
 
-var AbstractPlugin = require('web_editor.summernote.plugin.abstract');
+var Plugins = require('web_editor.summernote.plugins');
 var registry = require('web_editor.summernote.plugin.registry');
 
 //--------------------------------------------------------------------------
 // change editor to fix the twice undo (CTRL-Z) with odoo integration
 //--------------------------------------------------------------------------
 
-var SummernoteEditor = $.summernote.options.modules.editor;
-var NewSummernoteEditor = AbstractPlugin.extend(SummernoteEditor.prototype).extend({
-    init: function () {
-        this._super.apply(this, arguments);
-        SummernoteEditor.apply(this, arguments);
-    },
+var NewSummernoteEditor = Plugins.editor.extend({
     /**
      * @override
      */

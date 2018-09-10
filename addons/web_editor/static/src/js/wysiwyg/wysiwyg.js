@@ -76,7 +76,7 @@ var Wysiwyg = Widget.extend({
      **/
     willStart: function () {
         this.$target = this.$el;
-        this.$el = null; // temporary null to avoid hidden error (@see start)
+        this.$el = null; // temporary null to avoid hidden error, setElement when start
         return this._super()
             .then(function () { // load color picker template if needed
                 if ('web_editor.colorpicker' in QWeb.templates) {
@@ -90,36 +90,14 @@ var Wysiwyg = Widget.extend({
                     QWeb.add_template(template);
                 });
             }.bind(this))
-            .then(function () { // start summernote API
-                assetsLoaded = true;
-
-                var defaultOptions = this._editorOptions();
-                var summernoteOptions = _.extend({}, defaultOptions, this.options);
-
-                _.extend(summernoteOptions.callbacks, defaultOptions.callbacks, this.options.callbacks);
-                if (this.options.keyMap) {
-                    _.extend(summernoteOptions.keyMap.pc, defaultOptions.keyMap.pc, this.options.keyMap.pc);
-                    _.extend(summernoteOptions.keyMap.mac, defaultOptions.keyMap.mac, this.options.keyMap.mac);
-                }
-
-                var plugins = _.extend(this._getPlugins(), this.options.plugins);
-                summernoteOptions.modules = _.omit(plugins, function (v) {return !v;});
-
-                this.$target.summernote(summernoteOptions);
-
-                this._summernote = this.$target.data('summernote');
-                this.$target.attr('data-wysiwyg-id', this.id).data('wysiwyg', this);
-                $('.note-editor, .note-popover').not('[data-wysiwyg-id]').attr('data-wysiwyg-id', this.id);
-
-                this.setElement(this._summernote.layoutInfo.editable);
-            }.bind(this));
+            .then(this._loadInstance.bind(this));
     },
     /**
      * @override
      */
     start: function () {
         this._value = this._summernote.code();
-        this._super();
+        return this._super();
     },
     /**
      * @override
@@ -223,6 +201,7 @@ var Wysiwyg = Widget.extend({
         options.parent = this;
         options.lang = "odoo";
         options.container = this.$target.parent().css('position', 'relative');
+
         options.focus = false;
         options.disableDragAndDrop = !allowAttachment;
         options.styleTags = ['p', 'pre', 'small', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote'];
@@ -325,6 +304,34 @@ var Wysiwyg = Widget.extend({
     _getRecordInfo: function () {
         return {};
     },
+    /**
+     *  create an instance with the API lib
+     *
+     * @returns {$.Promise}
+     */
+    _loadInstance: function () {
+        var defaultOptions = this._editorOptions();
+        var summernoteOptions = _.extend({}, defaultOptions, this.options);
+
+        _.extend(summernoteOptions.callbacks, defaultOptions.callbacks, this.options.callbacks);
+        if (this.options.keyMap) {
+            _.extend(summernoteOptions.keyMap.pc, defaultOptions.keyMap.pc, this.options.keyMap.pc);
+            _.extend(summernoteOptions.keyMap.mac, defaultOptions.keyMap.mac, this.options.keyMap.mac);
+        }
+
+        var plugins = _.extend(this._getPlugins(), this.options.plugins);
+        summernoteOptions.modules = _.omit(plugins, function (v) {return !v;});
+
+        this.$target.summernote(summernoteOptions);
+
+        this._summernote = this.$target.data('summernote');
+        this.$target.attr('data-wysiwyg-id', this.id).data('wysiwyg', this);
+        $('.note-editor, .note-popover').not('[data-wysiwyg-id]').attr('data-wysiwyg-id', this.id);
+
+        this.setElement(this._summernote.layoutInfo.editable);
+
+        return $.when();
+    },
 
     //--------------------------------------------------------------------------
     // Handler
@@ -396,29 +403,41 @@ var Wysiwyg = Widget.extend({
 // Public helper
 //--------------------------------------------------------------------------
 
-var assetsLoaded = false;
+Wysiwyg.createReadyFunction = function (Contructor) {
+    var assetsLoaded = false;
+
+    /**
+     * Load wysiwyg assets if needed
+     *
+     * @param {Widget} parent
+     * @returns {$.Promise}
+    */
+    Contructor.ready = function (parent) {
+        if (assetsLoaded) {
+            return $.when();
+        }
+        var def = $.Deferred();
+        var timeout = setTimeout(function () {
+            throw _t("Can't load assets of the wysiwyg editor");
+        }, 10000);
+        var wysiwyg = new Contructor(parent, {recordInfo: {context: {}}});
+        wysiwyg.attachTo($('<textarea>')).then(function () {
+            assetsLoaded = true;
+            clearTimeout(timeout);
+            wysiwyg.destroy();
+            def.resolve();
+        });
+        return def;
+    };
+};
 /**
  * Load wysiwyg assets if needed
  *
+ * @see Wysiwyg.createReadyFunction
  * @param {Widget} parent
  * @returns {$.Promise}
 */
-Wysiwyg.ready = function (parent) {
-    if (assetsLoaded) {
-        return $.when();
-    }
-    var def = $.Deferred();
-    var timeout = setTimeout(function () {
-        throw _t("Can't load assets of the wysiwyg editor");
-    }, 10000);
-    var wysiwyg = new Wysiwyg(parent, {recordInfo: {context: {}}});
-    wysiwyg.attachTo($('<textarea>')).then(function () {
-        clearTimeout(timeout);
-        wysiwyg.destroy();
-        def.resolve();
-    });
-    return def;
-};
+Wysiwyg.createReadyFunction(Wysiwyg);
 /**
  *
  * @returns {Object}
@@ -427,7 +446,7 @@ Wysiwyg.ready = function (parent) {
  * @returns {Node} ec - end container
  * @returns {Number} eo - end offset
 */
-Wysiwyg.getRange = function () {
+Wysiwyg.getRange = function (DOM) {
     var range = $.summernote.range.create();
     return {
         sc: range.sc,

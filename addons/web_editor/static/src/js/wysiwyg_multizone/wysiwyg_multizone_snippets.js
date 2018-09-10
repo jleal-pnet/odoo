@@ -2,6 +2,7 @@ odoo.define('web_editor.wysiwyg.multizone.snippets', function (require) {
 'use strict';
 
 var WysiwygMultizone = require('web_editor.wysiwyg.multizone');
+var Wysiwyg = require('web_editor.wysiwyg');
 var snippetsEditor = require('web_editor.snippet.editor');
 
 /**
@@ -78,6 +79,19 @@ var WysiwygMultizoneSnippets = WysiwygMultizone.extend({
 
     // this._focusedNode
 });
+
+//--------------------------------------------------------------------------
+// Public helper
+//--------------------------------------------------------------------------
+
+/**
+ * Load wysiwyg assets if needed
+ *
+ * @see Wysiwyg.createReadyFunction
+ * @param {Widget} parent
+ * @returns {$.Promise}
+*/
+Wysiwyg.createReadyFunction(WysiwygMultizoneSnippets);
 
 return WysiwygMultizoneSnippets;
 });

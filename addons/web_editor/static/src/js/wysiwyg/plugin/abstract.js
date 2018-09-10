@@ -1,4 +1,5 @@
 odoo.define('web_editor.summernote.plugin.abstract', function (require) {
+'use strict';
 
 var Class = require('web.Class');
 
@@ -7,6 +8,10 @@ var Class = require('web.Class');
 //--------------------------------------------------------------------------
 
 var AbstractPlugin = Class.extend({
+    /*
+     * Use this prop if you want to extend a summernote plugin
+     *.
+    _extendSummernotePluginName: null,
     /*
     events: {
         'summernote.mousedown': '_onMouseDown',
@@ -21,10 +26,12 @@ var AbstractPlugin = Class.extend({
     */
     init: function (context) {
         var self = this;
-        this.ui = $.summernote.ui;
         this.context = context;
         this.$editable = context.layoutInfo.editable;
         this.editable = this.$editable[0];
+        this.window = this.editable.ownerDocument.defaultView;
+        this.summernote = this.window._summernoteSlave || $.summernote; // if the target is in iframe
+        this.ui = this.summernote.ui;
         this.$editingArea = context.layoutInfo.editingArea;
         this.options = context.options;
         this.lang = this.options.langInfo;

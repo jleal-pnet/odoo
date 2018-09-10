@@ -96,6 +96,39 @@ var FieldTextHtmlSimple = basic_fields.DebouncedField.extend(TranslatableFieldMi
         return this.$content.html();
     },
     /**
+     * create the wysiwyg instance with the target
+     * add the editable content: this.$content
+     *
+     * @private
+     * @returns {$.Promise}
+     */
+    _createWysiwygIntance: function () {
+        this.wysiwyg = new Wysiwyg(this, this._getWysiwygOptions());
+
+        // by default it's synchronus because the assets are already loaded in willStart
+        // but can be async with option like iframe, snippets...
+        return this.wysiwyg.attachTo(this.$target).then(function () {
+            this.$content = this.wysiwyg.$el;
+            this._onWysiwygIntance();
+        }.bind(this));
+    },
+    /**
+     * get wysiwyg options to create wysiwyg instance
+     *
+     * @private
+     * @returns {Object}
+     */
+    _getWysiwygOptions: function () {
+        return {
+            recordInfo: {
+                context: this.record.getContext(this.recordParams),
+                res_model: this.model,
+                res_id: this.res_id,
+            },
+            'no-attachment': this.nodeOptions['no-attachment'],
+        };
+    },
+    /**
      * trigger_up 'field_changed' add record into the "ir.attachment" field found in the view.
      * This method is called when an image is uploaded by the media dialog.
      *
@@ -123,9 +156,9 @@ var FieldTextHtmlSimple = basic_fields.DebouncedField.extend(TranslatableFieldMi
      * @private
      */
     _renderEdit: function () {
-        this.$textarea = $('<textarea>').val(this._textToHtml(this.value));
-        // his.$textarea.html(this._textToHtml(this.value)); to test
-        this.$textarea.appendTo(this.$el);
+        this.$target = $('<textarea>').val(this._textToHtml(this.value)).hide();
+        // this.$target.html(this._textToHtml(this.value)); to test
+        this.$target.appendTo(this.$el);
 
         var fieldNameAttachment =_.chain(this.recordData)
             .pairs()
@@ -138,28 +171,7 @@ var FieldTextHtmlSimple = basic_fields.DebouncedField.extend(TranslatableFieldMi
             this.fieldNameAttachment = fieldNameAttachment;
         }
 
-        this.wysiwyg = new Wysiwyg(this, {
-            recordInfo: {
-                context: this.record.getContext(this.recordParams),
-                res_model: this.model,
-                res_id: this.res_id,
-            },
-            'no-attachment': this.nodeOptions['no-attachment'],
-        });
-
-        // it's synchronus because the assets are already loaded in willStart
-        this.wysiwyg.attachTo(this.$textarea);
-
-        this.$content = this.wysiwyg.$el;
-        // this.$content.html(this._textToHtml(this.value));
-        // trigger a mouseup to refresh the editor toolbar
-        this.$content.trigger('mouseup');
-        if (this.nodeOptions['style-inline']) {
-            transcoder.styleToClass(this.$content);
-            transcoder.imgToFont(this.$content);
-            transcoder.linkImgToAttachmentThumbnail(this.$content);
-        }
-        this.$('.note-toolbar').append(this._renderTranslateButton());
+        return this._createWysiwygIntance();
     },
     /**
      * @override
@@ -225,6 +237,9 @@ var FieldTextHtmlSimple = basic_fields.DebouncedField.extend(TranslatableFieldMi
                 .on('click', this._onTranslate.bind(this));
         }
         return $();
+    },
+    _onWysiwygIntance: function () {
+        this.$el.closest('.note.editor').find('.note-toolbar').append(this._renderTranslateButton());
     },
 
 });

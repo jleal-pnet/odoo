@@ -4,25 +4,18 @@ odoo.define('web_editor.summernote.plugin.Link', function (require) {
 var core = require('web.core');
 var Class = require('web.Class');
 var LinkDialog = require('wysiwyg.widgets.LinkDialog');
-var AbstractPlugin = require('web_editor.summernote.plugin.abstract');
+var Plugins = require('web_editor.summernote.plugins');
 var registry = require('web_editor.summernote.plugin.registry');
 
 var _t = core._t;
 var dom = $.summernote.dom;
 var sLang = $.summernote.lang.odoo;
-var sOptions = $.summernote.options;
 
 //--------------------------------------------------------------------------
 // link
 //--------------------------------------------------------------------------
 
-var SummernoteLinkDialog = sOptions.modules.linkDialog;
-var Link = AbstractPlugin.extend(SummernoteLinkDialog.prototype).extend({
-    init: function () {
-        this._super.apply(this, arguments);
-        SummernoteLinkDialog.apply(this, arguments);
-    },
-
+var Link = Plugins.linkDialog.extend({
     //--------------------------------------------------------------------------
     // Public summernote module API
     //--------------------------------------------------------------------------
@@ -201,7 +194,6 @@ var Link = AbstractPlugin.extend(SummernoteLinkDialog.prototype).extend({
 
 });
 
-// override summernote default dialog
 registry.add('LinkPlugin', Link);
 
 return Link;

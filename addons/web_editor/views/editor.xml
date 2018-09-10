@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-<template id="summernote" name="Summernote">
+
+<template id="wysiwyg_iframe_css_assets" name="CSS assets for wysiwyg iframe content">
+    <t t-call-assets="web.assets_common" t-js="false"/>
+    <t t-call-assets="web.assets_backend" t-js="false"/>
+</template>
+
+<template id="wysiwyg" name="Wysiwyg Editor">
     <!-- interface -->
 
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/wysiwyg.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/wysiwyg_iframe.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/plugin_registry.js"/>
 
     <!-- lib -->
@@ -31,8 +38,10 @@
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/widgets/media_dialog.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/widgets/widgets.js"/>
 
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/editor.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/abstract.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/plugins.js"/>
+
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/editor.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/media.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/buttons.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/link.js"/>
@@ -52,7 +61,7 @@
     <xpath expr="script[last()]" position="after">
         <script type="text/javascript" src="/web_editor/static/lib/vkbeautify/vkbeautify.0.99.00.beta.js"/>
         <script type="text/javascript" src="/web_editor/static/src/js/common/ace.js"/>
-        <t t-call="web_editor.summernote"/>
+        <t t-call="web_editor.wysiwyg"/>
     </xpath>
 </template>
 

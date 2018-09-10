@@ -4,6 +4,7 @@ odoo.define('web_editor.wysiwyg.multizone.translate', function (require) {
 var core = require('web.core');
 var Dialog = require('wysiwyg.widgets.Dialog');
 var WysiwygMultizone = require('web_editor.wysiwyg.multizone');
+var Wysiwyg = require('web_editor.wysiwyg');
 
 var _t = core._t;
 
@@ -255,6 +256,19 @@ var WysiwygTranslate = WysiwygMultizone.extend({
         });
     },
 });
+
+//--------------------------------------------------------------------------
+// Public helper
+//--------------------------------------------------------------------------
+
+/**
+ * Load wysiwyg assets if needed
+ *
+ * @see Wysiwyg.createReadyFunction
+ * @param {Widget} parent
+ * @returns {$.Promise}
+*/
+Wysiwyg.createReadyFunction(WysiwygTranslate);
 
 return WysiwygTranslate;
 });

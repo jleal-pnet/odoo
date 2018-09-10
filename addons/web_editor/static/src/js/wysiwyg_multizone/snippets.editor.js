@@ -593,7 +593,7 @@ var SnippetsMenu = Widget.extend({
             $(ev.target).selectContent();
         });
         $document.on('keyup.snippets_menu', function () {
-            var range = Wysiwyg.getRange();
+            var range = Wysiwyg.getRange(this);
             $(range && range.sc).closest('.o_default_snippet_text').removeClass('o_default_snippet_text');
         });
 
