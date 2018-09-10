@@ -44,7 +44,7 @@ var Menu = Widget.extend({
     start: function () {
         var self = this;
 
-        this.$menu_toggle = this.$('.o_menu_toggle');
+        this.$menu_apps = this.$('.o_menu_apps');
         this.$menu_brand_placeholder = this.$('.o_menu_brand');
         this.$section_placeholder = this.$('.o_menu_sections');
 
@@ -65,7 +65,7 @@ var Menu = Widget.extend({
 
         // Apps Menu
         this._appsMenu = new AppsMenu(self, this.menu_data);
-        this._appsMenu.appendTo(this.$('.o_menu_apps'));
+        this._appsMenu.appendTo(this.$menu_apps);
 
         // Systray Menu
         this.systray_menu = new SystrayMenu(this);
@@ -73,9 +73,9 @@ var Menu = Widget.extend({
 
         dom.initAutoMoreMenu(this.$section_placeholder, {
             maxWidth: function () {
-                return self.$el.width() - (self.$menu_toggle.outerWidth(true) + self.$menu_brand_placeholder.outerWidth(true) + self.systray_menu.$el.outerWidth(true));
+                return self.$el.width() - (self.$menu_apps.outerWidth(true) + self.$menu_brand_placeholder.outerWidth(true) + self.systray_menu.$el.outerWidth(true));
             },
-            sizeClass: 'MD',
+            sizeClass: 'SM',
         });
 
         return this._super.apply(this, arguments);

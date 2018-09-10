@@ -9,6 +9,34 @@ html {
         display: flex;
         flex-flow: column nowrap;
 
+        > .o_main {
+            flex: 1 1 auto;
+            display: flex;
+            min-height: 0; // Allow flex to shrink this element as much as it wants
+            height: 100%;
+
+            .o_main_content {
+                flex: 1 1 auto;
+                display: flex;
+                flex-flow: column nowrap;
+
+                .o_control_panel {
+                    flex: 0 0 auto;
+                }
+                .o_content {
+                    flex: 1 1 auto;
+                    height: 100%;
+                    overflow: auto;
+                    position: relative;
+
+                    > .o_view_controller {
+                        @include o-position-absolute(0, 0, 0, 0);  // Get the 100% height of its flex parent
+                        height: 100%;
+                    }
+                }
+            }
+        }
+
         &.o_fullscreen {
             .o_main_navbar {
                 display: none;

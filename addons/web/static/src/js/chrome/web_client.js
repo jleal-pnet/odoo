@@ -2,7 +2,6 @@ odoo.define('web.WebClient', function (require) {
 "use strict";
 
 var AbstractWebClient = require('web.AbstractWebClient');
-var ActionManager = require('web.ActionManager');
 var config = require('web.config');
 var core = require('web.core');
 var data_manager = require('web.data_manager');
