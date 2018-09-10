@@ -2,6 +2,7 @@
 
 from odoo import api, fields, models, _
 from odoo.tools import float_compare, float_is_zero
+from odoo.exceptions import UserError
 
 
 class AccountReconcileModel(models.Model):
@@ -12,14 +13,13 @@ class AccountReconcileModel(models.Model):
     # Base fields.
     name = fields.Char(string='Name', required=True)
     sequence = fields.Integer(required=True, default=10)
-    has_second_line = fields.Boolean(string='Add a second line', default=False)
     company_id = fields.Many2one('res.company', string='Company', required=True, default=lambda self: self.env.user.company_id)
 
-    type = fields.Selection(selection=[
-        ('manual', _('Create manually journal items on clicked button.')),
-        ('write_off', _('Suggest an automatic write-off.')),
-        ('invoices', _('Suggest a matching with existing invoices/bills.'))
-    ], string='Type', default='manual', required=True)
+    rule_type = fields.Selection(selection=[
+        ('writeoff_button', _('Create manually journal items on clicked button.')),
+        ('writeoff_suggestion', _('Suggest an automatic write-off.')),
+        ('invoice_matching', _('Suggest a matching with existing invoices/bills.'))
+    ], string='Type', default='writeoff_button', required=True)
     auto_reconcile = fields.Boolean(string='Reconcile Automatically',
         help='Reconcile the statement line with propositions automatically.')
 
@@ -27,7 +27,7 @@ class AccountReconcileModel(models.Model):
     match_journal_ids = fields.Many2many('account.journal', string='Journals',
         domain="[('type', '=', 'bank')]",
         help='Restrict model to some journals.')
-    nature = fields.Selection(selection=[
+    match_nature = fields.Selection(selection=[
         ('amount_received', 'Amount Received'),
         ('amount_paid', 'Amount Paid'),
         ('both', 'Amount Paid/Received')
@@ -41,8 +41,8 @@ class AccountReconcileModel(models.Model):
         ('between', 'Is Between'),
     ], string='Line Amount',
         help='Restrict to statement line amount being lower than, greater than or between specified amount(s).')
-    match_amount_param = fields.Float(string='Amount Parameter')
-    match_amount_second_param = fields.Float(string='Amount Second Parameter')
+    match_amount_min = fields.Float(string='Amount Min Parameter')
+    match_amount_max = fields.Float(string='Amount Max Parameter')
     match_label = fields.Selection(selection=[
         ('contains', 'Contains'),
         ('not_contains', 'Not Contains'),
@@ -58,7 +58,7 @@ class AccountReconcileModel(models.Model):
         help='The sum of total residual amount propositions matches the statement line amount.')
     match_total_amount_param = fields.Float(string='Amount Matching %', default=100,
         help='The sum of total residual amount propositions matches the statement line amount under this percentage.')
-    partner_is_set = fields.Boolean(string='Partner Is Set', help='Apply only when partner statement line is set.')
+    match_partner = fields.Boolean(string='Partner Matching', help='Apply only when partner statement line is set.')
     match_partner_ids = fields.Many2many('res.partner', string='Partners',
         help='Restrict to some statement line partners.')
     match_partner_category_ids = fields.Many2many('res.partner.category', string='Partner Categories',
@@ -85,6 +85,7 @@ class AccountReconcileModel(models.Model):
     analytic_tag_ids = fields.Many2many('account.analytic.tag', string='Analytic Tags')
 
     # Second part fields.
+    has_second_line = fields.Boolean(string='Add a second line', default=False)
     second_account_id = fields.Many2one('account.account', string='Second Account', ondelete='cascade', domain=[('deprecated', '=', False)])
     second_journal_id = fields.Many2one('account.journal', string='Second Journal', ondelete='cascade', help="This field is ignored in a bank statement reconciliation.")
     second_label = fields.Char(string='Second Journal Item Label')
@@ -149,6 +150,7 @@ class AccountReconcileModel(models.Model):
         '''
         balance = base_line_dict['debit'] - base_line_dict['credit']
         currency = base_line_dict.get('currency_id') and self.env['res.currency'].browse(base_line_dict['currency_id'])
+
         res = tax.compute_all(balance, currency=currency)
 
         new_aml_dicts = []
@@ -163,8 +165,12 @@ class AccountReconcileModel(models.Model):
                 'credit': tax_res['amount'] < 0 and -tax_res['amount'] or 0,
                 'analytic_account_id': tax.analytic and base_line_dict['analytic_account_id'],
                 'analytic_tag_ids': tax.analytic and base_line_dict['analytic_tag_ids'],
-                'tax_exigible': tax.tax_exigibility == 'on_invoice',
+                'tax_exigible': tax.tax_exigibility == 'on_payment',
             })
+
+            # Handle price included taxes.
+            base_line_dict['debit'] = tax_res['base'] > 0 and tax_res['base'] or base_line_dict['debit']
+            base_line_dict['credit'] = tax_res['base'] < 0 and -tax_res['base'] or base_line_dict['credit']
         return new_aml_dicts
 
     @api.multi
@@ -184,7 +190,7 @@ class AccountReconcileModel(models.Model):
         if not self.account_id or float_is_zero(balance, precision_rounding=line_currency.rounding) or balance < 0:
             return []
 
-        line_balance = self.amount_type == 'percent' and balance * (self.amount / 100.0) or self.amount
+        line_balance = self.amount_type == 'percentage' and balance * (self.amount / 100.0) or self.amount
 
         new_aml_dicts = []
 
@@ -201,10 +207,10 @@ class AccountReconcileModel(models.Model):
 
         if self.tax_id:
             writeoff_line['tax_ids'] = [(6, None, [self.tax_id.id])]
-            self_ctx = self
+            tax = self.tax_id
             if self.force_tax_included:
-                self_ctx = self_ctx.with_context(force_price_include=True)
-            new_aml_dicts += self_ctx._get_taxes_move_lines_dict(self.tax_id, writeoff_line)
+                tax = tax.with_context(force_price_include=True)
+            new_aml_dicts += self._get_taxes_move_lines_dict(tax, writeoff_line)
 
         # Second write-off line.
         if self.has_second_line and self.second_account_id:
@@ -221,10 +227,10 @@ class AccountReconcileModel(models.Model):
 
             if self.second_tax_id:
                 second_writeoff_line['tax_ids'] = [(6, None, [self.second_tax_id.id])]
-                self_ctx = self
+                tax = self.second_tax_id
                 if self.force_second_tax_included:
-                    self_ctx = self_ctx.with_context(force_price_include=True)
-                new_aml_dicts += self_ctx._get_taxes_move_lines_dict(self.second_tax_id, second_writeoff_line)
+                    tax = tax.with_context(force_price_include=True)
+                new_aml_dicts += self._get_taxes_move_lines_dict(tax, second_writeoff_line)
 
         return new_aml_dicts
 
@@ -286,348 +292,261 @@ class AccountReconcileModel(models.Model):
     # RECONCILIATION CRITERIA
     ####################################################
 
-    @api.model
-    def _get_base_write_off_type_reconciliation_query(self, st_lines, partner_map=None):
-        ''' Get base query for models having type == 'write_off'.
-        :param st_lines:        Account.bank.statement.lines recordset.
-        :param partner_map:     Dict mapping each line with new partner eventually.
-        :return:                (query, params)
-        '''
-        # Compute partners values table.
-        partners_list = []
-        for line in st_lines:
-            partner_id = partner_map and partner_map.get(line.id) or line.partner_id.id or 0
-            partners_list.append('(%d, %d)' % (line.id, partner_id))
-        partners_table = '(VALUES %s) AS line_partner (line_id, partner_id)' % ','.join(partners_list)
-
-        params = [tuple(st_lines.ids)]
-
-        query = '''
-            SELECT
-                st_line.id                          AS id
-            FROM account_bank_statement_line st_line
-            LEFT JOIN account_journal journal       ON journal.id = st_line.journal_id
-            LEFT JOIN res_company company           ON company.id = st_line.company_id
-            LEFT JOIN ''' + partners_table + '''    ON line_partner.line_id = st_line.id
-            WHERE st_line.id IN %s
-        '''
-        return query, params
-
-    @api.model
-    def _get_base_invoices_type_reconciliation_query(self, st_lines, excluded_ids=None, partner_map=None):
-        ''' Get base query for models having type == 'invoices'.
+    @api.multi
+    def _get_rule_query(self, st_lines, excluded_ids=None, partner_map=None):
+        ''' Get query applying rules.
         :param st_lines:        Account.bank.statement.lines recordset.
         :param excluded_ids:    Account.move.lines to exclude.
         :param partner_map:     Dict mapping each line with new partner eventually.
         :return:                (query, params)
         '''
-        query, params = self._get_base_write_off_type_reconciliation_query(st_lines, partner_map=partner_map)
+        if any(m.rule_type == 'writeoff_button' for m in self):
+            raise UserError('Programmation Error: Can\'t apply reconciliation rule on "writeoff_button" type!')
+        if any(m.rule_type != self[0].rule_type for m in self):
+            raise UserError('Programmation Error: Can\'t mix reconciliation rule types!')
 
-        # Adapt the select.
-        query = query.replace(
-            'FROM',
+        queries = []
+        all_params = []
+        for rule in self:
+
+            # ==== Common part 'writeoff_suggestion'/'invoice_matching' ====
+
+            # Compute partners values table.
+            # This is required since some statement line's partners could be shadowed in the reconciliation widget.
+            partners_list = []
+            for line in st_lines:
+                partner_id = partner_map and partner_map.get(line.id) or line.partner_id.id or 0
+                partners_list.append('(%d, %d)' % (line.id, partner_id))
+            partners_table = '(VALUES %s) AS line_partner (line_id, partner_id)' % ','.join(partners_list)
+
+            query = '''
+                SELECT
+                    %s                                  AS sequence,
+                    %s                                  AS model_id,
+                    st_line.id                          AS id
+                FROM account_bank_statement_line st_line
+                LEFT JOIN account_journal journal       ON journal.id = st_line.journal_id
+                LEFT JOIN res_company company           ON company.id = st_line.company_id
+                LEFT JOIN ''' + partners_table + '''    ON line_partner.line_id = st_line.id
+                WHERE st_line.id IN %s
             '''
-            ,aml.id                              AS aml_id,
-            aml.currency_id                     AS aml_currency_id,
-            aml.amount_residual                 AS aml_amount_residual,
-            aml.amount_residual_currency        AS aml_amount_residual_currency
-            FROM
-            '''
-        )
+            params = [rule.sequence, rule.id, tuple(st_lines.ids)]
 
-        # Join the account_move_line table.
-        query = query.replace(
-            'WHERE',
-            '''
-            , account_move_line aml
-            LEFT JOIN account_move move             ON move.id = aml.move_id
-            LEFT JOIN res_company aml_company       ON aml_company.id = aml.company_id
-            LEFT JOIN account_account aml_account   ON aml_account.id = aml.account_id
-            WHERE
-            '''
-        )
+            # Filter on journals.
+            if rule.match_journal_ids:
+                query += ' AND st_line.journal_id IN %s'
+                params += [tuple(rule.match_journal_ids.ids)]
 
-        # Add where clauses on account.move.line.
-        # N.B: The first part of the CASE is about 'blue lines' while the second part is about 'black lines'.
-        query += '''
-            AND aml.company_id = st_line.company_id
-            AND aml.statement_id IS NULL
-            AND move.state = 'posted'
-            AND (
-                line_partner.partner_id = 0
-                OR
-                aml.partner_id = line_partner.partner_id
-            )
+            # Filter on amount nature.
+            if rule.match_nature == 'amount_received':
+                query += ' AND st_line.amount >= 0.0'
+            elif rule.match_nature == 'amount_paid':
+                query += ' AND st_line.amount <= 0.0'
 
-            AND (
-                company.account_bank_reconciliation_start IS NULL
-                OR
-                aml.date > company.account_bank_reconciliation_start
-            )
+            # Filter on amount.
+            if rule.match_amount:
+                # Join the res_currency table to get the decimal places.
+                query = query.replace(
+                    'ON line_partner.line_id = st_line.id',
+                    '''
+                    ON line_partner.line_id = st_line.id
+                    LEFT JOIN res_currency currency             ON currency.id = st_line.currency_id
+                    LEFT JOIN res_currency jnl_currency         ON jnl_currency.id = journal.currency_id
+                    LEFT JOIN res_currency comp_currency        ON comp_currency.id = company.currency_id
+                    '''
+                )
 
-            AND CASE WHEN journal.default_credit_account_id IS NOT NULL
-                AND journal.default_debit_account_id IS NOT NULL
-                THEN
-                    (
-                        aml.account_id IN (journal.default_credit_account_id, journal.default_debit_account_id)
-                        AND aml.payment_id IS NOT NULL
+                common_clause = '''
+                    AND (
+                        (
+                            st_line.currency_id IS NOT NULL
+                            AND
+                            (
+                                (st_line.amount >= 0 AND ROUND(st_line.amount, currency.decimal_places) %s)
+                                OR
+                                (st_line.amount < 0 AND ROUND(-st_line.amount, currency.decimal_places) %s)
+                            )
+                        )
+                        OR
+                        (
+                            journal.currency_id IS NOT NULL
+                            AND
+                            (
+                                (st_line.amount >= 0 AND ROUND(st_line.amount, jnl_currency.decimal_places) %s)
+                                OR
+                                (st_line.amount < 0 AND ROUND(-st_line.amount, jnl_currency.decimal_places) %s)
+                            )
+                        )
+                        OR
+                        (st_line.amount >= 0 AND ROUND(st_line.amount, comp_currency.decimal_places) %s)
+                        OR
+                        (st_line.amount < 0 AND ROUND(-st_line.amount, comp_currency.decimal_places) %s)
                     )
-                    OR
-                    (
-                        aml_account.reconcile IS TRUE
-                        AND aml.reconciled IS FALSE
-                    )
-                END
-        '''
-        if excluded_ids:
-            query += 'AND aml.id NOT IN %s'
-            params.append(tuple(excluded_ids))
-        return query, params
+                '''
 
-    @api.multi
-    def _apply_match_invoices_criterion(self, query, params):
-        ''' Apply filter to match invoices.
-        :param query:   The current query to be applied on this model.
-        :param params:  The query parameters.
-        :return:        (query, params)
-        '''
-        self.ensure_one()
+                if rule.match_amount == 'lower':
+                    common_clause_operator = '<= %s'
+                    common_clause_operator_param = [self.match_amount_min]
+                elif rule.match_amount == 'greater':
+                    common_clause_operator = '>= %s'
+                    common_clause_operator_param = [self.match_amount_min]
+                else:
+                    # if self.match_amount == 'between'
+                    common_clause_operator = 'IS BETWEEN %s AND %s'
+                    common_clause_operator_param = [rule.match_amount_min, rule.match_amount_max]
 
-        # Update select for communication.
-        query = query.replace(
-            'FROM',
-            '''
-                , CASE WHEN  
-                    REGEXP_REPLACE(st_line.name, '[^0-9]', '', 'g') ~ REGEXP_REPLACE(invoice.number, '[^0-9]', '', 'g')
-                    OR (
-                        invoice.reference IS NOT NULL
-                        AND
-                        REGEXP_REPLACE(st_line.name, '[^0-9]', '', 'g') ~ REGEXP_REPLACE(invoice.reference, '[^0-9]', '', 'g')
-                    )
-                THEN TRUE ELSE FALSE END AS communication_flag                    
-                FROM
-            '''
-        )
+                common_clause %= tuple([common_clause_operator] * 6)
+                query += common_clause
+                params += common_clause_operator_param * 6
 
-        # Join the account_invoice table.
-        query = query.replace(
-            'WHERE',
-            '''
-            LEFT JOIN account_invoice invoice ON invoice.move_name = move.name
-            WHERE
-            '''
-        )
+            # Filter on label.
+            if rule.match_label == 'contains':
+                query += ' AND st_line.name ILIKE %s'
+                params += ['%%%s%%' % rule.match_label_param]
+            elif rule.match_label == 'not_contains':
+                query += ' AND st_line.name NOT ILIKE %s'
+                params += ['%%%s%%' % rule.match_label_param]
+            elif rule.match_label == 'match_regex':
+                query += ' AND st_line.name ~ %s'
+                params += [rule.match_label_param]
 
-        # Add where clause.
-        query += '''
-            AND invoice.state = 'open'
-            AND CASE WHEN st_line.amount >= 0.0 THEN
-                    invoice.type IN ('out_invoice', 'in_refund')
-                ELSE
-                    invoice.type IN ('in_invoice', 'out_refund')
-                END
-            AND CASE WHEN line_partner.partner_id != 0 THEN
-                    invoice.partner_id = line_partner.partner_id
-                ELSE
-                    (
+            # Filter on partners.
+            if rule.match_partner:
+                query +=' AND line_partner.partner_id != 0'
+
+                if rule.match_partner_ids:
+                    query += ' AND line_partner.partner_id IN %s'
+                    params += [tuple(rule.match_partner_ids.ids)]
+
+                if rule.match_partner_category_ids:
+                    query += ''' 
+                        AND line_partner.partner_id IN (
+                            SELECT categ.partner_id FROM res_partner_res_partner_category_rel categ WHERE categ.category_id IN %s
+                        )
+                    '''
+                    params += [tuple(rule.match_partner_category_ids.ids)]
+
+            # ==== Specific part for 'invoice_matching' ====
+
+            if rule.rule_type == 'invoice_matching':
+
+                # Adapt the SELECT to the account_move_line table.
+                # N.B: 'communication_flag' is there to distinct invoice matching through the number/reference
+                # (higher priority) from invoice matching using the partner (lower priority).
+                query = query.replace(
+                    'FROM',
+                    '''
+                    ,aml.id                             AS aml_id,
+                    aml.currency_id                     AS aml_currency_id,
+                    aml.amount_residual                 AS aml_amount_residual,
+                    aml.amount_residual_currency        AS aml_amount_residual_currency,
+                    CASE WHEN  
                         REGEXP_REPLACE(st_line.name, '[^0-9]', '', 'g') ~ REGEXP_REPLACE(invoice.number, '[^0-9]', '', 'g')
                         OR (
                             invoice.reference IS NOT NULL
                             AND
                             REGEXP_REPLACE(st_line.name, '[^0-9]', '', 'g') ~ REGEXP_REPLACE(invoice.reference, '[^0-9]', '', 'g')
                         )
-                    )
-                END
-        '''
-        return query, params
-
-    @api.multi
-    def _apply_journal_ids_criterion(self, query, params):
-        ''' Apply filter for the 'match_journal_ids' field.
-        :param query:   The current query to be applied on this model.
-        :param params:  The query parameters.
-        :return:        (query, params)
-        '''
-        self.ensure_one()
-
-        if not self.match_journal_ids:
-            return query, params
-
-        return query + ' AND st_line.journal_id IN %s', params + [tuple(self.match_journal_ids.ids)]
-
-    @api.multi
-    def _apply_nature_criterion(self, query, params):
-        ''' Apply filter for the 'nature' field.
-        :param query:   The current query to be applied on this model.
-        :param params:  The query parameters.
-        :return:        (query, params)
-        '''
-        self.ensure_one()
-
-        if self.nature == 'amount_received':
-            return query + ' AND st_line.amount >= 0.0', params
-        if self.nature == 'amount_paid':
-            return query + ' AND st_line.amount <= 0.0', params
-        return query, params
-
-    @api.multi
-    def _apply_line_amount_criterion(self, query, params):
-        ''' Apply filter for the 'match_amount'/'match_amount_param'/'match_amount_second_param' fields.
-        :param query:   The current query to be applied on this model.
-        :param params:  The query parameters.
-        :return:        (query, params)
-        '''
-        self.ensure_one()
-
-        if not self.match_amount:
-            return query, params
-
-        # Join the res_currency table to get the decimal places.
-        query = query.replace(
-            'ON line_partner.line_id = st_line.id',
-            '''
-            ON line_partner.line_id = st_line.id
-            LEFT JOIN res_currency currency             ON currency.id = st_line.currency_id
-            LEFT JOIN res_currency jnl_currency         ON jnl_currency.id = journal.currency_id
-            LEFT JOIN res_currency comp_currency        ON comp_currency.id = company.currency_id
-            '''
-        )
-
-        common_clause = '''
-            AND (
-                (
-                    st_line.currency_id IS NOT NULL
-                    AND
-                    (
-                        (st_line.amount >= 0 AND ROUND(st_line.amount, currency.decimal_places) %s)
-                        OR
-                        (st_line.amount < 0 AND ROUND(-st_line.amount, currency.decimal_places) %s)
-                    )
+                    THEN TRUE ELSE FALSE END            AS communication_flag
+                    FROM
+                    '''
                 )
-                OR
-                (
-                    journal.currency_id IS NOT NULL
-                    AND
-                    (
-                        (st_line.amount >= 0 AND ROUND(st_line.amount, jnl_currency.decimal_places) %s)
-                        OR
-                        (st_line.amount < 0 AND ROUND(-st_line.amount, jnl_currency.decimal_places) %s)
-                    )
+
+                # Adapt the FROM to join the account_move_line table.
+                query = query.replace(
+                    'WHERE',
+                    '''
+                    , account_move_line aml
+                    LEFT JOIN account_move move             ON move.id = aml.move_id
+                    LEFT JOIN res_company aml_company       ON aml_company.id = aml.company_id
+                    LEFT JOIN account_account aml_account   ON aml_account.id = aml.account_id
+                    LEFT JOIN account_invoice invoice       ON invoice.move_name = move.name
+                    WHERE
+                    '''
                 )
-                OR
-                (st_line.amount >= 0 AND ROUND(st_line.amount, comp_currency.decimal_places) %s)
-                OR
-                (st_line.amount < 0 AND ROUND(-st_line.amount, comp_currency.decimal_places) %s)
-            )
-        '''
 
-        if self.match_amount == 'lower':
-            common_clause_operator = '<= %s'
-            common_clause_operator_param = [self.match_amount_param]
-        elif self.match_amount == 'greater':
-            common_clause_operator = '>= %s'
-            common_clause_operator_param = [self.match_amount_param]
-        else:
-            # if self.match_amount == 'between'
-            common_clause_operator = 'IS BETWEEN %s AND %s'
-            common_clause_operator_param = [self.match_amount_param, self.match_amount_second_param]
+                # Add where clauses on account.move.line/account.invoice.
+                # N.B: In the first CASE, the first part is about 'blue lines' while the second part is about 'black lines'.
+                # N.B: In the third CASE, the communication matching is done by striping all non-digits characters and making
+                # regex matching with the account_invoice table.
+                query += '''
+                    AND aml.company_id = st_line.company_id
+                    AND aml.statement_id IS NULL
+                    AND move.state = 'posted'
+                    AND invoice.state = 'open'
+                    AND (
+                        line_partner.partner_id = 0
+                        OR
+                        aml.partner_id = line_partner.partner_id
+                    )
+        
+                    AND (
+                        company.account_bank_reconciliation_start IS NULL
+                        OR
+                        aml.date > company.account_bank_reconciliation_start
+                    )
+        
+                    AND CASE WHEN journal.default_credit_account_id IS NOT NULL
+                        AND journal.default_debit_account_id IS NOT NULL
+                        THEN
+                            (
+                                aml.account_id IN (journal.default_credit_account_id, journal.default_debit_account_id)
+                                AND aml.payment_id IS NOT NULL
+                            )
+                            OR
+                            (
+                                aml_account.reconcile IS TRUE
+                                AND aml.reconciled IS FALSE
+                            )
+                        END
+                        
+                    AND CASE WHEN st_line.amount >= 0.0 THEN
+                            invoice.type IN ('out_invoice', 'in_refund')
+                        ELSE
+                            invoice.type IN ('in_invoice', 'out_refund')
+                        END
+                    
+                    AND CASE WHEN line_partner.partner_id != 0 THEN
+                            invoice.partner_id = line_partner.partner_id
+                        ELSE
+                            (
+                                REGEXP_REPLACE(st_line.name, '[^0-9]', '', 'g') ~ REGEXP_REPLACE(invoice.number, '[^0-9]', '', 'g')
+                                OR (
+                                    invoice.reference IS NOT NULL
+                                    AND
+                                    REGEXP_REPLACE(st_line.name, '[^0-9]', '', 'g') ~ REGEXP_REPLACE(invoice.reference, '[^0-9]', '', 'g')
+                                )
+                            )
+                    END
+                '''
 
-        common_clause %= tuple([common_clause_operator] * 6)
-        return query + common_clause, params + (common_clause_operator_param * 6)
+                # Filter on the same currency.
+                if rule.match_same_currency:
+                    query += '''
+                        AND (
+                            CASE WHEN st_line.currency_id IS NOT NULL AND st_line.currency_id != aml_company.currency_id THEN
+                                aml.currency_id = st_line.currency_id
+                            WHEN journal.currency_id IS NOT NULL AND journal.currency_id != aml_company.currency_id THEN
+                                aml.currency_id = journal.currency_id
+                            ELSE
+                                aml.currency_id IS NULL
+                            END
+                        )
+                    '''
 
-    @api.multi
-    def _apply_line_label_criterion(self, query, params):
-        ''' Apply filter for the 'match_label'/'match_label_param' fields.
-        :param query:   The current query to be applied on this model.
-        :param params:  The query parameters.
-        :return:        (query, params)
-        '''
-        self.ensure_one()
+                # Filter out excluded account.move.line.
+                if excluded_ids:
+                    query += 'AND aml.id NOT IN %s'
+                    params += [tuple(excluded_ids)]
 
-        if self.match_label == 'contains':
-            return query + ' AND st_line.name ILIKE %s', params + ['%%%s%%' % self.match_label_param]
-        if self.match_label == 'not_contains':
-            return query + ' AND st_line.name NOT ILIKE %s', params + ['%%%s%%' % self.match_label_param]
-        if self.match_label == 'match_regex':
-            return query + ' AND st_line.name ~ %s', params + [self.match_label_param]
-        return query, params
-
-    @api.multi
-    def _apply_partner_is_set_criterion(self, query, params):
-        ''' Apply filter for the 'partner_is_set' field.
-        :param query:   The current query to be applied on this model.
-        :param params:  The query parameters.
-        :return:        (query, params)
-        '''
-        self.ensure_one()
-
-        if not self.partner_is_set:
-            return query, params
-
-        return query + ' AND line_partner.partner_id != 0', params
-
-    @api.multi
-    def _apply_partner_ids_criterion(self, query, params):
-        ''' Apply filter for the match_partner_ids field.
-        :param query:   The current query to be applied on this model.
-        :param params:  The query parameters.
-        :return:        (query, params)
-        '''
-        self.ensure_one()
-
-        if not self.partner_is_set or not self.match_partner_ids:
-            return query, params
-
-        return query + ' AND line_partner.partner_id IN %s', params + [tuple(self.match_partner_ids.ids)]
-
-    @api.multi
-    def _apply_partner_category_ids_criterion(self, query, params):
-        ''' Apply filter for the 'match_partner_category_ids' field.
-        :param query:   The current query to be applied on this model.
-        :param params:  The query parameters.
-        :return:        (query, params)
-        '''
-        self.ensure_one()
-
-        if not self.partner_is_set or not self.match_partner_category_ids:
-            return query, params
-
-        query += ''' 
-            AND line_partner.partner_id IN (
-                SELECT categ.partner_id FROM res_partner_res_partner_category_rel categ WHERE categ.category_id IN %s
-            )
-        '''
-        return query, params + [tuple(self.match_partner_category_ids.ids)]
+            queries.append(query)
+            all_params += params
+        return ' UNION ALL '.join(queries), all_params
 
     @api.multi
-    def _apply_same_currency_criterion(self, query, params):
-        ''' Apply filter for the 'match_same_currency' field.
-        :param query:   The current query to be applied on this model.
-        :param params:  The query parameters.
-        :return:        (query, params)
-        '''
-        self.ensure_one()
-
-        if not self.match_same_currency:
-            return query, params
-
-        query += '''
-            AND (
-                CASE WHEN st_line.currency_id IS NOT NULL AND st_line.currency_id != aml_company.currency_id THEN
-                    aml.currency_id = st_line.currency_id
-                WHEN journal.currency_id IS NOT NULL AND journal.currency_id != aml_company.currency_id THEN
-                    aml.currency_id = journal.currency_id
-                ELSE
-                    aml.currency_id IS NULL
-                END
-            )
-        '''
-        return query, params
-
-    @api.multi
-    def _check_invoices_type_propositions(self, statement_line, candidates):
+    def _check_rule_propositions(self, statement_line, candidates):
         ''' Check restrictions that can't be handled for each move.line separately.
-        /!\ Only used by models having a type equals to 'invoices'.
+        /!\ Only used by models having a type equals to 'invoice_matching'.
         :param statement_line:  An account.bank.statement.line record.
         :param candidates:      Fetched account.move.lines from query (dict).
         :return:                True if the reconciliation propositions are accepted. False otherwise.
@@ -654,78 +573,8 @@ class AccountReconcileModel(models.Model):
         return amount_percentage >= self.match_total_amount_param
 
     @api.multi
-    def _get_invoices_type_reconciliation_query(self, st_lines, excluded_ids=None, partner_map=None):
-        '''
-        /!\ Must be called only on reconciliation models having type == 'invoices'.
-        :param st_lines:        Account.bank.statement.lines recordset.
-        :param excluded_ids:    Account.move.lines to exclude.
-        :param partner_map:     Dict mapping each line with new partner eventually.
-        :return:                (query, params)
-        '''
-        # Default query/params.
-        base_query, base_params = self._get_base_invoices_type_reconciliation_query(st_lines, excluded_ids=excluded_ids, partner_map=partner_map)
-
-        # Aggregated query/params.
-        queries = []
-        params = []
-
-        for record in self:
-            # Record query/params.
-            record_query = base_query.replace('SELECT', 'SELECT %s AS sequence, %s AS model_id,')
-            record_params = [record.sequence, record.id] + base_params
-
-            record_query, record_params = record._apply_match_invoices_criterion(record_query, record_params)
-            record_query, record_params = record._apply_journal_ids_criterion(record_query, record_params)
-            record_query, record_params = record._apply_nature_criterion(record_query, record_params)
-            record_query, record_params = record._apply_line_amount_criterion(record_query, record_params)
-            record_query, record_params = record._apply_line_label_criterion(record_query, record_params)
-            record_query, record_params = record._apply_partner_is_set_criterion(record_query, record_params)
-            record_query, record_params = record._apply_partner_ids_criterion(record_query, record_params)
-            record_query, record_params = record._apply_partner_category_ids_criterion(record_query, record_params)
-            record_query, record_params = record._apply_same_currency_criterion(record_query, record_params)
-
-            queries.append(record_query)
-            params += record_params
-
-        return ' UNION ALL '.join(queries), params
-
-    @api.multi
-    def _get_write_off_type_reconciliation_query(self, st_lines, excluded_ids=None, partner_map=None):
-        '''
-        /!\ Must be called only on reconciliation models having type == 'write_off'.
-        :param st_lines:        Account.bank.statement.lines recordset.
-        :param excluded_ids:    Account.move.lines to exclude.
-        :param partner_map:     Dict mapping each line with new partner eventually.
-        :return:                (query, params)
-        '''
-        # Default query/params.
-        base_query, base_params = self._get_base_write_off_type_reconciliation_query(st_lines, partner_map=partner_map)
-
-        # Aggregated query/params.
-        queries = []
-        params = []
-
-        for record in self:
-            # Record query/params.
-            record_query = base_query.replace('SELECT', 'SELECT %s AS sequence, %s AS model_id,')
-            record_params = [record.sequence, record.id] + base_params
-
-            record_query, record_params = record._apply_journal_ids_criterion(record_query, record_params)
-            record_query, record_params = record._apply_nature_criterion(record_query, record_params)
-            record_query, record_params = record._apply_line_amount_criterion(record_query, record_params)
-            record_query, record_params = record._apply_line_label_criterion(record_query, record_params)
-            record_query, record_params = record._apply_partner_is_set_criterion(record_query, record_params)
-            record_query, record_params = record._apply_partner_ids_criterion(record_query, record_params)
-            record_query, record_params = record._apply_partner_category_ids_criterion(record_query, record_params)
-
-            queries.append(record_query)
-            params += record_params
-
-        return ' UNION ALL '.join(queries), params
-
-    @api.multi
-    def _apply_reconciliation_model_rules(self, st_lines, excluded_ids=None, partner_map=None):
-        ''' Get the query to get candidates for all reconciliation models.
+    def _apply_criteria(self, st_lines, excluded_ids=None, partner_map=None):
+        ''' Apply criteria to get candidates for all reconciliation models.
         :param st_lines:        Account.bank.statement.lines recordset.
         :param excluded_ids:    Account.move.lines to exclude.
         :param partner_map:     Dict mapping each line with new partner eventually.
@@ -733,12 +582,12 @@ class AccountReconcileModel(models.Model):
             * aml_ids:      A list of account.move.line ids.
             * write_off:    A list of account.move.line dict corresponding to the write_off.
             * model:        An account.reconcile.model record (optional).
-            * status:       'reconciled' if the lines has been already reconciled, 'write_off' if the write_off must be
+            * status:       'reconciled' if the lines has been already reconciled, 'write_off' if the write-off must be
                             applied on the statement line.
         '''
-        available_models = self.filtered(lambda m: m.type != 'manual')
+        available_models = self.filtered(lambda m: m.rule_type != 'writeoff_button')
 
-        results = dict((r.id, {'aml_ids': [], 'write_off': []}) for r in st_lines)
+        results = dict((r.id, {'aml_ids': [], 'writeoff_suggestion': []}) for r in st_lines)
 
         if not available_models:
             return results
@@ -747,11 +596,11 @@ class AccountReconcileModel(models.Model):
 
         grouped_candidates = {}
 
-        # Type == 'invoices'.
+        # Type == 'invoice_matching'.
         # Map each (st_line.id, model_id) with matching amls.
-        invoices_models = ordered_models.filtered(lambda m: m.type == 'invoices')
+        invoices_models = ordered_models.filtered(lambda m: m.rule_type == 'invoice_matching')
         if invoices_models:
-            query, params = invoices_models._get_invoices_type_reconciliation_query(st_lines, excluded_ids=excluded_ids, partner_map=partner_map)
+            query, params = invoices_models._get_rule_query(st_lines, excluded_ids=excluded_ids, partner_map=partner_map)
             self._cr.execute(query, params)
             query_res = self._cr.dictfetchall()
 
@@ -760,11 +609,11 @@ class AccountReconcileModel(models.Model):
                 grouped_candidates[res['id']].setdefault(res['model_id'], [])
                 grouped_candidates[res['id']][res['model_id']].append(res)
 
-        # Type == 'write_off'.
+        # Type == 'writeoff_suggestion'.
         # Map each (st_line.id, model_id) with a flag indicating the st_line matches the criteria.
-        write_off_models = ordered_models.filtered(lambda m: m.type == 'write_off')
+        write_off_models = ordered_models.filtered(lambda m: m.rule_type == 'writeoff_suggestion')
         if write_off_models:
-            query, params = write_off_models._get_write_off_type_reconciliation_query(st_lines, partner_map=partner_map)
+            query, params = write_off_models._get_rule_query(st_lines, excluded_ids=excluded_ids, partner_map=partner_map)
             self._cr.execute(query, params)
             query_res = self._cr.dictfetchall()
 
@@ -786,7 +635,7 @@ class AccountReconcileModel(models.Model):
                     continue
 
                 process_auto_reconcile = model.auto_reconcile
-                if model.type == 'invoices':
+                if model.rule_type == 'invoice_matching':
                     candidates = grouped_candidates[line.id][model.id]
 
                     # If some invoices match on the communication, suggest them.
@@ -807,7 +656,7 @@ class AccountReconcileModel(models.Model):
                     available_candidates = available_candidates_with_com or available_candidates_wo_com
 
                     # Needed to handle check on total residual amounts.
-                    if model._check_invoices_type_propositions(line, available_candidates):
+                    if model._check_rule_propositions(line, available_candidates):
                         results[line.id]['model'] = model
 
                         # Add candidates to the result.
@@ -822,7 +671,7 @@ class AccountReconcileModel(models.Model):
 
                             results[line.id]['aml_ids'].append(candidate['aml_id'])
                             amls_ids_to_exclude.add(candidate['aml_id'])
-                elif model.type == 'write_off':
+                elif model.rule_type == 'writeoff_suggestion':
                     results[line.id]['model'] = model
                     results[line.id]['status'] = 'write_off'
 
@@ -839,7 +688,7 @@ class AccountReconcileModel(models.Model):
 
                     # An open balance is needed but no partner has been found.
                     if reconciliation_results['open_balance_dict'] is False:
-                        results[line.id]['write_off'] = reconciliation_results['new_aml_dicts']
+                        results[line.id]['writeoff_suggestion'] = reconciliation_results['new_aml_dicts']
                     else:
                         new_aml_dicts = reconciliation_results['new_aml_dicts']
                         if reconciliation_results['open_balance_dict']:

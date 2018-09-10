@@ -158,7 +158,7 @@
         <div class="btn-group o_reconcile_models" t-if="state.reconcileModels">
             <t t-foreach="state.reconcileModels" t-as="reconcileModel">
                 <button class="btn btn-primary"
-                        t-if="reconcileModel.type == 'manual'"
+                        t-if="reconcileModel.rule_type == 'writeoff_button'"
                         t-att-data-reconcile-model-id="reconcileModel.id">
                     <t t-esc="reconcileModel.name"/>
                 </button>

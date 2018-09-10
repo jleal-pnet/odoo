@@ -669,19 +669,19 @@ class AccountChartTemplate(models.Model):
                 'force_second_tax_included': account_reconcile_model.force_second_tax_included,
                 'second_amount': account_reconcile_model.second_amount,
                 'second_tax_id': account_reconcile_model.second_tax_id and tax_template_ref[account_reconcile_model.second_tax_id.id] or False,
-                'type': account_reconcile_model.type,
+                'rule_type': account_reconcile_model.rule_type,
                 'auto_reconcile': account_reconcile_model.auto_reconcile,
                 'match_journal_ids': [(6, None, account_reconcile_model.match_journal_ids.ids)],
-                'nature': account_reconcile_model.nature,
+                'match_nature': account_reconcile_model.match_nature,
                 'match_amount': account_reconcile_model.match_amount,
-                'match_amount_param': account_reconcile_model.match_amount_param,
-                'match_amount_second_param': account_reconcile_model.match_amount_second_param,
+                'match_amount_min': account_reconcile_model.match_amount_min,
+                'match_amount_max': account_reconcile_model.match_amount_max,
                 'match_label': account_reconcile_model.match_label,
                 'match_label_param': account_reconcile_model.match_label_param,
                 'match_same_currency': account_reconcile_model.match_same_currency,
                 'match_total_amount': account_reconcile_model.match_total_amount,
                 'match_total_amount_param': account_reconcile_model.match_total_amount_param,
-                'partner_is_set': account_reconcile_model.partner_is_set,
+                'match_partner': account_reconcile_model.match_partner,
                 'match_partner_ids': [(6, None, account_reconcile_model.match_partner_ids.ids)],
                 'match_partner_category_ids': [(6, None, account_reconcile_model.match_partner_category_ids.ids)],
             }
@@ -926,13 +926,12 @@ class AccountReconcileModelTemplate(models.Model):
     chart_template_id = fields.Many2one('account.chart.template', string='Chart Template', required=True)
     name = fields.Char(string='Button Label', required=True)
     sequence = fields.Integer(required=True, default=10)
-    has_second_line = fields.Boolean(string='Add a second line', default=False)
 
-    type = fields.Selection(selection=[
-        ('manual', _('Create manually journal items on clicked button.')),
-        ('write_off', _('Suggest an automatic write-off.')),
-        ('invoices', _('Suggest a matching with existing invoices/bills.'))
-    ], string='Type', default='manual', required=True)
+    rule_type = fields.Selection(selection=[
+        ('writeoff_button', _('Create manually journal items on clicked button.')),
+        ('writeoff_suggestion', _('Suggest an automatic write-off.')),
+        ('invoice_matching', _('Suggest a matching with existing invoices/bills.'))
+    ], string='Type', default='writeoff_button', required=True)
     auto_reconcile = fields.Boolean(string='Reconcile Automatically',
         help='Reconcile the statement line with propositions automatically.')
 
@@ -940,7 +939,7 @@ class AccountReconcileModelTemplate(models.Model):
     match_journal_ids = fields.Many2many('account.journal', string='Journals',
         domain="[('type', '=', 'bank')]",
         help='Restrict model to some journals.')
-    nature = fields.Selection(selection=[
+    match_nature = fields.Selection(selection=[
         ('amount_received', 'Amount Received'),
         ('amount_paid', 'Amount Paid'),
         ('both', 'Amount Paid/Received')
@@ -954,8 +953,8 @@ class AccountReconcileModelTemplate(models.Model):
         ('between', 'Is Between'),
     ], string='Line Amount',
         help='Restrict to statement line amount being lower than, greater than or between specified amount(s).')
-    match_amount_param = fields.Float(string='Amount Parameter')
-    match_amount_second_param = fields.Float(string='Amount Second Parameter')
+    match_amount_min = fields.Float(string='Amount Min Parameter')
+    match_amount_max = fields.Float(string='Amount Max Parameter')
     match_label = fields.Selection(selection=[
         ('contains', 'Contains'),
         ('not_contains', 'Not Contains'),
@@ -971,7 +970,7 @@ class AccountReconcileModelTemplate(models.Model):
         help='The sum of total residual amount propositions matches the statement line amount.')
     match_total_amount_param = fields.Float(string='Amount Matching %', default=100,
         help='The sum of total residual amount propositions matches the statement line amount under this percentage.')
-    partner_is_set = fields.Boolean(string='Partner Is Set', help='Apply only when partner statement line is set.')
+    match_partner = fields.Boolean(string='Partner Matching', help='Apply only when partner statement line is set.')
     match_partner_ids = fields.Many2many('res.partner', string='Partners',
         help='Restrict to some statement line partners.')
     match_partner_category_ids = fields.Many2many('res.partner.category', string='Partner Categories',
@@ -990,6 +989,7 @@ class AccountReconcileModelTemplate(models.Model):
     tax_id = fields.Many2one('account.tax.template', string='Tax', ondelete='restrict', domain=[('type_tax_use', '=', 'purchase')])
 
     # Second part fields.
+    has_second_line = fields.Boolean(string='Add a second line', default=False)
     second_account_id = fields.Many2one('account.account.template', string='Second Account', ondelete='cascade', domain=[('deprecated', '=', False)])
     second_label = fields.Char(string='Second Journal Item Label')
     second_amount_type = fields.Selection([
