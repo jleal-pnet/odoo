@@ -261,13 +261,15 @@ class Employee(models.Model):
                 self.env['res.partner.bank'].browse(account_id).partner_id = vals['address_home_id']
         if vals.get('user_id'):
             vals.update(self._sync_user(self.env['res.users'].browse(vals['user_id'])))
+        tools.image_resize_images(vals)
+        res = super(Employee, self).write(vals)
         if vals.get('department_id') or vals.get('user_id'):
+            department_id = vals['department_id'] if vals.get('department_id') else self[:1].department_id.id
             # When added to a department or changing user, subscribe to the channels auto-subscribed by department
             self.env['mail.channel'].sudo().search([
-                ('subscription_department_ids', 'in', vals['department_id'])
+                ('subscription_department_ids', 'in', department_id)
             ])._subscribe_users()
-        tools.image_resize_images(vals)
-        return super(Employee, self).write(vals)
+        return res
 
     @api.multi
     def unlink(self):
