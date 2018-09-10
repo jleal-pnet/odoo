@@ -69,7 +69,7 @@ class AccountAnalyticLine(models.Model):
 
     @api.model
     def create(self, values):
-        is_timesheet = self._default_get(['analytic_source'])['analytic_source'] == 'timesheet'
+        is_timesheet = self.default_get(['analytic_source'])['analytic_source'] == 'timesheet'
         if is_timesheet:
             # compute employee only for timesheet lines, makes no sense for other lines
             if not values.get('employee_id'):
@@ -87,7 +87,7 @@ class AccountAnalyticLine(models.Model):
 
     @api.multi
     def write(self, values):
-        is_timesheet = self._default_get(['analytic_source'])['analytic_source'] == 'timesheet'
+        is_timesheet = self.default_get(['analytic_source'])['analytic_source'] == 'timesheet'
         if is_timesheet:
             values = self._timesheet_preprocess(values)
         result = super(AccountAnalyticLine, self).write(values)
