@@ -282,10 +282,10 @@ class AccountMove(models.Model):
         return res
 
     @api.multi
-    def post(self, invoice=False):
+    def post(self, invoice=False, analytic_source=False):
         self._post_validate()
         for move in self:
-            move.line_ids.create_analytic_lines()
+            move.line_ids.create_analytic_lines(analytic_source=analytic_source)
             if move.name == '/':
                 new_name = False
                 journal = move.journal_id
@@ -1226,7 +1226,7 @@ class AccountMoveLine(models.Model):
         return self.analytic_tag_ids.filtered(lambda r: not r.active_analytic_distribution).ids
 
     @api.multi
-    def create_analytic_lines(self):
+    def create_analytic_lines(self, analytic_source=False):
         """ Create analytic items upon validation of an account.move.line having an analytic account or an analytic distribution.
         """
         for obj_line in self:
@@ -1235,11 +1235,11 @@ class AccountMoveLine(models.Model):
                     vals_line = obj_line._prepare_analytic_distribution_line(distribution)
                     self.env['account.analytic.line'].create(vals_line)
             if obj_line.analytic_account_id:
-                vals_line = obj_line._prepare_analytic_line()[0]
+                vals_line = obj_line._prepare_analytic_line(analytic_source=analytic_source)[0]
                 self.env['account.analytic.line'].create(vals_line)
 
     @api.one
-    def _prepare_analytic_line(self):
+    def _prepare_analytic_line(self, analytic_source=False):
         """ Prepare the values used to create() an account.analytic.line upon validation of an account.move.line having
             an analytic account. This method is intended to be extended in other modules.
         """
@@ -1260,6 +1260,7 @@ class AccountMoveLine(models.Model):
             'user_id': self.invoice_id.user_id.id or self._uid,
             'partner_id': self.partner_id.id,
             'company_id': self.analytic_account_id.company_id.id or self.env.user.company_id.id,
+            'analytic_source': analytic_source if analytic_source else 'account_move',
         }
 
     def _prepare_analytic_distribution_line(self, distribution):

@@ -16,6 +16,7 @@ class AccountAnalyticLine(models.Model):
     move_id = fields.Many2one('account.move.line', string='Journal Item', ondelete='cascade', index=True)
     code = fields.Char(size=8)
     ref = fields.Char(string='Ref.')
+    analytic_source = fields.Selection(selection_add=[('account_move', 'Account Moves')])
 
     @api.v8
     @api.onchange('product_id', 'product_uom_id', 'unit_amount', 'currency_id')

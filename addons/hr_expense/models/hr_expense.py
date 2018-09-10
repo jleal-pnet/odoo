@@ -396,7 +396,7 @@ class HrExpense(models.Model):
 
         # post the moves
         for move in move_group_by_sheet.values():
-            move.post()
+            move.post(analytic_source='expense')
 
         return move_group_by_sheet
 

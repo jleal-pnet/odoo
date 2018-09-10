@@ -173,6 +173,10 @@ class AccountAnalyticLine(models.Model):
     def _default_user(self):
         return self.env.context.get('user_id', self.env.user.id)
 
+    @api.model
+    def _default_analytic_source(self):
+        return 'manual'
+
     name = fields.Char('Description', required=True)
     date = fields.Date('Date', required=True, index=True, default=fields.Date.context_today)
     amount = fields.Monetary('Amount', required=True, default=0.0)
@@ -185,6 +189,10 @@ class AccountAnalyticLine(models.Model):
     company_id = fields.Many2one('res.company', string='Company', required=True, readonly=True, default=lambda self: self.env.user.company_id)
     currency_id = fields.Many2one(related="company_id.currency_id", string="Currency", readonly=True, store=True, compute_sudo=True)
     group_id = fields.Many2one('account.analytic.group', related='account_id.group_id', store=True, readonly=True, compute_sudo=True)
+    analytic_source = fields.Selection([
+        ('manual', 'Manual'),
+        ('automatic', 'Automatic')
+    ], string="Source", default=_default_analytic_source, index=True)
 
     @api.multi
     @api.constrains('company_id', 'account_id')

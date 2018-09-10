@@ -64,6 +64,8 @@ class TestReInvoice(TestCommonSaleTimesheetNoChart):
 
     def test_at_cost(self):
         """ Test vendor bill at cost for product based on ordered and delivered quantities. """
+        Timesheet = self.env['account.analytic.line'].with_context(default_analytic_source='timesheet')
+
         # create SO line and confirm SO (with only one line)
         sale_order_line1 = self.env['sale.order.line'].create({
             'name': self.product_ordered_cost.name,
@@ -102,7 +104,7 @@ class TestReInvoice(TestCommonSaleTimesheetNoChart):
         })
 
         # create invoice lines and validate it
-        invoice_lineA1 = self.env['account.invoice.line'].create({
+        invoice_lineA1 = Timesheet.create({
             'name': self.product_ordered_cost.name,
             'product_id': self.product_ordered_cost.id,
             'quantity': 3,
@@ -112,7 +114,7 @@ class TestReInvoice(TestCommonSaleTimesheetNoChart):
             'account_id': self.account_income.id,
             'invoice_id': self.invoiceA.id,
         })
-        invoice_lineA2 = self.env['account.invoice.line'].create({
+        invoice_lineA2 = Timesheet.create({
             'name': self.product_deliver_cost.name,
             'product_id': self.product_deliver_cost.id,
             'quantity': 3,
@@ -146,7 +148,7 @@ class TestReInvoice(TestCommonSaleTimesheetNoChart):
         self.assertEquals(sale_order_line4.qty_delivered_method, 'analytic', "Delivered quantity of 'expense' SO line should be computed by analytic amount")
 
         # create second invoice lines and validate it
-        invoice_lineB1 = self.env['account.invoice.line'].create({
+        invoice_lineB1 = Timesheet.create({
             'name': self.product_ordered_cost.name,
             'product_id': self.product_ordered_cost.id,
             'quantity': 2,
@@ -156,7 +158,7 @@ class TestReInvoice(TestCommonSaleTimesheetNoChart):
             'account_id': self.account_income.id,
             'invoice_id': self.invoiceB.id,
         })
-        invoice_lineB2 = self.env['account.invoice.line'].create({
+        invoice_lineB2 = Timesheet.create({
             'name': self.product_deliver_cost.name,
             'product_id': self.product_deliver_cost.id,
             'quantity': 2,
@@ -184,6 +186,7 @@ class TestReInvoice(TestCommonSaleTimesheetNoChart):
         """ Test invoicing vendor bill at sales price for products based on delivered and ordered quantities. Check no existing SO line is incremented, but when invoicing a
             second time, increment only the delivered so line.
         """
+        Timesheet = self.env['account.analytic.line'].with_context(default_analytic_source='timesheet')
         # create SO line and confirm SO (with only one line)
         sale_order_line1 = self.env['sale.order.line'].create({
             'name': self.product_deliver_sales_price.name,
@@ -219,7 +222,7 @@ class TestReInvoice(TestCommonSaleTimesheetNoChart):
         })
 
         # create invoice lines and validate it
-        invoice_lineA1 = self.env['account.invoice.line'].create({
+        invoice_lineA1 = Timesheet.create({
             'name': self.product_deliver_sales_price.name,
             'product_id': self.product_deliver_sales_price.id,
             'quantity': 3,
@@ -229,7 +232,7 @@ class TestReInvoice(TestCommonSaleTimesheetNoChart):
             'account_id': self.account_income.id,
             'invoice_id': self.invoiceA.id,
         })
-        invoice_lineA2 = self.env['account.invoice.line'].create({
+        invoice_lineA2 = Timesheet.create({
             'name': self.product_order_sales_price.name,
             'product_id': self.product_order_sales_price.id,
             'quantity': 3,
@@ -263,7 +266,7 @@ class TestReInvoice(TestCommonSaleTimesheetNoChart):
         self.assertEquals(sale_order_line4.qty_delivered_method, 'analytic', "Delivered quantity of 'expense' SO line 4 should be computed by analytic amount")
 
         # create second invoice lines and validate it
-        invoice_lineB1 = self.env['account.invoice.line'].create({
+        invoice_lineB1 = Timesheet.create({
             'name': self.product_deliver_sales_price.name,
             'product_id': self.product_deliver_sales_price.id,
             'quantity': 2,
@@ -273,7 +276,7 @@ class TestReInvoice(TestCommonSaleTimesheetNoChart):
             'account_id': self.account_income.id,
             'invoice_id': self.invoiceB.id,
         })
-        invoice_lineB2 = self.env['account.invoice.line'].create({
+        invoice_lineB2 = Timesheet.create({
             'name': self.product_order_sales_price.name,
             'product_id': self.product_order_sales_price.id,
             'quantity': 2,
@@ -298,6 +301,8 @@ class TestReInvoice(TestCommonSaleTimesheetNoChart):
 
     def test_no_expense(self):
         """ Test invoicing vendor bill with no policy. Check nothing happen. """
+        Timesheet = self.env['account.analytic.line'].with_context(default_analytic_source='timesheet')
+
         # confirm SO
         sale_order_line = self.env['sale.order.line'].create({
             'name': self.product_no_expense.name,
@@ -312,7 +317,7 @@ class TestReInvoice(TestCommonSaleTimesheetNoChart):
         self.sale_order.action_confirm()
 
         # create invoice lines and validate it
-        invoice_lineA1 = self.env['account.invoice.line'].create({
+        invoice_lineA1 = Timesheet.create({
             'name': self.product_no_expense.name,
             'product_id': self.product_no_expense.id,
             'quantity': 3,

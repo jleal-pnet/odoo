@@ -18,16 +18,29 @@ class AccountAnalyticLine(models.Model):
             result['employee_id'] = self.env['hr.employee'].search([('user_id', '=', result['user_id'])], limit=1).id
         return result
 
+    @api.model
+    def _default_analytic_source(self):
+        analytic_source = super(AccountAnalyticLine, self)._default_analytic_source()
+        if self._context.get('default_project_id'):
+            return 'timesheet'
+        return analytic_source
+
     task_id = fields.Many2one('project.task', 'Task', index=True)
     project_id = fields.Many2one('project.project', 'Project', domain=[('allow_timesheets', '=', True)])
 
     employee_id = fields.Many2one('hr.employee', "Employee")
     department_id = fields.Many2one('hr.department', "Department", compute='_compute_department_id', store=True, compute_sudo=True)
 
+    analytic_source = fields.Selection(selection_add=[('timesheet', 'Timesheet')])
+
+    _sql_constraints = [
+        ('employee_required_for_timesheet', "CHECK((analytic_source = 'timesheet' AND employee_id IS NOT NULL) OR (analytic_source != 'timesheet'))", "The employee is required for a timesheet entry."),
+    ]
+
     @api.onchange('project_id')
     def onchange_project_id(self):
         # force domain on task when project is set
-        if self.project_id:
+        if self.analytic_source == 'timesheet' and self.project_id:
             if self.project_id != self.task_id.project_id:
                 # reset task when changing project
                 self.task_id = False
@@ -37,12 +50,13 @@ class AccountAnalyticLine(models.Model):
 
     @api.onchange('task_id')
     def _onchange_task_id(self):
-        if not self.project_id:
+        if self.analytic_source == 'timesheet' and not self.project_id:
             self.project_id = self.task_id.project_id
 
     @api.onchange('employee_id')
     def _onchange_employee_id(self):
-        self.user_id = self.employee_id.user_id
+        if self.analytic_source == 'timesheet':
+            self.user_id = self.employee_id.user_id
 
     @api.depends('employee_id')
     def _compute_department_id(self):
@@ -55,15 +69,17 @@ class AccountAnalyticLine(models.Model):
 
     @api.model
     def create(self, values):
-        # compute employee only for timesheet lines, makes no sense for other lines
-        if not values.get('employee_id') and values.get('project_id'):
-            if values.get('user_id'):
-                ts_user_id = values['user_id']
-            else:
-                ts_user_id = self._default_user()
-            values['employee_id'] = self.env['hr.employee'].search([('user_id', '=', ts_user_id)], limit=1).id
+        is_timesheet = self._default_get(['analytic_source'])['analytic_source'] == 'timesheet'
+        if is_timesheet:
+            # compute employee only for timesheet lines, makes no sense for other lines
+            if not values.get('employee_id'):
+                if values.get('user_id'):
+                    ts_user_id = values['user_id']
+                else:
+                    ts_user_id = self._default_user()
+                values['employee_id'] = self.env['hr.employee'].search([('user_id', '=', ts_user_id)], limit=1).id
 
-        values = self._timesheet_preprocess(values)
+            values = self._timesheet_preprocess(values)
         result = super(AccountAnalyticLine, self).create(values)
         if result.project_id:  # applied only for timesheet
             result._timesheet_postprocess(values)
@@ -71,10 +87,12 @@ class AccountAnalyticLine(models.Model):
 
     @api.multi
     def write(self, values):
-        values = self._timesheet_preprocess(values)
+        is_timesheet = self._default_get(['analytic_source'])['analytic_source'] == 'timesheet'
+        if is_timesheet:
+            values = self._timesheet_preprocess(values)
         result = super(AccountAnalyticLine, self).write(values)
         # applied only for timesheet
-        self.filtered(lambda t: t.project_id)._timesheet_postprocess(values)
+        self.filtered(lambda t: t.analytic_source == 'timesheet')._timesheet_postprocess(values)
         return result
 
     @api.model

@@ -110,7 +110,7 @@ class SaleOrder(models.Model):
         action['context'] = self.env.context  # erase default filters
 
         if self.timesheet_count > 0:
-            action['domain'] = [('so_line', 'in', self.order_line.ids)]
+            action['domain'] = [('so_line', 'in', self.order_line.ids), ('analytic_source', '=', 'timesheet')]
         else:
             action = {'type': 'ir.actions.act_window_close'}
         return action
@@ -148,7 +148,7 @@ class SaleOrderLine(models.Model):
     @api.multi
     def _timesheet_compute_delivered_quantity_domain(self):
         """ Hook for validated timesheet in addionnal module """
-        return [('project_id', '!=', False)]
+        return [('analytic_source', '=', 'timesheet')]
 
     @api.multi
     @api.depends('product_id')

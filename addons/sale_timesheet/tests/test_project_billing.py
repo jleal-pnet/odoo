@@ -194,7 +194,7 @@ class TestProjectBilling(TestCommonSaleTimesheetNoChart):
     def test_billing_employee_rate(self):
         """ Check task and subtask creation, and timesheeting in a project billed at 'employee rate'. Then move the task into a 'task rate' project. """
         Task = self.env['project.task'].with_context(tracking_disable=True)
-        Timesheet = self.env['account.analytic.line']
+        Timesheet = self.env['account.analytic.line'].with_context(default_analytic_source='timesheet')
 
         # create a task
         task = Task.with_context(default_project_id=self.project_employee_rate.id).create({
@@ -262,7 +262,7 @@ class TestProjectBilling(TestCommonSaleTimesheetNoChart):
     def test_billing_task_rate(self):
         """ Check task and subtask creation, and timesheeting in a project billed at 'task rate'. Then move the task into a 'employee rate' project then, 'non billable'. """
         Task = self.env['project.task'].with_context(tracking_disable=True)
-        Timesheet = self.env['account.analytic.line']
+        Timesheet = self.env['account.analytic.line'].with_context(default_analytic_source='timesheet')
 
         # set subtask project on task rate project
         self.project_task_rate.write({'subtask_project_id': self.project_subtask.id})

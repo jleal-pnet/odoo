@@ -10,6 +10,7 @@
             'search_default_month':1,
             'search_default_employee_id': [active_id],
             'default_employee_id': active_id
+            'default_analytic_source': 'timesheet',
         }</field>
     </record>
 
