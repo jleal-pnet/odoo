@@ -23,7 +23,6 @@
     ],
     'data': [
         'security/hr_security.xml',
-        'security/mail_security.xml',
         'security/ir.model.access.csv',
         'views/hr_views.xml',
         'views/hr_templates.xml',

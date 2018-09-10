@@ -127,7 +127,8 @@
                                     <field name="group_public_id"
                                         attrs="{'invisible': [('public','!=','groups')], 'required': [('public','=','groups')]}"
                                         />
-                                    <field name="group_ids" widget="many2many_tags"/>
+                                    <field name="group_ids" widget="many2many_tags"
+                                        string="Auto Subscribe Groups"/>
                                 </group>
                             </page>
                             <page string="Members">
