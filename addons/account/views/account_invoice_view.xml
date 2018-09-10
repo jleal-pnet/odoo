@@ -452,7 +452,7 @@
                                 <field name="currency_id" options="{'no_create': True, 'no_open': True}" class="oe_inline"/>
                                 <field name="company_currency_id" invisible="1"/>
                             </div>
-                            <field name="partner_bank_id"/>
+                            <field id="invoice_account" name="partner_bank_id"/>
                         </group>
                     </group>
                     <field name="sent" invisible="1"/>

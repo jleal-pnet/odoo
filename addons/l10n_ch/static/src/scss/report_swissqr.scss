@@ -1,13 +1,17 @@
+.swissqr_content {
+    page-break-before: always;
+}
+
 .swissqr_body {
+    position: relative;
     background-color: white;
     border-color:black;
     border-width: 1pt 0pt 0pt 1pt;
     border-style: solid;
     height: 116mm;
-    width: 186mm;
-    position: absolute;
+    width: 190mm;
     top: 190mm;
-    left: 74mm;
+    left: 70mm;
 }
 
 .swissqr{
