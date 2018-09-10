@@ -1,83 +1,139 @@
 odoo.define('base.vat.vat_checker', function (require) {
-'use strict';
+    'use strict';
 
-var core = require('web.core');
-var widgetRegistry = require('web.widget_registry');
-var AbstractField = require('web.AbstractField');
-// var fieldRegistry = require('web.field_registry');
+    var core = require('web.core');
 
-var _t = core._t;
+    var AbstractField = require('web.AbstractField');
+    var fieldRegistry = require('web.field_registry');
 
-var VATChecker = AbstractField.extend({
-    resetOnAnyFieldChange: true,
+    var _t = core._t;
 
-    jsLibs: [
-        '/web/static/lib/jsvat/jsvat.js'
-    ],
+    var rpc = require('web.rpc');
+    var concurrency = require('web.concurrency');
 
-    /**
-     * @constructor
-     * Prepares the basic rendering of edit mode by setting the root to be a
-     * div.dropdown.open.
-     * @see FieldChar.init
-     */
-    init: function (parent, record, nodeInfo) {
-        this._super.apply(this, [parent, 'vat', record]);
+    var VATChecker = AbstractField.extend({
+        className: 'o_field_vat_checker',
+        resetOnAnyFieldChange: true,
+        currentValue: null,
 
-        if (record.mode === 'edit') {
-            this.tagName = 'div';
-            this.data = record.data;
-            console.log(this.data);
-        }
-    },
+        /**
+         * @constructor
+         * @see AbstractField.init
+         */
+        init: function () {
+            this._super.apply(this, arguments);
 
-    /**
-     * @override
-     */
-    start: function () {
-        this.$indicator = $('<i/>');
-        this.$el.append(this.$indicator);
-        return this._super.apply(this, arguments);
-    },
+            if (this.mode === 'edit') {
+                this.currentValue = this.record.data.vat;
+                this.dropPrevious = new concurrency.DropPrevious();
+            }
+        },
 
-    /**
-     * @override
-     */
-    reset: function () {
-        console.log('reset');
-        console.log(arguments);
-        return this._super.apply(this, arguments);
-    },
+        /**
+         * @override
+         */
+        start: function () {
+            if (this.mode === 'edit') {
+                this.$indicator = $('<i/>');
+                this.$el.append(this.$indicator);
+                if (this.record.data.vat_validation_state) this._setState(this.record.data.vat_validation_state);
+            }
 
-   _reset: function () {
-        console.log('_reset');
-        console.log(arguments);
-        return this._super.apply(this, arguments);
-    },
+            return this._super.apply(this, arguments);
+        },
 
-    //--------------------------------------------------------------------------
-    // Private
-    //--------------------------------------------------------------------------
+        /**
+         * @override
+         */
+        reset: function (state) {
+            var self = this;
+            var oldVat = this.currentValue;
+            var newVat = state.data.vat;
+            this.currentValue = newVat;
 
-    _setValid: function () {
+            if (!newVat) {
+                this._setState('hide');
+            } else {
+                if (oldVat !== newVat) {
+                    self._setState('loading');
 
-    },
+                    this._checkVATValidity(this._sanitizeVAT(newVat)).then(function (validity) {
+                        if (validity.existing) self._setState('valid');
+                        else {
+                            if (validity.format) self._setState('unknown');
+                            else {
+                                self._setState('format', validity.expected_format);
+                            }
+                        }
+                    });
+                }
+            }
 
-    _setInvalid: function () {
+            return this._super.apply(this, arguments);
+        },
 
-    },
+        //--------------------------------------------------------------------------
+        // Private
+        //--------------------------------------------------------------------------
+        _checkVATValidity: function (vat) {
+            var def = rpc.query({
+                model: 'res.partner',
+                method: 'check_vat_rpc',
+                args: [vat],
+            }, {
+                shadow: true,
+            });
 
-    _setUnknown: function () {
+            return this.dropPrevious.add(def);
+        },
 
-    },
+        /**
+         * Sanitize search value by removing all not alphanumeric
+         *
+         * @param {string} search_value
+         * @returns {string}
+         * @private
+         */
+        _sanitizeVAT: function (search_value) {
+            return search_value ? search_value.replace(/[^A-Za-z0-9]/g, '') : '';
+        },
 
-    _setLoading: function () {
+        _setState: function (state, extra_msg) {
+            var classes, title, db_state;
 
-    },
+            switch (state) {
+                case 'valid':
+                    classes = "fa fa-lg fa-check-circle text-success";
+                    title = "VAT number is valid";
+                    db_state = state;
+                    break;
+                case 'unknown':
+                    classes = "fa fa-lg fa-question-circle text-warning";
+                    title = "No company found with this VAT number";
+                    db_state = state;
+                    break;
+                case 'format':
+                    classes = "fa fa-lg fa-exclamation-triangle text-danger";
+                    title = "Incorrect VAT number format";
+                    if (extra_msg) title += ", expected format: %s";
+                    db_state = state;
+                    break;
+                case 'loading':
+                    classes = "fa fa-lg fa-spinner fa-spin text-muted";
+                    title = "";
+                    break;
+            }
 
-});
+            this.$indicator
+                .removeClass()
+                .addClass(classes)
+                .attr('title', _.str.sprintf(_t(title), extra_msg));
 
-widgetRegistry.add('vat_checker', VATChecker);
+            if (db_state) this._setValue(db_state);
+        },
+    });
 
-return VATChecker;
+    fieldRegistry.add('vat_checker', VATChecker);
+
+    return VATChecker;
 });

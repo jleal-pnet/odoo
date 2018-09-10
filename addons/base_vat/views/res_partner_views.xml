@@ -12,11 +12,11 @@
             <xpath expr="//label[@for='street']" position="before">
                 <label for="vat" string="VAT"/>
                 <div class="vat_checker_row">
-                    <widget name="vat_checker"/>
+                    <field name="vat_validation_state" widget="vat_checker"/>
                 </div>
             </xpath>
 
-            <xpath expr="//widget[@name='vat_checker']" position="before">
+            <xpath expr="//field[@name='vat_validation_state']" position="before">
                 <xpath expr="//field[@name='vat']" position="move"/>
             </xpath>
         </field>
@@ -29,6 +29,17 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='vat']" position="attributes">
                 <attribute name="string">VAT</attribute>
+            </xpath>
+
+            <xpath expr="//label[@for='street']" position="before">
+                <label for="vat" string="VAT"/>
+                <div class="vat_checker_row">
+                    <field name="vat_validation_state" widget="vat_checker"/>
+                </div>
+            </xpath>
+
+            <xpath expr="//field[@name='vat_validation_state']" position="before">
+                <xpath expr="//field[@name='vat']" position="move"/>
             </xpath>
         </field>
     </record>
