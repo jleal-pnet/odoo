@@ -159,6 +159,23 @@ class Property(models.Model):
         # note: order by 'company_id asc' will return non-null values first
         props = self.search(domain, order='company_id asc')
         result = {}
+        #--------------------------------------------------
+        # for many2one load them in batch
+        r = {}
+        remaining_props = []
+        for p in props:
+            if p.type == "many2one" and p.value_reference and p.res_id:
+                r[int(p.res_id.split(',')[1])] = int(p.value_reference.split(',')[1])
+            else:
+                remaining_props.append(p)
+        comodel_name = self.env[model]._fields[name].comodel_name
+        if comodel_name:
+            existing = self.env[comodel_name].browse(r.values()).exists()
+            for k, v in r.items():
+                if v in existing.ids:
+                    result[k] = self.env[comodel_name].browse(v)
+            props = remaining_props
+        #--------------------------------------------------
         for prop in props:
             # for a given res_id, take the first property only
             id = refs.pop(prop.res_id, None)

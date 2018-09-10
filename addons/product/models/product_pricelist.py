@@ -333,6 +333,34 @@ class Pricelist(models.Model):
 
         return pl
 
+    def _get_partner_pricelist_multi(self, partner_ids, company_id=None):
+        # return a dictionary of partner_id: pricelist
+        Partner = self.env['res.partner']
+        Property = self.env['ir.property'].with_context(force_company=company_id or self.env.user.company_id.id)
+
+        result = Property.get_multi('property_product_pricelist', Partner._name, partner_ids)
+        remaining_partner_ids = [k for k, v in result.items() if not v]
+        d = [('id','in',remaining_partner_ids)]
+
+        # TODO: use group_by ['country_id','id'] lazy=False (it crashed)
+        groups = Partner.read_group(d,['id','country_id'],['country_id'])
+        for group in groups:
+            country_id = group['country_id'] and group['country_id'][0]
+            pls = self.env['product.pricelist'].search([('country_group_ids.country_ids', '=', country_id)], limit=1)
+            pl = pls and pls[0].id
+            if not pl:
+                prop = Property.get('property_product_pricelist', 'res.partner')
+                pl = prop and prop[0].id
+
+            if not pl:
+                pls = self.env['product.pricelist'].search([], limit=1)
+                pl = pls and pls[0].id
+
+            for pid in Partner.search(d+group['__domain']).ids:
+                result[pid] = pl
+
+        return result
+
 
 class ResCountryGroup(models.Model):
     _inherit = 'res.country.group'
