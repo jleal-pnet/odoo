@@ -674,7 +674,6 @@ QUnit.module('Views', {
 
     QUnit.test('graph measures should be alphabetically sorted', function (assert) {
         assert.expect(2);
-
         var data = this.data;
         data.foo.fields.bouh = {string: "bouh", type: "integer"};
 
@@ -686,7 +685,7 @@ QUnit.module('Views', {
                         '<field name="foo" type="measure"/>' +
                         '<field name="bouh" type="measure"/>' +
                   '</graph>',
-        })
+        });
 
         assert.strictEqual(graph.$buttons.find('.o_graph_measures_list .dropdown-item:first').data('field'), 'bouh',
             "Bouh should be the first measure");
