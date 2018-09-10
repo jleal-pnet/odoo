@@ -1,0 +1,14 @@
+.o_form_view.o_form_editable .vat_checker_row {
+    width: 100%;
+    > input {
+        -webkit-box-flex: 1;
+        -webkit-flex: 1 0 auto;
+        flex: 1 0 auto;
+    }
+    > .o_widget {
+        -webkit-box-flex: 0;
+        -webkit-flex: 0 0 auto;
+        flex: 0 0 auto;
+        margin: 3px 0 0 5px;
+    }
+}
