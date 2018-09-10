@@ -239,7 +239,7 @@ class Employee(models.Model):
             name=user.name,
             image=user.image,
             work_email=user.email,
-            tz=user.tz,
+            tz=user.tz if user.tz else self.tz,
         )
 
     @api.model
