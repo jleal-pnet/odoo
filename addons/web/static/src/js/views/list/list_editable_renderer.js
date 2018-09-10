@@ -543,7 +543,7 @@ ListRenderer.include({
      */
     _moveToNextLine: function () {
         var self = this;
-        var recordID = this.getRecordId(this.currentRow);
+        var recordID = this.getRecordID(this.currentRow);
         this.commitChanges(recordID).then(function () {
             var fieldNames = self.canBeSaved(recordID);
             if (fieldNames.length) {
@@ -817,7 +817,7 @@ ListRenderer.include({
         ev.stopPropagation();
 
         var self = this;
-        var groupID = $(event.target).data('groupID');
+        var groupID = $(ev.target).data('groupID');
         this.unselectRow().then(function () {
             self.trigger_up('add_record', {
                 group_id: groupID,
