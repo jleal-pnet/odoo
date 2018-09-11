@@ -10,7 +10,7 @@
                     <page string="Popup Content">
                         <field name="popup_content" widget="html_frame" options="{
                                 'snippets': 'website.snippets',
-                                'iframeCssAssets': 'mass_mailing.wysiwyg_iframe_css_assets_popup'
+                                'iframeCssAssets': 'website_mass_mailing.wysiwyg_iframe_css_assets',
                             }"/>
                     </page>
                 </notebook>

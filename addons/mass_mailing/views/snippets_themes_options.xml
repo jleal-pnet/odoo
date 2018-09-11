@@ -5,11 +5,11 @@
     <t t-call="web_editor.snippet_options"/>
     <t t-raw="0"/>
 
-    <div data-js="sizing_x"
+    <div data-js="mass_mailing_sizing_x"
         data-selector="img, .mv, .col_mv, td, th"
         data-exclude=".o_mail_no_resize, .o_mail_no_options"/>
 
-    <div data-js="table_item"
+    <div data-js="mass_mailing_table_item"
         data-selector="td, th"
         data-exclude=".o_mail_no_options"/>
 

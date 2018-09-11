@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+<template id="wysiwyg_iframe_css_assets" name="CSS assets for wysiwyg iframe content for popup">
+    <t t-call-assets="web.assets_common" t-js="false"/>
+    <t t-call-assets="web.assets_frontend" t-js="false"/>
+    <link rel="stylesheet" href="/website_mass_mailing/static/src/css/website_mass_mailing_popup.css" type="text/css"/>
+</template>
+
 <template id="remove_external_snippets" inherit_id="website.external_snippets">
     <xpath expr="//t[@t-install='mass_mailing']" position="replace"/>
 </template>
