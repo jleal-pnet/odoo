@@ -170,6 +170,22 @@ MailManager.include({
         }
     },
     /**
+     * Called when receiving a join channel notification:
+     *
+     * @private
+     * @param {Object} channelData
+     * @param {string} channelData.joined_username
+     * @param {string} channelData.joined_partner_id
+     * @param {string} channelData.name
+     */
+    _handlePartnerJoinNotification: function (channelData) {
+        var username = this.getSession().partner_id == channelData.joined_partner_id ?
+            'You' : channelData.joined_username;
+        this.do_notify(
+            _t("Joined"),
+            username + _t(" has joined to : ") + channelData.name);
+    },
+    /**
      * Called when receiving a channel state as a partner notification:
      *
      *  - if it is a new channel, it means we have been invited to this channel
@@ -360,6 +376,8 @@ MailManager.include({
             this._handlePartnerMailFailureNotification(data);
         } else if (data.type === 'user_connection') {
             this._handlePartnerUserConnectionNotification(data);
+        } else if (data.type === 'join') {
+            this._handlePartnerJoinNotification(data);
         } else {
             this._handlePartnerChannelNotification(data);
         }
