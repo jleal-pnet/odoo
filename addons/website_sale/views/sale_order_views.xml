@@ -4,6 +4,7 @@
         <field name="name">sale.order.ecommerce.search.view</field>
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+        <field name="mode">primary</field> 
         <field name="arch" type="xml">
             <search>
                 <filter string="Confirmed Orders" name="order_confirmed" domain="[('state', 'in', ('sale', 'done'))]"/>
