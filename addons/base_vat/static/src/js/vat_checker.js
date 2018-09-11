@@ -22,7 +22,6 @@ odoo.define('base.vat.vat_checker', function (require) {
          */
         init: function () {
             this._super.apply(this, arguments);
-
             if (this.mode === 'edit') {
                 this.currentValue = this.record.data.vat;
                 this.dropPrevious = new concurrency.DropPrevious();
@@ -39,10 +38,8 @@ odoo.define('base.vat.vat_checker', function (require) {
                 this._popover.init(this.$el);
                 if (this.record.data.vat_validation_state) this._setState(this.record.data.vat_validation_state);
             }
-
             return this._super.apply(this, arguments);
         },
-
 
         /**
          * @override
@@ -66,9 +63,9 @@ odoo.define('base.vat.vat_checker', function (require) {
                                 if (validity.existing) self._setState('valid');
                                 else {
                                     if (validity.format) self._setState('company_not_found');
-                                    else self._setState('invalid_format', validity.expected_format);
+                                    else self._setState('invalid_format', validity.extra_msg);
                                 }
-                            } else self._setState('unknown_country_code');
+                            } else self._setState('unknown_country_code', validity.extra_msg);
                         });
                     } else {
                         self._setState('invalid_format', _t('2 letters followed by 2 to 12 alphanumerics'));
@@ -76,6 +73,14 @@ odoo.define('base.vat.vat_checker', function (require) {
                 }
             }
 
+            return this._super.apply(this, arguments);
+        },
+
+        /**
+         * @override
+         */
+        destroy: function () {
+            this._popover.destroy();
             return this._super.apply(this, arguments);
         },
 
@@ -88,15 +93,25 @@ odoo.define('base.vat.vat_checker', function (require) {
          */
         _popover: {
             $el: false,
-            delay: 3000,
+            autoHideDelay: 2000,
             init: function ($el) {
+                var self = this;
                 this.$el = $el;
                 this.$el.popover({
                     placement: 'top',
                     trigger: 'manual hover',
                     html: true,
                 });
+                this.$el.on('shown.bs.popover', function () {
+                    self.id = $(self.getAPI().getTipElement()).attr('id') || self.id;
+                });
                 return this;
+            },
+            getAPI: function () {
+                return this.$el.data('bs.popover');
+            },
+            destroy: function () {
+                if (this.id) $('#' + this.id).remove();
             },
             show: function () {
                 this.$el.popover('show');
@@ -107,13 +122,13 @@ odoo.define('base.vat.vat_checker', function (require) {
                 return this;
             },
             set: function (message) {
-                var popover = this.$el.data('bs.popover');
-                popover.config.content = message;
+                this.getAPI().config.content = message;
                 return this;
             },
             autoShowHide: function () {
                 this.show();
-                setTimeout(this.hide.bind(this), this.delay);
+                if (this.timeout) clearTimeout(this.timeout);
+                this.timeout = setTimeout(this.hide.bind(this), this.autoHideDelay);
                 return this;
             }
         },
@@ -187,6 +202,7 @@ odoo.define('base.vat.vat_checker', function (require) {
                 case 'unknown_country_code':
                     classes += "fa-question-circle text-muted";
                     title = "No VAT formatting found for the country code";
+                    if (extra_msg) title += " : %s";
                     break;
                 case 'invalid_format':
                     classes += "fa-exclamation-triangle text-danger";

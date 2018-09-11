@@ -109,20 +109,22 @@ class ResPartner(models.Model):
             'found_format': False,
             'format': False,
             'existing': False,
-            'expected_format': ''
+            'extra_msg': ''
         }
         vat_country, vat_number = self._split_vat(vat)
 
         validity['found_format'] = True if self._get_check_func(vat_country) else False
 
         if validity['found_format']:
-            validity['expected_format'] = _ref_vat.get(vat_country) or ''
+            validity['extra_msg'] = _ref_vat.get(vat_country) or ''
 
             # First check VAT format
             validity['format'] = self.simple_vat_check(vat_country, vat_number)
 
             if validity['format']:
                 validity['existing'] = self.vies_vat_check(vat_country, vat_number, True)
+        else:
+            validity['extra_msg'] = vat_country.upper()
 
         return validity
 
