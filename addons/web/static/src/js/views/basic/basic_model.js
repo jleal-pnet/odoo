@@ -894,26 +894,32 @@ var BasicModel = AbstractModel.extend({
                 params: params,
             })
             .then(function () {
-                var offset = options.offset ? options.offset : 0;
-                var old_data = data.data.slice();
-                data.data = _.sortBy(data.data, function (d) {
-                    if (_.contains(resIDs, self.localData[d].res_id)) {
-                        return _.indexOf(resIDs, self.localData[d].res_id) + offset;
-                    } else {
-                        return _.indexOf(old_data, d);
+                var field = params.field ? params.field : 'sequence';
+
+                return self._rpc({
+                    model: modelName,
+                    method: 'read',
+                    args: [resIDs, [field]],
+                }).then(function (records) {
+                    for (var i in records) {
+                        var record = _.findWhere(self.localData, {res_id: records[i].id});
+                        record.data[field] = records[i][field];
                     }
-                });
-                data.res_ids = [];
-                _.each(data.data, function (d) {
-                    var dataPoint = self.localData[d];
-                    if (dataPoint.type === 'record') {
-                        data.res_ids.push(dataPoint.res_id);
-                    } else {
-                        data.res_ids = data.res_ids.concat(dataPoint.res_ids);
-                    }
-                });
-                self._updateParentResIDs(data);
-                return parentID;
+                    data.data = _.sortBy(data.data, function (d) {
+                        return self.localData[d].data[field];
+                    });
+                    data.res_ids = [];
+                    _.each(data.data, function (d) {
+                        var dataPoint = self.localData[d];
+                        if (dataPoint.type === 'record') {
+                            data.res_ids.push(dataPoint.res_id);
+                        } else {
+                            data.res_ids = data.res_ids.concat(dataPoint.res_ids);
+                        }
+                    });
+                    self._updateParentResIDs(data);
+                    return parentID;
+                })
             });
     },
     /**

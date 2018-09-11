@@ -1278,7 +1278,7 @@ QUnit.module('Views', {
     });
 
     QUnit.test('delete a column in grouped on m2o', function (assert) {
-        assert.expect(33);
+        assert.expect(36);
 
         testUtils.patch(KanbanRenderer, {
             _renderGrouped: function () {
@@ -1895,6 +1895,7 @@ QUnit.module('Views', {
 
     QUnit.test('resequence columns in grouped by m2o', function (assert) {
         assert.expect(7);
+        this.data.product.fields.sequence = {string: "Sequence", type: "int"};
 
         var envIDs = [1, 3, 2, 4]; // the ids that should be in the environment during this test
         var kanban = createView({
@@ -1908,12 +1909,6 @@ QUnit.module('Views', {
                         '</t></templates>' +
                     '</kanban>',
             groupBy: ['product_id'],
-            mockRPC: function (route) {
-                if (route === '/web/dataset/resequence') {
-                    return $.when();
-                }
-                return this._super.apply(this, arguments);
-            },
             intercepts: {
                 env_updated: function (event) {
                     assert.deepEqual(event.data.ids, envIDs,
@@ -1937,7 +1932,7 @@ QUnit.module('Views', {
         kanban.update({}, {reload: false}); // re-render without reloading
 
         assert.strictEqual(kanban.$('.o_kanban_group:first').data('id'), 5,
-            "first column should be id 5 before resequencing");
+            "first column should be id 5 after resequencing");
 
         kanban.destroy();
     });
@@ -2064,7 +2059,7 @@ QUnit.module('Views', {
     });
 
     QUnit.test('archive new kanban column', function (assert) {
-        assert.expect(16);
+        assert.expect(17);
 
         this.data.partner.fields.active = {string: 'Active', type: 'char', default: true};
 
@@ -2094,6 +2089,7 @@ QUnit.module('Views', {
         kanban.$('.o_column_quick_create button.o_kanban_add').click();
         rpcs.push('/web/dataset/call_kw/product/name_create');
         rpcs.push('/web/dataset/resequence');
+        rpcs.push('/web/dataset/call_kw/product/read');  // a read is done after a resequence
         assert.verifySteps(rpcs);
 
         // add a record inside
