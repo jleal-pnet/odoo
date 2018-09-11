@@ -602,7 +602,10 @@
                         </group>
                         <notebook>
                             <page string="Mail Body">
-                                <field name="body_html" class="o_mail_body" widget="html_frame" options="{'editor_url': '/mass_mailing/field/email_template'}"/>
+                                <field name="body_html" class="o_mail_body" widget="html_frame" options="{
+                                    'snippetsURL': '/mass_mailing/snippets',
+                                    'iframeCssAssets': 'mass_mailing.wysiwyg_iframe_css_assets'
+                                }"/>
                             </page>
                             <page string="Options">
                                 <group>
