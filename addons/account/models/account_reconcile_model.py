@@ -629,6 +629,9 @@ class AccountReconcileModel(models.Model):
 
         # Iterate all and create results.
         for line in st_lines:
+            line_currency = line.currency_id or line.journal_id.currency_id or line.company_id.currency_id
+            line_residual = line.currency_id and line.amount_currency or line.amount
+
             for model in ordered_models:
                 # No result found.
                 if not grouped_candidates.get(line.id) or not grouped_candidates[line.id].get(model.id):
@@ -641,19 +644,27 @@ class AccountReconcileModel(models.Model):
                     # If some invoices match on the communication, suggest them.
                     # Otherwise, suggest all invoices having the same partner.
                     # N.B: The only way to match a line without a partner is through the communication.
-                    available_candidates_with_com = []
-                    available_candidates_wo_com = []
+                    first_batch_candidates = []
+                    second_batch_candidates = []
                     for c in candidates:
+                        residual_amount = c['aml_currency_id'] and c['aml_amount_residual_currency'] or c['aml_amount_residual']
+
+                        # Special case: the amount are the same, submit the line directly.
+                        if float_is_zero(residual_amount - line_residual, precision_rounding=line_currency.rounding):
+                            first_batch_candidates = [c]
+                            second_batch_candidates = []
+                            break
+
                         # Don't take into account already reconciled lines.
                         if c['aml_id'] in reconciled_amls_ids:
                             continue
 
                         # Dispatch candidates between lines matching invoices with the communication or only the partner.
                         if c['communication_flag']:
-                            available_candidates_with_com.append(c)
-                        elif not available_candidates_with_com:
-                            available_candidates_wo_com.append(c)
-                    available_candidates = available_candidates_with_com or available_candidates_wo_com
+                            first_batch_candidates.append(c)
+                        elif not first_batch_candidates:
+                            second_batch_candidates.append(c)
+                    available_candidates = first_batch_candidates or second_batch_candidates
 
                     # Needed to handle check on total residual amounts.
                     if model._check_rule_propositions(line, available_candidates):
