@@ -14,6 +14,8 @@
     }
 }
 
+
+
 // TOP BAR (EDIT)
 #web_editor-top-edit {
     height: $o-navbar-height;
@@ -99,6 +101,8 @@ html[lang] > body.editor_enable [data-oe-translation-state] {
         background: rgba($o-we-translated-content-color, 0.25)!important;
     }
 }
+
+// NOTE EDITOR
 
 // SNIPPET PANEL
 #oe_snippets {
@@ -355,15 +359,23 @@ html[lang] > body.editor_enable [data-oe-translation-state] {
 // editor_enable
 
 body.editor_enable {
-    padding-top: $o-navbar-height!important;
+    overflow: hidden;
+    padding-top: 0!important;
 
     .note-editor {
-        .note-resizebar {
+        .note-statusbar {
             display: none;
         }
         .note-editing-area {
             overflow: visible;
         }
+        .note-editable {
+            height: calc(100vh - 34px);
+        }
+    }
+
+    .note-toolbar {
+        background-color: $o-we-color-dark;
     }
 
     #web_editor-top-edit {

@@ -950,7 +950,9 @@ table.table_desc tr td {
 //
 
 // Header
-#wrapwrap .o_header_affix {
+
+.o_header_affix {
+    display: block;
     @include o-position-absolute(0, 0, auto, 0);
     position: fixed;
     z-index: $zindex-modal - 20;

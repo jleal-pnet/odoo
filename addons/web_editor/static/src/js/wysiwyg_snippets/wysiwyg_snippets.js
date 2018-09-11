@@ -20,7 +20,7 @@ Wysiwyg.include({
      * @override
      */
     start: function () {
-        this._super();
+        var def = this._super();
 
         var options = _.clone(this.options);
         if (!options.snippetsURL && !this.options.snippets) {
@@ -41,6 +41,7 @@ Wysiwyg.include({
                 this.$el.addClass('o_snippets_loaded');
             }.bind(this));
         }.bind(this));
+        return def;
     },
 
     //--------------------------------------------------------------------------

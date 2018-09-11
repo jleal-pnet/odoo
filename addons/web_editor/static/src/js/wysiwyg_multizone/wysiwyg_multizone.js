@@ -156,7 +156,7 @@ var WysiwygMultizone = Wysiwyg.extend({
                 $(this).tooltip('hide');
             });
         $('body').addClass('editor_enable');
-        $('.note-editor, .note-popover').filter('[data-wysiwyg-id="' + this.id + '"]').addClass('wysiwyg_frontend');
+        $('.note-editor, .note-popover').filter('[data-wysiwyg-id="' + this.id + '"]').addClass('wysiwyg_multizone');
     },
     /**
      * @override

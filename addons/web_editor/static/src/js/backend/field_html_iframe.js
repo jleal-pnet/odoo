@@ -25,11 +25,17 @@ var FieldTextHtmlIframe = FieldTextHtmlSimple.extend({
         var options = this._super();
         options.inIframe = true;
         options.snippets = true;
-        // options.snippetsURL = this.nodeOptions.snippetsURL || '/web_editor/snippets' || '/mass_mailing/snippets';
-        // options.iframeCssAssets = '';
+        options.snippetsURL = this.nodeOptions.snippetsURL;
+        options.iframeCssAssets = this.nodeOptions.iframeCssAssets;
         return options;
     },
 });
+
+console.error('todo: readonly in iframe');
+// mass_mailing: /mass_mailing/static/src/css/basic_theme_readonly.css
+
+console.error('insert js mass_mailing')
+// /mass_mailing/static/src/js/mass_mailing_editor.js
 
 return FieldTextHtmlIframe;
 });

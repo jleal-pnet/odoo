@@ -37,8 +37,10 @@ var EditorMenu = Widget.extend({
      * @override
      */
     start: function () {
+        this.$el.css({width: '100%'});
         return this._super().then(function () {
             this.trigger_up('edit_mode');
+            this.$el.css({width: ''});
         }.bind(this));
     },
 

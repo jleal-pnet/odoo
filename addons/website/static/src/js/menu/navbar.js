@@ -109,11 +109,8 @@ var WebsiteNavbar = rootWidget.RootWidget.extend({
      * @private
      */
     _onEditMode: function () {
-        var self = this;
         this.$el.addClass('editing_mode');
-        _.delay(function () {
-            self.do_hide();
-        }, 800);
+        this.do_hide();
     },
     /**
      * Called when a submenu is hovered -> automatically opens it if another

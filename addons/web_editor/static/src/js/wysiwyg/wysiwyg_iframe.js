@@ -98,6 +98,41 @@ Wysiwyg.include({
     // Private
     //--------------------------------------------------------------------------
 
+    /**
+     * remove bottom resize bar
+     *
+     * @override
+     */
+    _editorOptions: function () {
+        var options = this._super();
+        options
+        return options;
+    },
+
+    /**
+     * change fullsreen feature
+     *
+     * @override
+     */
+    _getPlugins: function () {
+        var self = this;
+        var plugins = this._super();
+        plugins.fullscreen = plugins.fullscreen.extend({
+            toggle: function () {
+                self.$iframe.toggleClass('o_fullscreen');
+                self.$iframe.contents().find('body').toggleClass('o_fullscreen');
+            },
+            isFullscreen: function () {
+                return self.$iframe.hasClass('o_fullscreen');
+            },
+        });
+        return plugins;
+    },
+    /**
+     * this method is called after the iframe is loaded with the editor. This is
+     * to activate the bootstrap features that out of the iframe would launch
+     * automatically when changing the dom.
+     */
     _enableBootstrapInIframe: function () {
         var body =this.$iframe[0].contentWindow.document.body;
         var $toolbarButtons = this._summernote.layoutInfo.toolbar.find('[data-toggle="dropdown"]').dropdown({boundary: body});
@@ -119,7 +154,7 @@ Wysiwyg.include({
             console.error('Target must be present in the DOM');
         }
 
-        this.$iframe = $('<iframe>').css({
+        this.$iframe = $('<iframe class="wysiwyg_iframe">').css({
             'min-height': '400px',
             width: '100%'
         });

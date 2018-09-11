@@ -7,12 +7,6 @@
 </template>
 
 <template id="wysiwyg" name="Wysiwyg Editor">
-    <!-- interface -->
-
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/wysiwyg.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/wysiwyg_iframe.js"/>
-    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/plugin_registry.js"/>
-
     <!-- lib -->
 
     <link rel="stylesheet" type="text/css" href="/web_editor/static/lib/summernote/summernote.css"/>
@@ -24,6 +18,12 @@
     <!-- inegration -->
 
     <link rel="stylesheet" type="text/scss" href="/web_editor/static/src/scss/wysiwyg.scss"/>
+    <link rel="stylesheet" type="text/scss" href="/web_editor/static/src/scss/wysiwyg_iframe.scss"/>
+
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/wysiwyg.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/wysiwyg_iframe.js"/>
+    <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/plugin_registry.js"/>
+
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/translation.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/fonts.js"/>
 

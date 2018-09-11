@@ -1,15 +1,8 @@
-.wysiwyg_frontend.note-popover.popover {
+.wysiwyg_multizone.note-popover.popover {
     background-color: $o-we-color-dark;
     border-width: 0 1px;
 }
-.wysiwyg_frontend.note-editor > .note-toolbar-wrapper {
-    background-color: $o-we-color-dark;
-    position: fixed;
-    top: 0px;
-    width: 100%;
-    z-index: 1040;
-}
-.wysiwyg_frontend.note-popover, .wysiwyg_frontend.note-editor > .note-toolbar-wrapper .note-toolbar {
+.wysiwyg_multizone.note-popover, .wysiwyg_multizone.note-editor > .note-toolbar-wrapper .note-toolbar {
     .btn {
         background-color: $o-we-color-dark;
         color: $o-we-color-text-normal;

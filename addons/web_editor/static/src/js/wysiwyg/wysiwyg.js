@@ -296,6 +296,7 @@ var Wysiwyg = Widget.extend({
         };
 
         options.isUnbreakableNode = this.isUnbreakableNode.bind(this);
+        options.isEditableNode = this.isEditableNode.bind(this);
 
         return options;
     },
