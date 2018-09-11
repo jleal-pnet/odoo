@@ -541,7 +541,13 @@ class AccountReconcileModel(models.Model):
 
             queries.append(query)
             all_params += params
-        return ' UNION ALL '.join(queries), all_params
+
+        full_query = ' UNION ALL '.join(queries)
+        if self[0].rule_type == 'invoice_matching':
+            # Oldest due dates come first.
+            full_query += ' ORDER BY aml.date_maturity, aml.id'
+
+        return full_query, all_params
 
     @api.multi
     def _check_rule_propositions(self, statement_line, candidates):
