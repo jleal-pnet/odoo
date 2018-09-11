@@ -257,7 +257,6 @@
             <field name="priority">1</field>
             <field name="arch" type="xml">
                 <search string="Search Account Journal">
-                    <field name="name" filter_domain="['|', ('name','ilike',self), ('code','ilike',self)]" string="Journal"/>
                     <filter string="Archived" name="inactive" domain="[('active','=',False)]"/>
                     <filter name="sales" domain="[('type', '=', 'sale')]" string="Sales"/>
                     <filter name="purchases" domain="[('type', '=', 'purchase')]" string="Purchases"/>
