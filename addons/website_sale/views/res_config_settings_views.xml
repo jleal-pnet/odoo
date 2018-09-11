@@ -314,7 +314,7 @@
                             <span class="o_form_label">Abandoned Carts</span>
                             <span class="fa fa-lg fa-globe" title="Values set here are website-specific." groups="website.group_multi_website"/>
                             <div class="text-muted">
-                                Send a recovery email when a cart is abandoned
+                                Abandoned carts are all carts left unconfirmed by website visitors. You can find them in *Website > Orders > Abandoned Carts*. From there you can send recovery emails to visitors who entered their contact details.
                             </div>
                             <div class="content-group" title="This email template is suggested by default when you send a recovery email.">
                                 <div class="row mt16">
