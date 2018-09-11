@@ -530,15 +530,13 @@ var SnippetsMenu = Widget.extend({
      *
      * @constructor
      */
-    init: function (parent, $editable, options) {
+    init: function (parent, options) {
         this._super.apply(this, arguments);
 
         this.options = options || {};
         if (!this.options.snippets) {
             this.options.snippets = 'web_editor.snippets';
         }
-        this.$editable = $editable;
-        this.$body = this.$editable.closest('body');
         this.$activeSnippet = false;
         this.snippetEditors = [];
     },
@@ -553,14 +551,7 @@ var SnippetsMenu = Widget.extend({
 
         // Fetch snippet templates and compute it
 
-        defs.push(this._rpc({
-            model: 'ir.ui.view',
-            method: 'render_template',
-            args: [this.options.snippets, {}],
-            kwargs: {
-                context: this.options.recordInfo().context,
-            },
-        }).then(function (html) {
+        defs.push(this.loadSnippets().then(function (html) {
             return self._computeSnippetTemplates(html);
         }));
 
@@ -662,6 +653,23 @@ var SnippetsMenu = Widget.extend({
 
         this.$editable.find('.o_we_selected_image')
             .removeClass('o_we_selected_image');
+    },
+    loadSnippets: function () {
+        if (this._defLoadSnippets) {
+            return this._defLoadSnippets;
+        }
+        this._defLoadSnippets = this._rpc({
+            model: 'ir.ui.view',
+            method: 'render_template',
+            args: [this.options.snippets, {}],
+            kwargs: {
+                context: this.options.recordInfo().context,
+            },
+        });
+    },
+    setEditable: function ($editable) {
+        this.$editable = $editable;
+        this.$body = this.$editable.closest('body');
     },
 
     //--------------------------------------------------------------------------

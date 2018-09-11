@@ -73,7 +73,7 @@ var EditPageMenu = websiteNavbarData.WebsiteNavbarActionWidget.extend({
         }
         return new EditorMenu(this).prependTo(document.body).then(function () {
             if (self.$welcomeMessage) {
-                self.$wrap.append(self.$welcomeMessage.clone()); // reappend if the user cancel the edition
+                self.$wrap.append(self.$welcomeMessage); // reappend if the user cancel the edition
             }
             var $wrapwrap = self._targetForEdition();
             $wrapwrap.find('.oe_structure.oe_empty, [data-oe-type="html"]').attr('data-editor-message', _t('DRAG BUILDING BLOCKS HERE'));

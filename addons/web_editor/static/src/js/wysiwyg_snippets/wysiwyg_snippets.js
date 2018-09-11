@@ -13,6 +13,31 @@ Wysiwyg.include({
         activate_snippet:  '_onActivateSnippet',
     }),
 
+    init: function (parent, options) {
+        this._super.apply(this, arguments);
+
+        options = _.clone(this.options);
+        if (!options.snippets && !this.options.snippets) {
+            return;
+        }
+        if (!options.snippets) {
+            options.snippets = 'web_editor.snippets';
+        }
+        options.isUnbreakableNode = this.isUnbreakableNode.bind(this);
+        options.isEditableNode = this.isEditableNode.bind(this);
+        this.snippets = new snippetsEditor.Class(this, options);
+    },
+    /*
+     * Preload snippets.
+     *
+     * @override
+     **/
+    willStart: function () {
+        if (this.snippets) {
+            this.snippets.loadSnippets(); // don't use the deferred
+        }
+        return this._super();
+    },
     /**
      * add options (snippets) to load snippet building block
      * snippets can by url begin with '/' or an view xml_id
@@ -21,28 +46,19 @@ Wysiwyg.include({
      * @params {string} [options.snippets]
      */
     start: function () {
-        var def = this._super();
-
-        var options = _.clone(this.options);
-        if (!options.snippets && !this.options.snippets) {
+        var self = this;
+        this._super();
+        if (!this.snippets) {
             return;
         }
-        if (!options.snippets) {
-            options.snippets = 'web_editor.snippets';
-        }
-
-        options.isUnbreakableNode = this.isUnbreakableNode.bind(this);
-        options.isEditableNode = this.isEditableNode.bind(this);
-
-        this.snippets = new snippetsEditor.Class(this, this.$targetDroppable || this.$el.find('.note-editable'), options);
+        this.snippets.setEditable(this.$targetDroppable || this.$el.find('.note-editable'));
         this.snippets.insertBefore(this.$el).then(function () {
-            this.$el.before(this.snippets.$el);
+            self.$el.before(self.snippets.$el);
             setTimeout(function () { // add a set timeout for the transition
-                this.snippets.$el.addClass('o_loaded');
-                this.$el.addClass('o_snippets_loaded');
-            }.bind(this));
-        }.bind(this));
-        return def;
+                self.snippets.$el.addClass('o_loaded');
+                self.$el.addClass('o_snippets_loaded');
+            });
+        });
     },
 
     //--------------------------------------------------------------------------
@@ -53,7 +69,7 @@ Wysiwyg.include({
      * @override
      */
     isUnbreakableNode: function (node) {
-        if (!this.options.snippets) {
+        if (!this.snippets) {
             return this._super(node);
         }
         return this._super(node) || $(node).is('div') || snippetsEditor.globalSelector.is($(node));
@@ -62,7 +78,7 @@ Wysiwyg.include({
      * @override
      */
     save: function () {
-        if (!this.options.snippets) {
+        if (!this.snippets) {
             return this._super();
         }
         if (!this.isDirty()) {
