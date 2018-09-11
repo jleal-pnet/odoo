@@ -20,6 +20,7 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(nam
 _logger = logging.getLogger('dispatcher')
 
 to_reload = {}
+last_ping = {}
 
 class StatusController(http.Controller):
 
@@ -67,12 +68,14 @@ class StatusController(http.Controller):
     def ping_trigger(self): #, tab
         data = httprequest.jsonrequest
         ping_dict = {}
-        for dev in self.owner_dict.keys():
-            if self.owner_dict[dev] == data['tab']:
+        #last_ping[data['tab']] = datetime.datetime.utcnow()
+        for dev in data['devices']:
+            if self.owner_dict.get(dev) and self.owner_dict[dev] == data['tab']:
                 if drivers[dev].ping_value:
                     ping_dict[dev] = drivers[dev].ping_value
                     drivers[dev].ping_value = '' #or set it to nothing
-        # TODO: Need separate dict to tell when it is disconnected, so it can inform the user if necessary to retake control
+            else:
+                ping_dict[dev] = 'STOP'
         return ping_dict
 
     @http.route('/box/connect', type='http', auth='none', cors='*', csrf=False)
@@ -225,6 +228,7 @@ class SylvacUSBDriver(USBDriver):
 
 class KeyboardUSBDriver(USBDriver):
 
+    ping_value = ''
     def supported(self):
         return getattr(self.dev, 'idVendor') == 0x046d and getattr(self.dev, 'idProduct') == 0xc31c
 
@@ -249,6 +253,8 @@ class KeyboardUSBDriver(USBDriver):
                     self.value = ''
                 elif data.keystate:
                     self.value += data.keycode.replace('KEY_','')
+                    self.ping_value = data.keycode.replace('KEY_','')
+
 
     def action(self, action):
         pass
