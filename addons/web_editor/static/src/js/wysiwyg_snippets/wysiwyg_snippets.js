@@ -17,10 +17,10 @@ Wysiwyg.include({
         this._super.apply(this, arguments);
 
         options = _.clone(this.options);
-        if (!options.snippets && !this.options.snippets) {
+        if (!options.snippets) {
             return;
         }
-        if (!options.snippets) {
+        if (options.snippets === true) {
             options.snippets = 'web_editor.snippets';
         }
         options.isUnbreakableNode = this.isUnbreakableNode.bind(this);
