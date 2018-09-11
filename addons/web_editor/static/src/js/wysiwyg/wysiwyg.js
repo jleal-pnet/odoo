@@ -169,7 +169,8 @@ var Wysiwyg = Widget.extend({
      * @returns {boolean}
      */
     isDirty: function () {
-        return this._dirty && this._value !== this._summernote.code();
+        if (!this._dirty && this._value !== this._summernote.code()) console.warn("not dirty flag ? (eg: font-size)");
+        return this._value !== this._summernote.code();
     },
     /*
      * return true if the current node is unbreakable.
@@ -203,7 +204,7 @@ var Wysiwyg = Widget.extend({
      */
     _editorOptions: function () {
         var self = this;
-        var allowAttachment = !this.options['no-attachment'];
+        var allowAttachment = !this.options.noAttachment;
 
         var options = JSON.parse(JSON.stringify($.summernote.options));
 

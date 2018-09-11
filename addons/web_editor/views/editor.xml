@@ -93,6 +93,7 @@
         <script type="text/javascript" src="/web_editor/static/src/js/backend/field_html_iframe.js" />
         <script type="text/javascript" src="/web_editor/static/src/js/backend/field_registry.js" />
         <script type="text/javascript" src="/web_editor/static/src/js/backend/transcoder.js"/>
+        <script type="text/javascript" src="/web_editor/static/src/js/backend/wysiwyg_inline.js"/>
     </xpath>
 </template>
 

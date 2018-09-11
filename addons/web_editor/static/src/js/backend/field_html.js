@@ -6,7 +6,6 @@ var config = require('web.config');
 var core = require('web.core');
 var session = require('web.session');
 var Wysiwyg = require('web_editor.wysiwyg');
-var transcoder = require('web_editor.transcoder');
 
 var TranslatableFieldMixin = basic_fields.TranslatableFieldMixin;
 
@@ -45,10 +44,10 @@ var FieldTextHtmlSimple = basic_fields.DebouncedField.extend(TranslatableFieldMi
      * @override
      */
     commitChanges: function () {
-        if (this._getValue() !== this.value) {
+        if (this.wysiwyg.isDirty()) {
             this._isDirty = true;
         }
-        this._super.apply(this, arguments);
+        return this.wysiwyg.save().then(this._super.bind(this));
     },
     /**
      * @override
@@ -88,12 +87,7 @@ var FieldTextHtmlSimple = basic_fields.DebouncedField.extend(TranslatableFieldMi
      * @private
      */
     _getValue: function () {
-        if (this.nodeOptions['style-inline']) {
-            transcoder.attachmentThumbnailToLinkImg(this.$content);
-            transcoder.fontToImg(this.$content);
-            transcoder.classToStyle(this.$content);
-        }
-        return this.$content.html();
+        return this.$target.val();
     },
     /**
      * create the wysiwyg instance with the target
@@ -125,7 +119,8 @@ var FieldTextHtmlSimple = basic_fields.DebouncedField.extend(TranslatableFieldMi
                 res_model: this.model,
                 res_id: this.res_id,
             },
-            'no-attachment': this.nodeOptions['no-attachment'],
+            styleInline: this.nodeOptions['style-inline'],
+            noAttachment: this.nodeOptions['no-attachment'],
         };
     },
     /**
