@@ -102,7 +102,6 @@ return core.Class.extend(mixins.EventDispatcherMixin, ServicesMixin, {
                 local_storage.removeItem(get_step_key(name));
                 tour.current_step = 0;
             }
-
             tour.ready = true;
 
             if (do_update && (this.running_tour === name || (!this.running_tour && !tour.test && !tour_is_consumed))) {
@@ -219,6 +218,7 @@ return core.Class.extend(mixins.EventDispatcherMixin, ServicesMixin, {
                 $el.off('load').one('load', function () {
                     $el.off('load');
                     if (self.active_tooltips[tour_name] === tip) {
+                        console.log("second update");
                         self.update(tour_name);
                     }
                 });
