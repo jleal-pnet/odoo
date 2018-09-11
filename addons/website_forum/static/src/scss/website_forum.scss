@@ -79,6 +79,9 @@
 }
 .o_card_people{
     padding-top: 200px;
+    position: relative;
+    width: 32%; 
+    margin-left: 1%;
 }
 
 .user_name_people{
@@ -95,7 +98,9 @@
     background-repeat: no-repeat;
     background-position: center;
 }
-
+.o_profile_main{
+    overflow: hidden;
+}
 /*img.o_forum_avatar {*/
     /*max-height: 40px;*/
     /*margin-right: 10px;*/

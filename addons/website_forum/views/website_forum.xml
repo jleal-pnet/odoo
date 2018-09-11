@@ -1410,8 +1410,8 @@
 
 <template id="users">
     <t t-call="website_forum.header">
-        <div t-foreach="users" t-as="row_users" class=" mt16">
-            <div t-foreach="row_users" t-as="user" class="rounded bg-white pl-4 pr-4 pb-4 o_card_people float-left">
+        <div t-foreach="users" t-as="row_users">
+            <div t-foreach="row_users" t-as="user" class="rounded bg-white pl-4 pr-4 pb-4 o_card_people d-inline-block mb-2">
                 <div class="float-left col-12 pt-0 pr-0 pb-0 pl-0 o_people_photo_over rounded" t-attf-style="background-image: url('/forum/user/#{user.id}/avatar')">
                     <!-- <img class="img o_forum_avatar" t-attf-src="/forum/user/#{user.id}/avatar" alt="Avatar"/> -->
                     <t t-if="user.country_id">
@@ -1419,7 +1419,7 @@
                     </t>
                 </div>
                 <div>
-                    <h3 class="d-inline-block user_name_people"><a t-attf-href="/forum/#{slug(forum)}/user/#{user.id}" t-field="user.name" class="text-secondary"/></h3>
+                    <h4 class="d-inline-block user_name_people"><a t-attf-href="/forum/#{slug(forum)}/user/#{user.id}" t-field="user.name" class="text-secondary"/></h4>
                     <b class='float-right mt-1'><i class="text-secondary mr-1 fa fa-diamond"/><t t-esc="user.karma"/></b>
                     <!-- <t t-raw="separator"/> -->
                     <div>
@@ -1548,40 +1548,40 @@
             <h1 class="mt0 page-header d-inline">Profile</h1>
             <a class="float-right text-secondary mt-4" t-attf-href="/forum/#{slug(forum)}/user/#{slug(user)}/edit">Edit<i class="fa fa-angle-right ml-2"/></a>
         </div>
-        <div>
-            <div class="col-md-4 border pb16 rounded mb-5 d-block float-left">
-                <div class="o_people_photo_over col-12 pl-0 pr-0">
-                    <img class="img img-fluid" t-attf-src="/forum/user/#{user.id}/avatar" alt="Avatar"/>
+        <div class="o_profile_main">
+            <div class="col-md-4 pb16 rounded mb-5 d-block float-left o_card_people bg-white">
+                <div class="o_people_photo_over col-12 pl-0 pr-0 rounded" t-attf-style="background-image: url('/forum/user/#{user.id}/avatar')">
+                    <!-- <img class="img img-fluid" t-attf-src="/forum/user/#{user.id}/avatar" alt="Avatar"/> -->
                 </div>
-                <span t-field="user.name"/>
+                <h3 class="text-secondary font-weight-bold"><span t-field="user.name"/></h3>
                 <div class="col-12 border-top mt-2 pt-2 pr-0 pl-0">
-                    <b class="text-secondary">Karma</b>
-                    <span class="float-right" t-field="user.karma"/>
+                    <b class="text-muted">Karma</b>
+                    <span class="float-right"><i class="fa fa-diamond text-secondary mr-2"/><b t-field="user.karma"/></span>
                 </div>
                 <div class="col-12 border-top mt-2 pt-2 pr-0 pl-0">
-                    <b class="mb-1 text-secondary">Badges</b>
+                    <b class="mb-1 text-muted">Badges</b>
                     <span class="float-right">
-                        <span class="fa fa-trophy badge-gold" role="img" aria-label="Gold badge" title="Gold badge"/>
-                        <span t-esc="user.gold_badge" class=""/>
-                        <span class="fa fa-trophy badge-silver ml16" role="img" aria-label="Silver badge" title="Silver badge"/>
-                        <span t-esc="user.silver_badge" class="" />
-                        <span class="fa fa-trophy badge-bronze ml16" role="img" aria-label="Bronze badge" title="Bronze badge"/>
-                        <span t-esc="user.bronze_badge" class="" />
+                        <b class="fa fa-trophy badge-gold" role="img" aria-label="Gold badge" title="Gold badge"/>
+                        <b t-esc="user.gold_badge" class=""/>
+                        <b class="fa fa-trophy badge-silver ml16" role="img" aria-label="Silver badge" title="Silver badge"/>
+                        <b t-esc="user.silver_badge" class="" />
+                        <b class="fa fa-trophy badge-bronze ml16" role="img" aria-label="Bronze badge" title="Bronze badge"/>
+                        <b t-esc="user.bronze_badge" class="" />
                     </span>
                 </div>
                 <div class="col-12 border-top mt-2 pt-2 pr-0 pl-0">
-                    <b class="mb-1 text-secondary">Votes</b>
+                    <b class="mb-1 text-muted">Votes</b>
                     <span class="float-right">
-                        <span class="fa fa-thumbs-up text-success" role="img" aria-label="Positive votes" title="Positive votes"/>
-                        <span t-esc="up_votes"/>
-                        <span class="fa fa-thumbs-down text-danger ml-3" role="img" aria-label="Negative votes" title="Negative votes"/>
-                        <span t-esc="down_votes"/>
+                        <b class="fa fa-thumbs-up text-success" role="img" aria-label="Positive votes" title="Positive votes"/>
+                        <b t-esc="up_votes"/>
+                        <b class="fa fa-thumbs-down text-danger ml-3" role="img" aria-label="Negative votes" title="Negative votes"/>
+                        <b t-esc="down_votes"/>
                     </span>
                 </div>
             </div>
             <div class="col-md-8 rounded float-left d-inline-block pr-0">
                 <b class="text-muted">Contribution</b>
-                <div class="border rounded pt-3 pb-3 pl-3 pr-3 mt-1 mb-4">
+                <div class="bg-white rounded pt-3 pb-3 pl-3 pr-3 mt-1 mb-4">
                     <div class="col-12 d-block pr-0 pl-0">
                         <div class="col-4 d-inline-block pr-0 pl-0">
                             <b class="text-secondary">Member since</b>
@@ -1597,7 +1597,7 @@
                 </div>
 
                 <b class="text-muted">Bio</b>
-                <div class="border rounded pt-3 pb-3 pl-3 pr-3 mt-1 mb-4">
+                <div class="bg-white rounded pt-3 pb-3 pl-3 pr-3 mt-1 mb-4">
                     <div class=" col-12 d-block">
                         <div class="col-4 d-inline-block pr-0 pl-0">
                             <b class="text-secondary">Location</b>
@@ -1619,8 +1619,8 @@
                     </div>
                 </div>
 
-                <b class="text-muted">Introducion</b>
-                <div class="border pt-3 pb-3 pr-3 pl-3 mt-1 mb-4 rounded">
+                <b class="text-muted">Introduction</b>
+                <div class="bg-white pt-3 pb-3 pr-3 pl-3 mt-1 mb-4 rounded">
                     <div><span t-field="user.partner_id.website_description" class="oe_no_empty"/></div>
                 </div>
                 <!-- <t t-if="uid == user.id">
