@@ -4,9 +4,6 @@ odoo.define('web_editor.wysiwyg.snippets', function (require) {
 var Wysiwyg = require('web_editor.wysiwyg');
 var snippetsEditor = require('web_editor.snippet.editor');
 
-/*
- * add options (snippetsURL) to load snippet building block
- **/
 Wysiwyg.include({
     events: _.extend({}, Wysiwyg.prototype.events, {
         'content_changed .o_editable': '_onChange',
@@ -17,17 +14,21 @@ Wysiwyg.include({
     }),
 
     /**
+     * add options (snippets) to load snippet building block
+     * snippets can by url begin with '/' or an view xml_id
+     *
      * @override
+     * @params {string} [options.snippets]
      */
     start: function () {
         var def = this._super();
 
         var options = _.clone(this.options);
-        if (!options.snippetsURL && !this.options.snippets) {
+        if (!options.snippets && !this.options.snippets) {
             return;
         }
-        if (!options.snippetsURL) {
-            options.snippetsURL = '/web_editor/snippets';
+        if (!options.snippets) {
+            options.snippets = 'web_editor.snippets';
         }
 
         options.isUnbreakableNode = this.isUnbreakableNode.bind(this);
@@ -52,7 +53,7 @@ Wysiwyg.include({
      * @override
      */
     isUnbreakableNode: function (node) {
-        if (!this.options.snippetsURL) {
+        if (!this.options.snippets) {
             return this._super(node);
         }
         return this._super(node) || $(node).is('div') || snippetsEditor.globalSelector.is($(node));
@@ -61,7 +62,7 @@ Wysiwyg.include({
      * @override
      */
     save: function () {
-        if (!this.options.snippetsURL) {
+        if (!this.options.snippets) {
             return this._super();
         }
         if (!this.isDirty()) {

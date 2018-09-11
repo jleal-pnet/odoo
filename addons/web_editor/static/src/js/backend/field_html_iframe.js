@@ -3,8 +3,6 @@ odoo.define('web_editor.field.html.iframe', function (require) {
 
 var FieldTextHtmlSimple = require('web_editor.field.html');
 
-// "/mass_mailing/field/email_template"
-
 var FieldTextHtmlIframe = FieldTextHtmlSimple.extend({
     className: 'oe_form_field oe_form_field_html',
     supportedFieldTypes: ['html'],
@@ -25,7 +23,7 @@ var FieldTextHtmlIframe = FieldTextHtmlSimple.extend({
         var options = this._super();
         options.inIframe = true;
         options.snippets = true;
-        options.snippetsURL = this.nodeOptions.snippetsURL;
+        options.snippets = this.nodeOptions.snippets;
         options.iframeCssAssets = this.nodeOptions.iframeCssAssets;
         return options;
     },
@@ -34,8 +32,18 @@ var FieldTextHtmlIframe = FieldTextHtmlSimple.extend({
 console.error('todo: readonly in iframe');
 // mass_mailing: /mass_mailing/static/src/css/basic_theme_readonly.css
 
-console.error('insert js mass_mailing')
-// /mass_mailing/static/src/js/mass_mailing_editor.js
+console.error('insert js mass_mailing');
+/*
+
+mass_mailing/static/src/js/mass_mailing_editor.js
+mass_mailing.FieldTextHtmlInline
+
+To remove: 
+
+FieldTextHtmlInline
+FieldTextHtmlPopupContent
+
+*/
 
 return FieldTextHtmlIframe;
 });

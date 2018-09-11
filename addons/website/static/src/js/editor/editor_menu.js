@@ -124,7 +124,7 @@ var EditorMenu = Widget.extend({
     //--------------------------------------------------------------------------
 
     _wysiwygInstance: function () {
-        return new WysiwygMultizone(this, {snippetsURL: odoo.snippetsURL});
+        return new WysiwygMultizone(this, {snippets: 'website.snippets'});
     },
     /**
      * Reloads the page in non-editable mode, with the right scrolling.

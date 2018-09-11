@@ -21,54 +21,6 @@ logger = logging.getLogger(__name__)
 
 class Web_Editor(http.Controller):
     #------------------------------------------------------
-    # Backend snippet
-    #------------------------------------------------------
-    @http.route('/web_editor/snippets', type='json', auth="user")
-    def snippets(self, **kwargs):
-        return request.env.ref('web_editor.snippets').render(None)
-
-    #------------------------------------------------------
-    # Backend html field
-    #------------------------------------------------------
-    @http.route('/web_editor/field/html', type='http', auth="user")
-    def FieldTextHtml(self, model=None, res_id=None, field=None, callback=None, **kwargs):
-        kwargs.update(
-            model=model,
-            res_id=res_id,
-            field=field,
-            datarecord=json.loads(kwargs['datarecord']),
-            debug=request.debug)
-
-        for k in kwargs:
-            if isinstance(kwargs[k], pycompat.string_types) and kwargs[k].isdigit():
-                kwargs[k] = int(kwargs[k])
-
-        trans = dict(
-            lang=kwargs.get('lang', request.env.context.get('lang')),
-            translatable=kwargs.get('translatable'),
-            edit_translations=kwargs.get('edit_translations'),
-            editable=kwargs.get('enable_editor'))
-
-        kwargs.update(trans)
-
-        record = None
-        if model and kwargs.get('res_id'):
-            record = request.env[model].with_context(trans).browse(kwargs.get('res_id'))
-
-        kwargs.update(content=record and getattr(record, field) or "")
-
-        return request.render(kwargs.get("template") or "web_editor.FieldTextHtml", kwargs, uid=request.uid)
-
-    #------------------------------------------------------
-    # Backend html field in inline mode
-    #------------------------------------------------------
-    @http.route('/web_editor/field/html/inline', type='http', auth="user")
-    def FieldTextHtmlInline(self, model=None, res_id=None, field=None, callback=None, **kwargs):
-        kwargs['inline_mode'] = True
-        kwargs['dont_load_assets'] = not kwargs.get('enable_editor') and not kwargs.get('edit_translations')
-        return self.FieldTextHtml(model, res_id, field, callback, **kwargs)
-
-    #------------------------------------------------------
     # convert font into picture
     #------------------------------------------------------
     @http.route([

@@ -67,6 +67,9 @@
 
 <!-- Extend default mass_mailing snippets with website feature -->
 <template id="social_links">
+    <t t-if="not website">
+        <t t-set="website" t-value="request.env['website'].search([], limit=1)"/>
+    </t>
     <t t-if="website.social_facebook">
         <a t-att-href="website.social_facebook" aria-label="Facebook" title="Facebook">
           <span class="fa fa-facebook"></span>

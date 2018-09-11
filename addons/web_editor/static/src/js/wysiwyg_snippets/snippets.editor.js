@@ -522,11 +522,11 @@ var SnippetsMenu = Widget.extend({
      * @params {Widget} parent
      * @params {DOM} $editable
      * @params {Object} [options]
-     * @params {string} [options.snippetsURL]
+     * @params {string} [options.snippets]
      *      URL where to find the snippets template. This URL might have
-     *      been set in the global 'snippetsURL' variable, otherwise this function
+     *      been set in the global 'snippets' variable, otherwise this function
      *      returns a default one.
-     *      default: '/web_editor/snippets'
+     *      default: 'web_editor.snippets'
      *
      * @constructor
      */
@@ -534,8 +534,8 @@ var SnippetsMenu = Widget.extend({
         this._super.apply(this, arguments);
 
         this.options = options || {};
-        if (!this.options.snippetsURL) {
-            this.options.snippetsURL = '/web_editor/snippets';
+        if (!this.options.snippets) {
+            this.options.snippets = 'web_editor.snippets';
         }
         this.$editable = $editable;
         this.$body = this.$editable.closest('body');
@@ -552,7 +552,15 @@ var SnippetsMenu = Widget.extend({
         var $window = $(window);
 
         // Fetch snippet templates and compute it
-        defs.push(this._rpc({route: this.options.snippetsURL}).then(function (html) {
+
+        defs.push(this._rpc({
+            model: 'ir.ui.view',
+            method: 'render_template',
+            args: [this.options.snippets, {}],
+            kwargs: {
+                context: this.options.recordInfo().context,
+            },
+        }).then(function (html) {
             return self._computeSnippetTemplates(html);
         }));
 

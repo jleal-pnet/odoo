@@ -603,7 +603,7 @@
                         <notebook>
                             <page string="Mail Body">
                                 <field name="body_html" class="o_mail_body" widget="html_frame" options="{
-                                    'snippetsURL': '/mass_mailing/snippets',
+                                    'snippets': 'mass_mailing.email_designer_snippets',
                                     'iframeCssAssets': 'mass_mailing.wysiwyg_iframe_css_assets'
                                 }"/>
                             </page>

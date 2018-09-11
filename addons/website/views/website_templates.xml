@@ -191,7 +191,6 @@
                     user_id: <t t-esc="json.dumps(request.env.user.id)" />
                 };
                 <t groups="website.group_website_publisher">
-                    odoo.snippetsURL = '/website/snippets';
                     odoo.session_info.website_id = <t t-esc="json.dumps(request.website.id)" />;
                     odoo.session_info.website_company_id = <t t-esc="json.dumps(request.website.company_id.id)" />;
                 </t>

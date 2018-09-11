@@ -12,6 +12,11 @@
     <t t-call-assets="mass_mailing.assets_mail_themes" t-js="false"/>
 </template>
 
+<template id="wysiwyg_iframe_css_assets_popup" name="CSS assets for wysiwyg iframe content to edit popup">
+    <t t-call="mass_mailing.wysiwyg_iframe_css_assets"/>
+    <link rel="stylesheet" href="/mass_mailing/static/src/css/mass_mailing_popup.css" type="text/css"/>
+</template>
+
 
 <template id="FieldTextHtmlInline" name="Editor layout">
     <t t-call="web_editor.layout">
