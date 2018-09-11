@@ -123,20 +123,6 @@ class AccountReconcileModel(models.Model):
         if self.match_total_amount_param < 0 or self.match_total_amount_param > 100:
             self.match_total_amount_param = min(max(0, self.match_total_amount_param), 100)
 
-    @api.multi
-    def button_journal_items(self):
-        move_lines = self.env['account.move.line'].search([('model_id', 'in', self.ids)])
-        return {
-            'name': _('Journal Items'),
-            'view_type': 'form',
-            'view_mode': 'tree,form',
-            'res_model': 'account.move.line',
-            'view_id': False,
-            'type': 'ir.actions.act_window',
-            'domain': [('id', 'in', move_lines.ids)],
-        }
-
-
     ####################################################
     # RECONCILIATION PROCESS
     ####################################################
@@ -715,8 +701,6 @@ class AccountReconcileModel(models.Model):
                             payment_aml_rec=reconciliation_results['payment_aml_rec'],
                             new_aml_dicts=new_aml_dicts,
                         )
-                        reconciled_move_lines = counterpart_moves.mapped('line_ids')
-                        reconciled_move_lines.write({'model_id': model.id})
                         results[line.id]['status'] = 'reconciled'
-                        results[line.id]['reconciled_lines'] = reconciled_move_lines
+                        results[line.id]['reconciled_lines'] = counterpart_moves.mapped('line_ids')
         return results
