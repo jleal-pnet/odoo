@@ -9,7 +9,7 @@ class ResConfigSettings(models.TransientModel):
 
     lock_confirmed_po = fields.Boolean("Lock Confirmed Orders", default=lambda self: self.env.user.company_id.po_lock == 'lock')
     po_lock = fields.Selection(related='company_id.po_lock', string="Purchase Order Modification *")
-    po_order_approval = fields.Boolean("Order Approval", default=lambda self: self.env.user.company_id.po_double_validation == 'two_step')
+    po_order_approval = fields.Boolean("Purchase Order Approval", default=lambda self: self.env.user.company_id.po_double_validation == 'two_step')
     po_double_validation = fields.Selection(related='company_id.po_double_validation', string="Levels of Approvals *")
     po_double_validation_amount = fields.Monetary(related='company_id.po_double_validation_amount', string="Minimum Amount", currency_field='company_currency_id')
     company_currency_id = fields.Many2one('res.currency', related='company_id.currency_id', string="Company Currency", readonly=True,
@@ -23,6 +23,8 @@ class ResConfigSettings(models.TransientModel):
     group_warning_purchase = fields.Boolean("Purchase Warnings", implied_group='purchase.group_warning_purchase')
     group_manage_vendor_price = fields.Boolean("Vendor Pricelists",
         implied_group="purchase.group_manage_vendor_price")
+    group_order_approval = fields.Boolean(string='Order Approval',
+        implied_group='purchase.group_order_approval')
     module_account_3way_match = fields.Boolean("3-way matching: purchases, receptions and bills")
     module_purchase_requisition = fields.Boolean("Purchase Agreements")
     po_lead = fields.Float(related='company_id.po_lead')
@@ -36,6 +38,21 @@ class ResConfigSettings(models.TransientModel):
     def _onchange_use_po_lead(self):
         if not self.use_po_lead:
             self.po_lead = 0.0
+
+    @api.onchange('po_order_approval')
+    def onchange_po_order_approval(self):
+        if self.po_order_approval:
+            self.group_order_approval = True
+        else:
+            self.group_order_approval = False
+
+    @api.onchange('group_order_approval')
+    def onchange_group_order_approval(self):
+        if self.group_order_approval:
+            self.po_order_approval = True
+        else:
+            self.po_order_approval = False
+
 
     def set_values(self):
         super(ResConfigSettings, self).set_values()

@@ -16,15 +16,15 @@
                     <div class="row mt16 o_settings_container" name="purchase_setting_container">
                         <div class="col-12 col-lg-6 o_setting_box">
                             <div class="o_setting_left_pane">
-                                <field name="po_order_approval"/>
+                                <field name="group_order_approval"/>
                             </div>
                             <div class="o_setting_right_pane">
-                                <label for="po_order_approval"/>
+                                <label for="group_order_approval"/>
                                 <span class="fa fa-lg fa-building-o" title="Values set here are company-specific." aria-label="Values set here are company-specific." groups="base.group_multi_company" role="img"/>
                                 <div class="text-muted">
                                     Managers must approve orders
                                 </div>
-                                <div class="content-group" attrs="{'invisible': [('po_order_approval', '=', False)]}">
+                                <div class="content-group" attrs="{'invisible': [('group_order_approval', '=', False)]}">
                                     <div class="row mt16">
                                         <label for="po_double_validation_amount" class="col-lg-4 o_light_label"/>
                                         <field name="po_double_validation_amount"/>

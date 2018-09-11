@@ -25,6 +25,9 @@
         <field name="category_id" ref="base.module_category_hidden"/>
     </record>
 
+    <record id="group_order_approval" model="res.groups">
+        <field name="name">Purchase approval for two-step validation</field>
+    </record>
 </data>
 <data noupdate="1">
     <record id="base.default_user" model="res.users">
