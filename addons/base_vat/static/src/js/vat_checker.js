@@ -36,11 +36,13 @@ odoo.define('base.vat.vat_checker', function (require) {
             if (this.mode === 'edit') {
                 this.$indicator = $('<i/>');
                 this.$el.append(this.$indicator);
+                this._popover.init(this.$el);
                 if (this.record.data.vat_validation_state) this._setState(this.record.data.vat_validation_state);
             }
 
             return this._super.apply(this, arguments);
         },
+
 
         /**
          * @override
@@ -55,17 +57,22 @@ odoo.define('base.vat.vat_checker', function (require) {
                 this._setState('hide');
             } else {
                 if (oldVat !== newVat) {
-                    self._setState('loading');
+                    var sanitized = this._sanitizeVAT(newVat);
+                    if (this._isVAT(sanitized)) {
+                        self._setState('loading');
 
-                    this._checkVATValidity(this._sanitizeVAT(newVat)).then(function (validity) {
-                        if (validity.existing) self._setState('valid');
-                        else {
-                            if (validity.format) self._setState('unknown');
-                            else {
-                                self._setState('format', validity.expected_format);
-                            }
-                        }
-                    });
+                        this._checkVATValidity(sanitized).then(function (validity) {
+                            if (validity.found_format) {
+                                if (validity.existing) self._setState('valid');
+                                else {
+                                    if (validity.format) self._setState('company_not_found');
+                                    else self._setState('invalid_format', validity.expected_format);
+                                }
+                            } else self._setState('unknown_country_code');
+                        });
+                    } else {
+                        self._setState('invalid_format', _t('2 letters followed by 2 to 12 alphanumerics'));
+                    }
                 }
             }
 
@@ -75,6 +82,49 @@ odoo.define('base.vat.vat_checker', function (require) {
         //--------------------------------------------------------------------------
         // Private
         //--------------------------------------------------------------------------
+
+        /**
+         * Internal object to manage the popover
+         */
+        _popover: {
+            $el: false,
+            delay: 3000,
+            init: function ($el) {
+                this.$el = $el;
+                this.$el.popover({
+                    placement: 'top',
+                    trigger: 'manual hover',
+                    html: true,
+                });
+                return this;
+            },
+            show: function () {
+                this.$el.popover('show');
+                return this;
+            },
+            hide: function () {
+                this.$el.popover('hide');
+                return this;
+            },
+            set: function (message) {
+                var popover = this.$el.data('bs.popover');
+                popover.config.content = message;
+                return this;
+            },
+            autoShowHide: function () {
+                this.show();
+                setTimeout(this.hide.bind(this), this.delay);
+                return this;
+            }
+        },
+
+        /**
+         * Call RPC to check advanced formatting and valididty of VAT
+         *
+         * @param {string} vat
+         * @returns {Deferred}
+         * @private
+         */
         _checkVATValidity: function (vat) {
             var def = rpc.query({
                 model: 'res.partner',
@@ -88,47 +138,79 @@ odoo.define('base.vat.vat_checker', function (require) {
         },
 
         /**
+         * Fast check format of string match a VAT number
+         * Must be 2 Characters + 2 to 12 Alphanumerics
+         *
+         * @param {string} vat
+         * @returns {Boolean}
+         * @private
+         */
+        _isVAT: function (vat) {
+            return vat && vat.match(/^[a-zA-Z]{2}[a-zA-Z0-9]{2,12}$/);
+        },
+
+        /**
          * Sanitize search value by removing all not alphanumeric
          *
-         * @param {string} search_value
+         * @param {string} vat
          * @returns {string}
          * @private
          */
-        _sanitizeVAT: function (search_value) {
-            return search_value ? search_value.replace(/[^A-Za-z0-9]/g, '') : '';
+        _sanitizeVAT: function (vat) {
+            return vat ? vat.replace(/[^A-Za-z0-9]/g, '') : '';
         },
 
+        /**
+         * Update UI to show State Icon and title tooltip information
+         * + Set new value into DB field
+         *
+         * @param {string} state
+         * @param {string} extra_msg
+         * @private
+         */
         _setState: function (state, extra_msg) {
-            var classes, title, db_state;
+            var classes = 'fa fa-lg ';
+            var title;
+            var db_state = state;
+
+            this._popover.hide();
 
             switch (state) {
                 case 'valid':
-                    classes = "fa fa-lg fa-check-circle text-success";
+                    classes += "fa-check-circle text-success";
                     title = "VAT number is valid";
-                    db_state = state;
                     break;
-                case 'unknown':
-                    classes = "fa fa-lg fa-question-circle text-warning";
+                case 'company_not_found':
+                    classes += "fa-question-circle text-warning";
                     title = "No company found with this VAT number";
-                    db_state = state;
                     break;
-                case 'format':
-                    classes = "fa fa-lg fa-exclamation-triangle text-danger";
+                case 'unknown_country_code':
+                    classes += "fa-question-circle text-muted";
+                    title = "No VAT formatting found for the country code";
+                    break;
+                case 'invalid_format':
+                    classes += "fa-exclamation-triangle text-danger";
                     title = "Incorrect VAT number format";
-                    if (extra_msg) title += ", expected format: %s";
-                    db_state = state;
+                    if (extra_msg) title += "<br/>Expected format: %s";
+                    break;
+                case 'timeout':
+                    classes += "fa-clock-o text-danger";
+                    title = "VIES-VAT is not responding, please try again later";
+                    break;
+                case 'error':
+                    classes += "fa-frown-o text-danger";
+                    title = "Sorry, an error occurred :";
+                    if (extra_msg) title += "<br/>%s";
                     break;
                 case 'loading':
-                    classes = "fa fa-lg fa-spinner fa-spin text-muted";
+                    classes += "fa-spinner fa-spin text-muted";
                     title = "";
+                    db_state = false;
                     break;
             }
 
-            this.$indicator
-                .removeClass()
-                .addClass(classes)
-                .attr('title', _.str.sprintf(_t(title), extra_msg));
-
+            this.$indicator.removeClass().addClass(classes);
+            if (title) this._popover.set(_.str.sprintf(_t(title), extra_msg)).autoShowHide();
             if (db_state) this._setValue(db_state);
         },
     });

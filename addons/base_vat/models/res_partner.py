@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
-
+import time
 import datetime
 import logging
 import string
@@ -26,11 +26,15 @@ _eu_country_vat_inverse = {v: k for k, v in _eu_country_vat.items()}
 
 _ref_vat = {
     'at': 'ATU12345675',
+    'al': 'ALK99999999L',
+    'ar': 'AR00000000000',
     'be': 'BE0477472701',
-    'bg': 'BG1234567892',
+    'bg': 'BG1234567892 or BG1001000000',
     'ch': 'CHE-123.456.788 TVA or CH TVA 123456',  # Swiss by Yannick Vaucher @ Camptocamp
+    'cl': 'CL334441113',
+    'co': 'CO9001279338',
     'cy': 'CY12345678F',
-    'cz': 'CZ12345679',
+    'cz': 'CZ12345679 or CZ612345670 or CZ6306150004',
     'de': 'DE123456788',
     'dk': 'DK12345674',
     'ee': 'EE123456780',
@@ -39,12 +43,12 @@ _ref_vat = {
     'fi': 'FI12345671',
     'fr': 'FR32123456789',
     'gb': 'GB123456782',
-    'gr': 'GR12345670',
+    'gr': 'GR12345670 or GT123456783',
     'hu': 'HU12345676',
     'hr': 'HR01234567896',  # Croatia, contributed by Milan Tribuson
     'ie': 'IE1234567FA',
     'it': 'IT12345670017',
-    'lt': 'LT123456715',
+    'lt': 'LT123456715 or LT123456789011',
     'lu': 'LU12345613',
     'lv': 'LV41234567891',
     'mt': 'MT12345634',
@@ -54,11 +58,14 @@ _ref_vat = {
     'pe': 'PER10254824220 or PED10254824220',
     'pl': 'PL1234567883',
     'pt': 'PT123456789',
-    'ro': 'RO1234567897',
+    'ro': 'RO24736200 or RO1234567897 or RO1630615123457',
+    'ru': 'RU5505035011 or RU550501929014',
     'se': 'SE123456789701',
     'si': 'SI12345679',
-    'sk': 'SK0012345675',
-    'tr': 'TR1234567890 (VERGINO) veya TR12345678901 (TCKIMLIKNO)'  # Levent Karakas @ Eska Yazilim A.S.
+    'sk': 'SK531231123 or SK0012345675',
+    'sm': 'SM12345',
+    'tr': 'TR1234567890 (VERGINO) veya TR12345678901 (TCKIMLIKNO)',  # Levent Karakas @ Eska Yazilim A.S.
+    'ua': 'UA12345678',
 }
 
 
@@ -67,9 +74,17 @@ class ResPartner(models.Model):
 
     vat_validation_state = fields.Char('VAT Validation state')
 
+    @api.model
     def _split_vat(self, vat):
         vat_country, vat_number = vat[:2].lower(), vat[2:].replace(' ', '')
         return vat_country, vat_number
+
+    @api.model
+    def _get_check_func(self, country_code):
+        if not ustr(country_code).encode('utf-8').isalpha():
+            return False
+        check_func_name = 'check_vat_' + country_code
+        return getattr(self, check_func_name, None) or getattr(vatnumber, check_func_name, None)
 
     @api.model
     def simple_vat_check(self, country_code, vat_number):
@@ -77,10 +92,7 @@ class ResPartner(models.Model):
         Check the VAT number depending of the country.
         http://sima-pc.com/nif.php
         '''
-        if not ustr(country_code).encode('utf-8').isalpha():
-            return False
-        check_func_name = 'check_vat_' + country_code
-        check_func = getattr(self, check_func_name, None) or getattr(vatnumber, check_func_name, None)
+        check_func = self._get_check_func(country_code)
         if not check_func:
             # No VAT validation available, default to check that the country code exists
             if country_code.upper() == 'EU':
@@ -94,24 +106,28 @@ class ResPartner(models.Model):
     @api.model
     def check_vat_rpc(self, vat):
         validity = {
+            'found_format': False,
             'format': False,
             'existing': False,
             'expected_format': ''
         }
         vat_country, vat_number = self._split_vat(vat)
 
-        validity['expected_format'] = _ref_vat.get(vat_country) or ''
+        validity['found_format'] = True if self._get_check_func(vat_country) else False
 
-        # First check VAT format
-        validity['format'] = self.simple_vat_check(vat_country, vat_number)
+        if validity['found_format']:
+            validity['expected_format'] = _ref_vat.get(vat_country) or ''
 
-        if validity['format']:
-            validity['existing'] = self.vies_vat_check(vat_country, vat_number)
+            # First check VAT format
+            validity['format'] = self.simple_vat_check(vat_country, vat_number)
+
+            if validity['format']:
+                validity['existing'] = self.vies_vat_check(vat_country, vat_number, True)
 
         return validity
 
     @api.model
-    def vies_vat_check(self, country_code, vat_number):
+    def vies_vat_check(self, country_code, vat_number, fail_on_exception=False):
         try:
             # Validate against  VAT Information Exchange System (VIES)
             # see also http://ec.europa.eu/taxation_customs/vies/
@@ -122,7 +138,10 @@ class ResPartner(models.Model):
             # TIMEOUT or SERVER_BUSY. There is no way we can validate the input
             # with VIES if any of these arise, including the first one (it means invalid
             # country code or empty VAT number), so we fall back to the simple check.
-            return self.simple_vat_check(country_code, vat_number)
+            if fail_on_exception:
+                return False
+            else:
+                return self.simple_vat_check(country_code, vat_number)
 
     @api.model
     def fix_eu_vat_number(self, country_id, vat):
