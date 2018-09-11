@@ -2,20 +2,32 @@ odoo.define('web_editor.wysiwyg.iframe', function (require) {
 'use strict';
 
 var Wysiwyg = require('web_editor.wysiwyg');
+var config = require('web.config');
 
 
 var _fnSummernoteMaster = $.fn.summernote;
+var _summernoteMaster = $.summernote;
 $.fn.summernote = function () {
     var summernote = this[0].ownerDocument.defaultView._fnSummenoteSlave || _fnSummernoteMaster;
     return summernote.apply(this, arguments);
 };
 
+/*
+ * add options (inIframe) to load Wysiwyg in an iframe
+ **/
 Wysiwyg.include({
-
+    /*
+     * add options to load Wysiwyg in an iframe
+     *
+     * @override
+     * @param {boolean} options.inIframe
+     **/
     init: function (parent, options) {
         this._super.apply(this, arguments);
         if (this.options.inIframe) {
-            this._wysiwygIframeCssAssets = this.options._wysiwygIframeCssAssets || 'web_editor.wysiwyg_iframe_css_assets';
+            if (!this.options.iframeCssAssets) {
+                this.options.iframeCssAssets = 'web_editor.wysiwyg_iframe_css_assets';
+            }
             this._onUpdateIframeSummernoteId = 'onLoad_'+ this.subLib;
         }
     },
@@ -28,12 +40,20 @@ Wysiwyg.include({
         if (!this.options.inIframe) {
             return this._super();
         }
-        var rpcDef;
-        if (this._wysiwygIframeCssAssets && !Wysiwyg._iframeCssAssetsCache[this._wysiwygIframeCssAssets]) {
+        var rpcDef = $.when();
+        if (this.options.iframeCssAssets && !Wysiwyg._iframeCssAssetsCache[this.options.iframeCssAssets]) {
             rpcDef = this._rpc({
                 model: 'ir.qweb',
                 method: 'render',
-                args: [this._wysiwygIframeCssAssets, {}, this.options.recordInfo().context]
+                args: [
+                    this.options.iframeCssAssets,
+                    {
+                        debug: config.debug,
+                    }
+                ],
+                kwargs: {
+                    context: this.options.recordInfo().context,
+                }
             }).then(function (html) {
                 var $assets = $(html).filter('link');
 
@@ -43,7 +63,7 @@ Wysiwyg.include({
                     '<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">\n'+
                     $assets.map(function () {return this.outerHTML;}).get().join('\n');
 
-                Wysiwyg._iframeCssAssetsCache[this._wysiwygIframeCssAssets] = assets;
+                Wysiwyg._iframeCssAssetsCache[this.options.iframeCssAssets] = assets;
             }.bind(this));
         }
 
@@ -123,8 +143,8 @@ Wysiwyg.include({
             var cwindow = this.$iframe[0].contentWindow;
             cwindow.document
                 .open("text/html", "replace")
-                .write('<head>' + Wysiwyg._iframeCssAssetsCache[this._wysiwygIframeCssAssets] + '</head>'+
-                    '<body>'+
+                .write('<head>' + Wysiwyg._iframeCssAssetsCache[this.options.iframeCssAssets] + '</head>'+
+                    '<body class="wysiwyg_iframe">'+
                         '<div id="wysiwyg_target"></div>'+
                         '<script type="text/javascript">'+
                             'window.$ = window.jQuery = window.top.jQuery;'+
@@ -135,10 +155,10 @@ Wysiwyg.include({
                         '</script>\n'+
                         '<script type="text/javascript" src="/web_editor/static/lib/summernote/summernote.js"></script>\n'+
                         '<script type="text/javascript">'+
-                            '_summernoteSlave = $.summernote;'+
-                            '_summernoteSlave.iframe = true;'+
-                            '_summernoteSlave.lang = _summernoteMaster.lang;'+
-                            '_fnSummenoteSlave = $.fn.summernote;'+
+                            'window._summernoteSlave = $.summernote;'+
+                            'window._summernoteSlave.iframe = true;'+
+                            'window._summernoteSlave.lang = _summernoteMaster.lang;'+
+                            'window._fnSummenoteSlave = $.fn.summernote;'+
                             '$.summernote = _summernoteMaster;'+
                             '$.fn.summernote = _fnSummernoteMaster;'+
                             'window.top.' + this._onUpdateIframeSummernoteId + '()'+
@@ -163,7 +183,7 @@ Wysiwyg.include({
  * @returns {Number} eo - end offset
 */
 Wysiwyg.getRange = function (DOM) {
-    var summernote = DOM.ownerDocument.defaultView._fnSummenoteSlave || _fnSummernoteMaster;
+    var summernote = (DOM.defaultView || DOM.ownerDocument.defaultView)._summernoteSlave || _summernoteMaster;
     var range = summernote.range.create();
     return {
         sc: range.sc,
@@ -180,7 +200,7 @@ Wysiwyg.getRange = function (DOM) {
  * @param {Number} eo - end offset
 */
 Wysiwyg.setRange = function (sc, so, ec, eo) {
-    var summernote = DOM.ownerDocument.defaultView._fnSummenoteSlave || _fnSummernoteMaster;
+    var summernote = sc.ownerDocument.defaultView._summernoteSlave || _summernoteMaster;
     $(sc).focus();
     if (ec) {
         summernote.range.create(sc, so, ec, eo).normalize().select();

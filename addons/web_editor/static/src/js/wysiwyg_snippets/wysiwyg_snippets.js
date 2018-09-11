@@ -1,18 +1,17 @@
-odoo.define('web_editor.wysiwyg.multizone.snippets', function (require) {
+odoo.define('web_editor.wysiwyg.snippets', function (require) {
 'use strict';
 
-var WysiwygMultizone = require('web_editor.wysiwyg.multizone');
 var Wysiwyg = require('web_editor.wysiwyg');
 var snippetsEditor = require('web_editor.snippet.editor');
 
-/**
- * Can not break a snippet
- */
-var WysiwygMultizoneSnippets = WysiwygMultizone.extend({
-    events: _.extend({}, WysiwygMultizone.prototype.events, {
+/*
+ * add options (snippetsURL) to load snippet building block
+ **/
+Wysiwyg.include({
+    events: _.extend({}, Wysiwyg.prototype.events, {
         'content_changed .o_editable': '_onChange',
     }),
-    custom_events: _.extend({}, WysiwygMultizone.prototype.custom_events, {
+    custom_events: _.extend({}, Wysiwyg.prototype.custom_events, {
         request_history_undo_record: '_onHistoryUndoRecordRequest',
         activate_snippet:  '_onActivateSnippet',
     }),
@@ -21,23 +20,43 @@ var WysiwygMultizoneSnippets = WysiwygMultizone.extend({
      * @override
      */
     start: function () {
-        this.snippets = new snippetsEditor.Class(this, this.$editables);
-        var def = this.snippets.insertBefore(this._summernote.layoutInfo.editor);
-        return $.when(this._super(), def);
+        this._super();
+        if (!this.options.snippetsURL && !this.options.snippets) {
+            return;
+        }
+        if (!this.options.snippetsURL) {
+            this.options.snippetsURL = '/web_editor/snippets';
+        }
+        this.snippets = new snippetsEditor.Class(this, this.$targetDroppable || this.$el, this.options);
+        this.snippets.insertBefore(this.$el).then(function () {
+            this.$el.before(this.snippets.$el);
+            setTimeout(function () { // add a set timeout for the transition
+                this.snippets.$el.addClass('o_loaded');
+                this.$el.addClass('o_snippets_loaded');
+            }.bind(this));
+        }.bind(this));
     },
+
     //--------------------------------------------------------------------------
     // Public
     //--------------------------------------------------------------------------
+
     /*
      * @override
      */
     isUnbreakableNode: function (node) {
+        if (!this.options.snippetsURL) {
+            return this._super(node);
+        }
         return this._super(node) || $(node).is('div') || snippetsEditor.globalSelector.is($(node));
     },
     /*
      * @override
      */
     save: function () {
+        if (!this.options.snippetsURL) {
+            return this._super();
+        }
         if (!this.isDirty()) {
             return $.when();
         }
@@ -76,22 +95,6 @@ var WysiwygMultizoneSnippets = WysiwygMultizone.extend({
     _onHistoryUndoRecordRequest: function (ev) {
         this.addHistoryStep();
     },
-
-    // this._focusedNode
 });
 
-//--------------------------------------------------------------------------
-// Public helper
-//--------------------------------------------------------------------------
-
-/**
- * Load wysiwyg assets if needed
- *
- * @see Wysiwyg.createReadyFunction
- * @param {Widget} parent
- * @returns {$.Promise}
-*/
-Wysiwyg.createReadyFunction(WysiwygMultizoneSnippets);
-
-return WysiwygMultizoneSnippets;
 });

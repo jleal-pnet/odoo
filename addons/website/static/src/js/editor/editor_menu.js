@@ -4,7 +4,7 @@ odoo.define('website.editor.menu', function (require) {
 var Dialog = require('web.Dialog');
 var Widget = require('web.Widget');
 var core = require('web.core');
-var WysiwygMultizoneSnippets = require('web_editor.wysiwyg.multizone.snippets');
+var WysiwygMultizone = require('web_editor.wysiwyg.multizone');
 var snippetsEditor = require('web_editor.snippet.editor');
 
 var _t = core._t;
@@ -122,7 +122,7 @@ var EditorMenu = Widget.extend({
     //--------------------------------------------------------------------------
 
     _wysiwygInstance: function () {
-        return new WysiwygMultizoneSnippets(this);
+        return new WysiwygMultizone(this, {snippetsURL: odoo.snippetsURL});
     },
     /**
      * Reloads the page in non-editable mode, with the right scrolling.

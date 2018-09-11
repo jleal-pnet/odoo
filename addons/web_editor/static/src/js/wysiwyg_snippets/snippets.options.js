@@ -4,7 +4,6 @@ odoo.define('web_editor.snippets.options', function (require) {
 var core = require('web.core');
 var Dialog = require('web.Dialog');
 var Widget = require('web.Widget');
-var weContext = require('web_editor.context');
 var weWidgets = require('wysiwyg.widgets');
 
 var qweb = core.qweb;
@@ -37,8 +36,9 @@ var SnippetOption = Widget.extend({
      *
      * @constructor
      */
-    init: function (parent, $target, $overlay, data) {
+    init: function (parent, $target, $overlay, data, options) {
         this._super.apply(this, arguments);
+        this.options = options;
         this.$target = $target;
         this.$overlay = $overlay;
         this.data = data;
@@ -1233,7 +1233,7 @@ registry.many2one = SnippetOption.extend({
             kwargs: {
                 order: [{name: 'name', asc: false}],
                 limit: 5,
-                context: weContext.get(),
+                context: this.options.recordInfo().context,
             },
         }).then(function (result) {
             self.$search.siblings().remove();
@@ -1272,7 +1272,7 @@ registry.many2one = SnippetOption.extend({
                         args: [[self.ID]],
                         kwargs: {
                             options: options,
-                            context: weContext.get(),
+                            context: self.options.recordInfo().context,
                         },
                     }).then(function (html) {
                         $node.html(html);

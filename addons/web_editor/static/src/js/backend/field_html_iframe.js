@@ -24,8 +24,9 @@ var FieldTextHtmlIframe = FieldTextHtmlSimple.extend({
     _getWysiwygOptions: function () {
         var options = this._super();
         options.inIframe = true;
-        options.snippetsController = this.nodeOptions.snippetsController || '/mass_mailing/snippets';
-        options.assetsTemplate = '';
+        options.snippets = true;
+        // options.snippetsURL = this.nodeOptions.snippetsURL || '/web_editor/snippets' || '/mass_mailing/snippets';
+        // options.iframeCssAssets = '';
         return options;
     },
 });

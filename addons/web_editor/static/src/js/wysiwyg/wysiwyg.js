@@ -93,11 +93,11 @@ var Wysiwyg = Widget.extend({
             .then(this._loadInstance.bind(this));
     },
     /**
+     * start in sync
      * @override
      */
     start: function () {
         this._value = this._summernote.code();
-        return this._super();
     },
     /**
      * @override
@@ -328,7 +328,7 @@ var Wysiwyg = Widget.extend({
         this.$target.attr('data-wysiwyg-id', this.id).data('wysiwyg', this);
         $('.note-editor, .note-popover').not('[data-wysiwyg-id]').attr('data-wysiwyg-id', this.id);
 
-        this.setElement(this._summernote.layoutInfo.editable);
+        this.setElement(this._summernote.layoutInfo.editor);
 
         return $.when();
     },

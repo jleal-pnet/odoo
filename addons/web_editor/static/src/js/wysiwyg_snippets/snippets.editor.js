@@ -6,7 +6,6 @@ var dom = require('web.dom');
 var Widget = require('web.Widget');
 var options = require('web_editor.snippets.options');
 var Wysiwyg = require('web_editor.wysiwyg');
-var WysiwygMultizone = require('web_editor.wysiwyg.multizone');
 
 var _t = core._t;
 
@@ -38,8 +37,9 @@ var SnippetEditor = Widget.extend({
      * @param {Element} target
      * @param templateOptions
      */
-    init: function (parent, target, templateOptions) {
+    init: function (parent, target, templateOptions, options) {
         this._super.apply(this, arguments);
+        this.options = options;
         this.$target = $(target);
         this.$target.data('snippet-editor', this);
         this.templateOptions = templateOptions;
@@ -283,7 +283,8 @@ var SnippetEditor = Widget.extend({
                 self,
                 val.base_target ? self.$target.find(val.base_target).eq(0) : self.$target,
                 self.$el,
-                val.data
+                val.data,
+                self.options
             );
             self.styles[optionName || _.uniqueId('option')] = option;
             option.__order = i++;
@@ -516,11 +517,24 @@ var SnippetsMenu = Widget.extend({
     },
 
     /**
+     * @params {Widget} parent
+     * @params {DOM} $editable
+     * @params {Object} [options]
+     * @params {string} [options.snippetsURL]
+     *      URL where to find the snippets template. This URL might have
+     *      been set in the global 'snippetsURL' variable, otherwise this function
+     *      returns a default one.
+     *      default: '/web_editor/snippets'
+     *
      * @constructor
      */
-    init: function (parent, $editable) {
+    init: function (parent, $editable, options) {
         this._super.apply(this, arguments);
 
+        this.options = options || {};
+        if (!this.options.snippetsURL) {
+            this.options.snippetsURL = '/web_editor/snippets';
+        }
         this.$editable = $editable;
         this.$activeSnippet = false;
         this.snippetEditors = [];
@@ -535,8 +549,7 @@ var SnippetsMenu = Widget.extend({
         var $window = $(window);
 
         // Fetch snippet templates and compute it
-        var url = this._getSnippetURL();
-        defs.push(this._rpc({route: url}).then(function (html) {
+        defs.push(this._rpc({route: this.options.snippetsURL}).then(function (html) {
             return self._computeSnippetTemplates(html);
         }));
 
@@ -904,7 +917,7 @@ var SnippetsMenu = Widget.extend({
             selectorConditions += ':has(' + target + ')';
         }
         if (!noCheck) {
-            selectorConditions = ':o_editable' + selectorConditions;
+            selectorConditions = (this.options.addDropSelector || '') + selectorConditions;
         }
 
         // (Re)join the subselectors
@@ -1117,7 +1130,7 @@ var SnippetsMenu = Widget.extend({
         }
 
         return $.when(def).then(function (parentEditor) {
-            snippetEditor = new SnippetEditor(parentEditor || self, $snippet, self.templateOptions);
+            snippetEditor = new SnippetEditor(parentEditor || self, $snippet, self.templateOptions, self.options);
             self.snippetEditors.push(snippetEditor);
             return snippetEditor.appendTo(self.$snippetEditorArea);
         }).then(function () {
@@ -1151,17 +1164,6 @@ var SnippetsMenu = Widget.extend({
 
             $snippet.toggleClass('o_disabled', !check);
         });
-    },
-    /**
-     * Returns the URL where to find the snippets template. This URL might have
-     * been set in the global 'snippetsURL' variable, otherwise this function
-     * returns a default one.
-     *
-     * @private
-     * @returns {string}
-     */
-    _getSnippetURL: function () {
-        return odoo.snippetsURL || '/web_editor/snippets';
     },
     /**
      * Make given snippets be draggable/droppable thanks to their thumbnail.

@@ -102,9 +102,10 @@ var WysiwygMultizone = Wysiwyg.extend({
      *        page element)
      */
     init: function (parent, options) {
-        this._super(this, options);
-        this.setParent(parent);
+        options = options || {};
+        options.addDropSelector = ':o_editable';
         this.savingMutex = new concurrency.Mutex();
+        this._super(parent, options);
     },
     /**
      * Prevent some default features for the editable area.
@@ -352,14 +353,15 @@ var WysiwygMultizone = Wysiwyg.extend({
      * @override
      */
     _loadInstance: function () {
-        var $target = this.$target;
-        var id = $target.attr('id');
-        var className = $target.attr('class');
-        $target.off('.WysiwygFrontend');
-        $target.attr('data-id', id).removeAttr('id');
         return this._super().then(function () {
+            var $target = this.$target;
+            var id = $target.attr('id');
+            var className = $target.attr('class');
+            $target.off('.WysiwygFrontend');
+            $target.attr('data-id', id).removeAttr('id');
             this.$el.attr('id', id).addClass(className);
             this.$editables = this.$('.o_editable');
+            this.$targetDroppable = this.$editables;
         }.bind(this));
     },
 
