@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server saas~11.5\n"
+"Project-Id-Version: Odoo Server saas~11.5+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-08-24 09:05+0000\n"
-"PO-Revision-Date: 2018-08-24 09:05+0000\n"
+"POT-Creation-Date: 2018-09-11 10:52+0000\n"
+"PO-Revision-Date: 2018-09-11 10:52+0000\n"
 "Last-Translator: <>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -16,13 +16,13 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. module: website_sale_wishlist
-#: model:ir.ui.view,arch_db:website_sale_wishlist.header
+#: model_terms:ir.ui.view,arch_db:website_sale_wishlist.header
 msgid "<i class=\"fa fa-heart\"/>\n"
 "                        Wishlist"
 msgstr ""
 
 #. module: website_sale_wishlist
-#: model:ir.ui.view,arch_db:website_sale_wishlist.product_wishlist
+#: model_terms:ir.ui.view,arch_db:website_sale_wishlist.product_wishlist
 msgid "<small><i class=\"fa fa-trash-o\"/> Remove</small>"
 msgstr ""
 
@@ -32,18 +32,18 @@ msgid "Active"
 msgstr ""
 
 #. module: website_sale_wishlist
-#: model:ir.ui.view,arch_db:website_sale_wishlist.product_wishlist
+#: model_terms:ir.ui.view,arch_db:website_sale_wishlist.product_wishlist
 msgid "Add <span class=\"d-none d-md-inline\">to Cart</span>"
 msgstr ""
 
 #. module: website_sale_wishlist
-#: model:ir.ui.view,arch_db:website_sale_wishlist.product_wishlist
+#: model_terms:ir.ui.view,arch_db:website_sale_wishlist.product_wishlist
 msgid "Add product to my cart but keep it in my wishlist"
 msgstr ""
 
 #. module: website_sale_wishlist
-#: model:ir.ui.view,arch_db:website_sale_wishlist.add_to_wishlist
-#: model:ir.ui.view,arch_db:website_sale_wishlist.product_add_to_wishlist
+#: model_terms:ir.ui.view,arch_db:website_sale_wishlist.add_to_wishlist
+#: model_terms:ir.ui.view,arch_db:website_sale_wishlist.product_add_to_wishlist
 msgid "Add to Wishlist"
 msgstr ""
 
@@ -93,7 +93,7 @@ msgid "Last Updated on"
 msgstr ""
 
 #. module: website_sale_wishlist
-#: model:ir.ui.view,arch_db:website_sale_wishlist.product_wishlist
+#: model_terms:ir.ui.view,arch_db:website_sale_wishlist.product_wishlist
 msgid "My Wishlist"
 msgstr ""
 
@@ -128,12 +128,12 @@ msgid "Product"
 msgstr ""
 
 #. module: website_sale_wishlist
-#: model:ir.ui.view,arch_db:website_sale_wishlist.product_wishlist
+#: model_terms:ir.ui.view,arch_db:website_sale_wishlist.product_wishlist
 msgid "Product image"
 msgstr ""
 
 #. module: website_sale_wishlist
-#: model:ir.ui.view,arch_db:website_sale_wishlist.product_wishlist
+#: model_terms:ir.ui.view,arch_db:website_sale_wishlist.product_wishlist
 msgid "Shop Wishlist"
 msgstr ""
 
