@@ -181,7 +181,16 @@ var Wysiwyg = Widget.extend({
      * @returns {Boolean}
      */
     isUnbreakableNode: function (node) {
-        return $.summernote.dom.isMedia(node);
+        return !this.isEditableNode(node) || $.summernote.dom.isMedia(node);
+    },
+    /*
+     * return true if the current node is editable
+     *
+     * @param {DOM} node
+     * @returns {Boolean}
+     */
+    isEditableNode: function (node) {
+        return this.$el.is(node) || $(node).closest(this.$el).length;
     },
 
     //--------------------------------------------------------------------------

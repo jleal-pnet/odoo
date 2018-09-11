@@ -28,16 +28,15 @@
 
     <div data-js="content"
         data-selector=".s_hr"
-        data-drop-near="p, h1, h2, h3, blockquote, .s_hr"
-        data-drop-in=".content">
+        data-drop-near="p, h1, h2, h3, blockquote, .s_hr">
     </div>
 
 </template>
 
 <!-- default block -->
 <template id="s_hr" name="Separator">
-    <div class="s_hr text-left pt32 pb32">
-        <hr class="s_hr_1px s_hr_solid border-600 w-100 mx-auto"/>
+    <div class="s_hr pt32 pb32">
+        <hr class="s_hr_1px s_hr_solid w-100 mx-auto"/>
     </div>
 </template>
 

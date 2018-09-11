@@ -51,6 +51,18 @@
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg/plugin/transform.js"/>
 </template>
 
+<template id="wysiwyg_snippets" inherit_id="web_editor.wysiwyg" name="Wysiwyg Editor additional snippets">
+    <xpath expr="." position="inside">
+        <link rel="stylesheet" type="text/scss" href="/web_editor/static/src/scss/wysiwyg_snippets.scss"/>
+
+        <script type="text/javascript" src="/web_editor/static/lib/nearest/jquery.nearest.js"/>
+
+        <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg_snippets/wysiwyg_snippets.js"/>
+        <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg_snippets/snippets.editor.js"/>
+        <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg_snippets/snippets.options.js"/>
+    </xpath>
+</template>
+
 <template id="_assets_primary_variables" inherit_id="web._assets_primary_variables">
     <xpath expr="//link[last()]" position="after">
         <link rel="stylesheet" type="text/scss" href="/web_editor/static/src/scss/web_editor.variables.scss"/>
@@ -103,16 +115,6 @@
     </xpath>
 </template>
 
-<template id="wysiwyg_snippets" inherit_id="web_editor.wysiwyg" name="Wysiwyg Editor additional snippets">
-    <xpath expr="." position="inside">
-        <link rel="stylesheet" type="text/scss" href="/web_editor/static/src/scss/wysiwyg_snippets.scss"/>
-
-        <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg_snippets/wysiwyg_snippets.js"/>
-        <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg_snippets/snippets.editor.js"/>
-        <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg_snippets/snippets.options.js"/>
-    </xpath>
-</template>
-
 <template id="assets_editor" name="Web Editor Assets (used in private and public editor)">
     <t t-call="web._assets_helpers"/>
 
@@ -122,7 +124,6 @@
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg_multizone/wysiwyg_multizone.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/wysiwyg_multizone/wysiwyg_multizone_translate.js"/>
 
-    <script type="text/javascript" src="/web_editor/static/lib/nearest/jquery.nearest.js"/>
     <script type="text/javascript" src="/web_editor/static/src/js/frontend/tours_rte.js"/>
 </template>
 

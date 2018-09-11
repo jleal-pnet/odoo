@@ -197,8 +197,8 @@ var WysiwygMultizone = Wysiwyg.extend({
     /*
      * @override
      */
-    isUnbreakableNode: function (node) {
-        return this._super(node) || !$(node).is(':o_editable');
+    isEditableNode: function (node) {
+        return this._super(node) && $(node).is(':o_editable');
     },
 
     //--------------------------------------------------------------------------

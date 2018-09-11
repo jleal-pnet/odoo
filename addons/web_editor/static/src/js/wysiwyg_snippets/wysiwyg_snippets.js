@@ -21,13 +21,19 @@ Wysiwyg.include({
      */
     start: function () {
         this._super();
-        if (!this.options.snippetsURL && !this.options.snippets) {
+
+        var options = _.clone(this.options);
+        if (!options.snippetsURL && !this.options.snippets) {
             return;
         }
-        if (!this.options.snippetsURL) {
-            this.options.snippetsURL = '/web_editor/snippets';
+        if (!options.snippetsURL) {
+            options.snippetsURL = '/web_editor/snippets';
         }
-        this.snippets = new snippetsEditor.Class(this, this.$targetDroppable || this.$el, this.options);
+
+        options.isUnbreakableNode = this.isUnbreakableNode.bind(this);
+        options.isEditableNode = this.isEditableNode.bind(this);
+
+        this.snippets = new snippetsEditor.Class(this, this.$targetDroppable || this.$el.find('.note-editable'), options);
         this.snippets.insertBefore(this.$el).then(function () {
             this.$el.before(this.snippets.$el);
             setTimeout(function () { // add a set timeout for the transition

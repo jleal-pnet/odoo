@@ -37,9 +37,11 @@ var SnippetEditor = Widget.extend({
      * @param {Element} target
      * @param templateOptions
      */
-    init: function (parent, target, templateOptions, options) {
+    init: function (parent, target, templateOptions, $editable, options) {
         this._super.apply(this, arguments);
         this.options = options;
+        this.$editable = $editable;
+        this.$body = $editable.closest('body');
         this.$target = $(target);
         this.$target.data('snippet-editor', this);
         this.templateOptions = templateOptions;
@@ -61,13 +63,13 @@ var SnippetEditor = Widget.extend({
         defs.push(this._initializeOptions());
 
         // Initialize move/clone/remove buttons
-        if (!this.$target.parent().is(':o_editable')) {
+        if (!this.options.isEditableNode(this.$target[0])) {
             this.$el.find('.oe_snippet_move, .oe_snippet_clone, .oe_snippet_remove').remove();
         } else {
             this.dropped = false;
             this.$el.draggable({
                 greedy: true,
-                appendTo: 'body',
+                appendTo: this.$body,
                 cursor: 'move',
                 handle: '.oe_snippet_move',
                 cursorAt: {
@@ -78,7 +80,7 @@ var SnippetEditor = Widget.extend({
                     var $clone = $(this).clone().css({width: '24px', height: '24px', border: 0});
                     $clone.find('.oe_overlay_options >:not(:contains(.oe_snippet_move)), .o_handle').remove();
                     $clone.find(':not(.glyphicon)').css({position: 'absolute', top: 0, left: 0});
-                    $clone.appendTo('body').removeClass('d-none');
+                    $clone.appendTo(self.$body).removeClass('d-none');
                     return $clone;
                 },
                 start: _.bind(self._onDragAndDropStart, self),
@@ -182,8 +184,8 @@ var SnippetEditor = Widget.extend({
         }
 
         // clean editor if they are image or table in deleted content
-        $('.note-control-selection').hide();
-        $('.o_table_handler').remove();
+        this.$body.find('.note-control-selection').hide();
+        this.$body.find('.o_table_handler').remove();
 
         this.trigger_up('snippet_removed');
         this.destroy();
@@ -383,11 +385,11 @@ var SnippetEditor = Widget.extend({
             $selectorChildren: $selectorChildren,
         });
 
-        $('body').addClass('move-important');
+        this.$body.addClass('move-important');
 
-        $('.oe_drop_zone').droppable({
+        this.$editable.find('.oe_drop_zone').droppable({
             over: function () {
-                $('.oe_drop_zone.hide').removeClass('hide');
+                self.$editable.find('.oe_drop_zone.hide').removeClass('hide');
                 $(this).addClass('hide').first().after(self.$target);
                 self.dropped = true;
             },
@@ -407,13 +409,13 @@ var SnippetEditor = Widget.extend({
     _onDragAndDropStop: function () {
         var self = this;
 
-        $('.oe_drop_zone').droppable('destroy').remove();
+        this.$editable.find('.oe_drop_zone').droppable('destroy').remove();
 
         var prev = this.$target.first()[0].previousSibling;
         var next = this.$target.last()[0].nextSibling;
         var $parent = this.$target.parent();
 
-        var $clone = $('.oe_drop_clone');
+        var $clone = this.$editable.find('.oe_drop_clone');
         if (prev === $clone[0]) {
             prev = $clone[0].previousSibling;
         } else if (next === $clone[0]) {
@@ -422,7 +424,7 @@ var SnippetEditor = Widget.extend({
         $clone.after(this.$target);
 
         this.$el.removeClass('d-none');
-        $('body').removeClass('move-important');
+        this.$body.removeClass('move-important');
         $clone.remove();
 
         if (this.dropped) {
@@ -536,6 +538,7 @@ var SnippetsMenu = Widget.extend({
             this.options.snippetsURL = '/web_editor/snippets';
         }
         this.$editable = $editable;
+        this.$body = this.$editable.closest('body');
         this.$activeSnippet = false;
         this.snippetEditors = [];
     },
@@ -629,7 +632,7 @@ var SnippetsMenu = Widget.extend({
         $(document).off('.snippets_menu');
         core.bus.off('deactivate_snippet', this, this._onDeactivateSnippet);
         core.bus.off('snippet_editor_clean_for_save', this, this._onCleanForSaveDemand);
-        $('body').removeClass('editor_has_snippets');
+        this.$body.removeClass('editor_has_snippets');
     },
 
     //--------------------------------------------------------------------------
@@ -1082,7 +1085,7 @@ var SnippetsMenu = Widget.extend({
         if (!this.$snippets.length) {
             this.$el.detach();
         }
-        $('body').toggleClass('editor_has_snippets', this.$snippets.length > 0);
+        this.$body.toggleClass('editor_has_snippets', this.$snippets.length > 0);
 
         // Register the text nodes that needs to be auto-selected on click
         this._registerDefaultTexts();
@@ -1130,7 +1133,7 @@ var SnippetsMenu = Widget.extend({
         }
 
         return $.when(def).then(function (parentEditor) {
-            snippetEditor = new SnippetEditor(parentEditor || self, $snippet, self.templateOptions, self.options);
+            snippetEditor = new SnippetEditor(parentEditor || self, $snippet, self.templateOptions, self.$editable, self.options);
             self.snippetEditors.push(snippetEditor);
             return snippetEditor.appendTo(self.$snippetEditorArea);
         }).then(function () {
@@ -1181,8 +1184,7 @@ var SnippetsMenu = Widget.extend({
         $snippets.draggable({
             greedy: true,
             helper: 'clone',
-            zIndex: '1000',
-            appendTo: 'body',
+            appendTo: this.$body,
             cursor: 'move',
             handle: '.oe_snippet_thumbnail',
             distance: 30,
@@ -1220,7 +1222,7 @@ var SnippetsMenu = Widget.extend({
                 self._activateSnippet(false);
                 self._activateInsertionZones($selectorSiblings, $selectorChildren);
 
-                $('.oe_drop_zone').droppable({
+                self.$editable.find('.oe_drop_zone').droppable({
                     over: function () {
                         if (!dropped) {
                             dropped = true;

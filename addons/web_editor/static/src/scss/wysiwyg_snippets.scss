@@ -12,6 +12,10 @@ $o-wysiwyg-border-color: #a9a9a9 !default;
 
 $o-wysiwyg-sidebar-width: 210px !default;
 $o-wysiwyg-sidebar-height: 36px !default;
+$o-wysiwyg-overlay-option-size: 25px !default;
+
+$o-wysiwyg-font-family: Roboto, "Montserrat", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
 
 // NOTE EDITOR
 .o_snippets_loaded.note-editor {
@@ -48,7 +52,7 @@ $o-wysiwyg-sidebar-height: 36px !default;
         font-weight: normal;
         font-size: 17px;
         color: $o-wysiwyg-color;
-        font-family: $o-we-font-family;
+        font-family: $o-wysiwyg-font-family;
     }
 
     #o_scroll {
@@ -138,6 +142,7 @@ $o-wysiwyg-sidebar-height: 36px !default;
     position: relative;
     width: 100px;
     background-color: $o-wysiwyg-bg-color;
+    z-index: 1041;
 
     > :not(.oe_snippet_thumbnail) {
         display: none!important;
@@ -167,7 +172,7 @@ $o-wysiwyg-sidebar-height: 36px !default;
             font-size: 12px;
             font-weight: 300;
             text-shadow: none;
-            color: $o-we-color-text-light;
+            color: $o-wysiwyg-color;
         }
         &:hover .oe_snippet_thumbnail_title {
             color: $o-wysiwyg-color;
@@ -266,7 +271,7 @@ $o-wysiwyg-sidebar-height: 36px !default;
         background-color: rgba($o-brand-odoo, 0.2);
     }
 }
-#wrapwrap .oe_drop_zone {
+.note-editable .oe_drop_zone {
     background-color: rgba($o-brand-odoo, 0.05);
     animation: dropZoneInsert 1s linear 0s infinite alternate;
 
@@ -332,34 +337,38 @@ $o-wysiwyg-sidebar-height: 36px !default;
 
         // OVERLAY OPTIONS
         > .oe_overlay_options {
-            font-family: $o-we-font-family;
+            font-family: $o-wysiwyg-font-family;
             @include o-position-absolute($bottom: 0, $left: 0);
             width: 250px; // the parent oe_overlay has a width equal to the snippet width, the 250px is there to force the options to stay on one line without overriding bootstrap .btn-group
             text-align: left;
+            border-left: 2px solid $o-wysiwyg-border-color;
 
             > .btn-group {
                 white-space: nowrap;
+                border: 1px solid $o-wysiwyg-border-color;
+                border-left: 0;
 
                 .btn {
                     display: inline-block;
-                    width: $o-we-overlay-option-size;
-                    height: $o-we-overlay-option-size;
+                    width: $o-wysiwyg-overlay-option-size;
+                    height: $o-wysiwyg-overlay-option-size;
                     padding: 0;
                     border: 1px solid $o-wysiwyg-bg-color;
-                    line-height: $o-we-overlay-option-size;
+                    line-height: $o-wysiwyg-overlay-option-size;
                     font-size: 11px;
                     border-radius: 0;
                     font-weight: normal;
 
                     transition: all 400ms ease 0s;
-                    color: $o-we-color-text-light;
-                    background-color: $o-we-color-light;
+                    color: $o-wysiwyg-color;
+                    background-color: $o-wysiwyg-bg-color;
                     &:hover {
                         color: $o-wysiwyg-color;
                         background-color: lighten($o-wysiwyg-bg-color, 10%);
 
                         > .fa {
                             color: $o-wysiwyg-color;
+                            line-height: $o-wysiwyg-overlay-option-size;
                         }
                     }
 
@@ -370,6 +379,7 @@ $o-wysiwyg-sidebar-height: 36px !default;
 
                         > .fa {
                             color: $o-wysiwyg-color;
+                            line-height: $o-wysiwyg-overlay-option-size;
                         }
 
                         &:hover {
@@ -382,7 +392,8 @@ $o-wysiwyg-sidebar-height: 36px !default;
                     }
 
                     > .fa {
-                        color: $o-we-color-text-light;
+                        color: $o-wysiwyg-color;
+                        line-height: $o-wysiwyg-overlay-option-size;
                     }
                 }
 
