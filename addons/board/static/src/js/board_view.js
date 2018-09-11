@@ -252,7 +252,9 @@ var BoardRenderer = FormRenderer.extend({
                 return self.loadViews(action.res_model, context, [view])
                            .then(function (viewsInfo) {
                     var viewInfo = viewsInfo[params.viewType];
-                    var View = viewRegistry.get(params.viewType);
+                    var viewXml = new DOMParser().parseFromString(viewInfo.arch, "text/xml");
+                    var jsClass = viewXml.documentElement.getAttribute('js_class');
+                    var View = viewRegistry.get(jsClass || params.viewType);
                     var view = new View(viewInfo, {
                         action: action,
                         context: context,
