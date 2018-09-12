@@ -1969,7 +1969,7 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
         sections = []
         for gb in annotated_groupbys:
             ftype = gb['type']
-            value = data[gb['groupby']]
+            value = data.get(gb['groupby'])
 
             # full domain for this groupby spec
             d = None
