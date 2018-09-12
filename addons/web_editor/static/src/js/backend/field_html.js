@@ -6,6 +6,7 @@ var config = require('web.config');
 var core = require('web.core');
 var session = require('web.session');
 var Wysiwyg = require('web_editor.wysiwyg');
+var field_registry = require('web.field_registry');
 
 var TranslatableFieldMixin = basic_fields.TranslatableFieldMixin;
 
@@ -13,13 +14,38 @@ var QWeb = core.qweb;
 var _t = core._t;
 
 
+console.error("todo: this.nodeOptions['style-inline']");
+
+console.error('todo: readonly in iframe');
+// mass_mailing: /mass_mailing/static/src/css/basic_theme_readonly.css
+
+console.error('insert js mass_mailing');
+/*
+
+mass_mailing/static/src/js/mass_mailing_editor.js
+mass_mailing.FieldTextHtmlInline
+
+To remove: 
+
+FieldTextHtmlInline
+FieldTextHtmlPopupContent
+
+*/
+
 /**
- * FieldTextHtmlSimple Widget
+ * FieldHtml Widget
  * Intended to display HTML content. This widget uses the wysiwyg editor
  * improved by odoo.
  *
+ * nodeOptions:
+ *  - no-attachment
+ *  - cssEdit
+ *  - cssReadonly
+ *  - snippets
+ *  - wrapper
+ *
  */
-var FieldTextHtmlSimple = basic_fields.DebouncedField.extend(TranslatableFieldMixin, {
+var FieldHtml = basic_fields.DebouncedField.extend(TranslatableFieldMixin, {
     className: 'oe_form_field oe_form_field_html_text',
     supportedFieldTypes: ['html'],
 
@@ -29,7 +55,8 @@ var FieldTextHtmlSimple = basic_fields.DebouncedField.extend(TranslatableFieldMi
     },
 
     willStart: function () {
-        return this._super().then(Wysiwyg.ready.bind(null, this));
+        var defAsset = this.nodeOptions.cssReadonly && ajax.loadAsset(this.nodeOptions.cssReadonly);
+        return $.when(this._super().then(Wysiwyg.ready.bind(null, this)), defAsset);
     },
 
     //--------------------------------------------------------------------------
@@ -119,8 +146,10 @@ var FieldTextHtmlSimple = basic_fields.DebouncedField.extend(TranslatableFieldMi
                 res_model: this.model,
                 res_id: this.res_id,
             },
-            styleInline: this.nodeOptions['style-inline'],
             noAttachment: this.nodeOptions['no-attachment'],
+            inIframe: !!this.nodeOptions.cssEdit,
+            iframeCssAssets: this.nodeOptions.cssEdit,
+            snippets: this.nodeOptions.snippets,
         };
     },
     /**
@@ -152,7 +181,6 @@ var FieldTextHtmlSimple = basic_fields.DebouncedField.extend(TranslatableFieldMi
      */
     _renderEdit: function () {
         this.$target = $('<textarea>').val(this._textToHtml(this.value)).hide();
-        // this.$target.html(this._textToHtml(this.value)); to test
         this.$target.appendTo(this.$el);
 
         var fieldNameAttachment =_.chain(this.recordData)
@@ -166,26 +194,56 @@ var FieldTextHtmlSimple = basic_fields.DebouncedField.extend(TranslatableFieldMi
             this.fieldNameAttachment = fieldNameAttachment;
         }
 
-        return this._createWysiwygIntance();
+        if (this.nodeOptions.cssEdit) {
+            // must be async because the target must be append in the DOM
+            setTimeout(this._createWysiwygIntance.bind(this));
+        } else {
+            return this._createWysiwygIntance();
+        }
     },
     /**
      * @override
      * @private
      */
     _renderReadonly: function () {
-        var self = this;
+        var value = this._textToHtml(this.value);
+        if (this.nodeOptions.wrapper) {
+            value = this._wrap(value);
+        }
+
         this.$el.empty();
-        if (this.nodeOptions['style-inline']) {
-            var $iframe = $('<iframe class="o_readonly"/>');
-            $iframe.on('load', function () {
-                self.$content = $($iframe.contents()[0]).find("body");
-                self.$content.html(self._textToHtml(self.value));
-                self._resize();
-            });
-            $iframe.appendTo(this.$el);
+
+        if (this.nodeOptions.cssReadonly) {
+            this.$iframe = $('<iframe class="o_readonly"/>');
+            this.$iframe.appendTo(this.$el);
+
+            // inject content in iframe
+
+            this.$iframe.one('load', function onLoad () {
+                ajax.loadAsset(this.nodeOptions.cssReadonly).then(function (asset) {
+                    var cwindow = this.$iframe[0].contentWindow;
+                    cwindow.document
+                        .open("text/html", "replace")
+                        .write(
+                            '<head>' +
+                                '<meta charset="utf-8">' +
+                                '<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">\n' +
+                                '<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">\n' +
+                                _.map(asset.cssLibs, function (cssLib) {
+                                    return '<link type="text/css" rel="stylesheet" href="' + cssLib + '"/>';
+                                }).join('\n') + '\n' +
+                                _.map(asset.cssContents, function (cssContent) {
+                                    return '<style type="text/css">' + cssContent + '</style>';
+                                }).join('\n') + '\n' +
+                            '</head>\n' +
+                            '<body class="o_in_iframe o_readonly">\n' +
+                                '<div id="iframe_target">' + value + '</div>\n' +
+                            '</body>');
+                    this._resize();
+                }.bind(this));
+            }.bind(this));
         } else {
-            this.$content = $('<div class="o_readonly"/>');
-            this.$content.html(this._textToHtml(this.value));
+            this.$content = $('<div class="o_readonly"/>').html(value);
             this.$content.appendTo(this.$el);
         }
     },
@@ -236,8 +294,19 @@ var FieldTextHtmlSimple = basic_fields.DebouncedField.extend(TranslatableFieldMi
     _onWysiwygIntance: function () {
         this.$el.closest('.note.editor').find('.note-toolbar').append(this._renderTranslateButton());
     },
-
+    _wrap: function (html) {
+        return $(QWeb.render(this.nodeOptions.wrapper))
+            .find('#wrapper').html(html)
+            .end().prop('outerHTML');
+    },
+    _unWrap: function (html) {
+        return $(html).find('#wrapper').html();
+    },
 });
 
-return FieldTextHtmlSimple;
+
+field_registry.add('html', FieldHtml);
+
+
+return FieldHtml;
 });

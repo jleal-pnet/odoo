@@ -3,6 +3,7 @@ odoo.define('web_editor.wysiwyg.iframe', function (require) {
 
 var Wysiwyg = require('web_editor.wysiwyg');
 var config = require('web.config');
+var ajax = require('web.ajax');
 
 
 var _fnSummernoteMaster = $.fn.summernote;
@@ -28,7 +29,7 @@ Wysiwyg.include({
             if (!this.options.iframeCssAssets) {
                 this.options.iframeCssAssets = 'web_editor.wysiwyg_iframe_css_assets';
             }
-            this._onUpdateIframeSummernoteId = 'onLoad_'+ this.subLib;
+            this._onUpdateIframeSummernoteId = 'onLoad_' + this.subLib;
         }
     },
     /*
@@ -40,34 +41,12 @@ Wysiwyg.include({
         if (!this.options.inIframe) {
             return this._super();
         }
-        var rpcDef = $.when();
-        if (this.options.iframeCssAssets && !Wysiwyg._iframeCssAssetsCache[this.options.iframeCssAssets]) {
-            rpcDef = this._rpc({
-                model: 'ir.qweb',
-                method: 'render',
-                args: [
-                    this.options.iframeCssAssets,
-                    {
-                        debug: config.debug,
-                    }
-                ],
-                kwargs: {
-                    context: this.options.recordInfo().context,
-                }
-            }).then(function (html) {
-                var $assets = $(html).filter('link');
-
-                var assets = 
-                    '<meta charset="utf-8">'+
-                    '<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">\n'+
-                    '<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">\n'+
-                    $assets.map(function () {return this.outerHTML;}).get().join('\n');
-
-                Wysiwyg._iframeCssAssetsCache[this.options.iframeCssAssets] = assets;
-            }.bind(this));
+        if (this.options.iframeCssAssets) {
+            this.defAsset = ajax.loadAsset(this.options.iframeCssAssets);
+        } else {
+            this.defAsset = $.when({cssLibs: [], cssContents: []});
         }
-
-        return rpcDef
+        return this.defAsset
             .then(this._loadIframe.bind(this))
             .then(this._super.bind(this)).then(function () {
                 var _summernoteMaster = $.summernote;
@@ -159,46 +138,56 @@ Wysiwyg.include({
             width: '100%'
         });
         this.$iframe.insertAfter($target);
-        var loadDef = $.Deferred();
-        this.$iframe.on('load', loadDef.resolve.bind(loadDef));
 
         // resolve deferred on load
 
         var def = $.Deferred();
         window.top[this._onUpdateIframeSummernoteId] = function () {
             delete window.top[this._onUpdateIframeSummernoteId];
-            this.$iframe.contents().find('#wysiwyg_target').append($target);
+            this.$iframe.contents().find('#iframe_target').append($target);
             def.resolve();
         }.bind(this);
 
         // inject content in iframe
 
-        loadDef.then(function () {
-                // inject HTML
-            var cwindow = this.$iframe[0].contentWindow;
-            cwindow.document
-                .open("text/html", "replace")
-                .write('<head>' + Wysiwyg._iframeCssAssetsCache[this.options.iframeCssAssets] + '</head>'+
-                    '<body class="wysiwyg_iframe">'+
-                        '<div id="wysiwyg_target"></div>'+
-                        '<script type="text/javascript">'+
-                            'window.$ = window.jQuery = window.top.jQuery;'+
-                            'var _summernoteMaster = $.summernote;'+
-                            'var _fnSummernoteMaster = $.fn.summernote;'+
-                            'delete $.summernote;'+
-                            'delete $.fn.summernote;'+
-                        '</script>\n'+
-                        '<script type="text/javascript" src="/web_editor/static/lib/summernote/summernote.js"></script>\n'+
-                        '<script type="text/javascript">'+
-                            'window._summernoteSlave = $.summernote;'+
-                            'window._summernoteSlave.iframe = true;'+
-                            'window._summernoteSlave.lang = _summernoteMaster.lang;'+
-                            'window._fnSummenoteSlave = $.fn.summernote;'+
-                            '$.summernote = _summernoteMaster;'+
-                            '$.fn.summernote = _fnSummernoteMaster;'+
-                            'window.top.' + this._onUpdateIframeSummernoteId + '()'+
-                        '</script>\n'+
-                    '</body>');
+        this.$iframe.one('load', function onLoad () {
+            this.defAsset.then(function (asset) {
+                var cwindow = this.$iframe[0].contentWindow;
+                cwindow.document
+                    .open("text/html", "replace")
+                    .write(
+                        '<head>' +
+                            '<meta charset="utf-8">' +
+                            '<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">\n' +
+                            '<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">\n' +
+                            _.map(asset.cssLibs, function (cssLib) {
+                                return '<link type="text/css" rel="stylesheet" href="' + cssLib + '"/>';
+                            }).join('\n') + '\n' +
+                            _.map(asset.cssContents, function (cssContent) {
+                                return '<style type="text/css">' + cssContent + '</style>';
+                            }).join('\n') + '\n' +
+                        '</head>\n' +
+                        '<body class="o_in_iframe">\n' +
+                            '<div id="iframe_target"></div>\n' +
+                            '<script type="text/javascript">' +
+                                'window.$ = window.jQuery = window.top.jQuery;' +
+                                'var _summernoteMaster = $.summernote;' +
+                                'var _fnSummernoteMaster = $.fn.summernote;' +
+                                'delete $.summernote;' +
+                                'delete $.fn.summernote;' +
+                            '</script>\n' +
+                            '<script type="text/javascript" src="/web_editor/static/lib/summernote/summernote.js"></script>\n' +
+                            '<script type="text/javascript">' +
+                                'window._summernoteSlave = $.summernote;' +
+                                'window._summernoteSlave.iframe = true;' +
+                                'window._summernoteSlave.lang = _summernoteMaster.lang;' +
+                                'window._fnSummenoteSlave = $.fn.summernote;' +
+                                '$.summernote = _summernoteMaster;' +
+                                '$.fn.summernote = _fnSummernoteMaster;' +
+                                'window.top.' + this._onUpdateIframeSummernoteId + '()' +
+                            '</script>\n' +
+                        '</body>');
+            }.bind(this));
         }.bind(this));
 
         return def.promise();

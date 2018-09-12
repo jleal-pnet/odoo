@@ -8,9 +8,9 @@
             <xpath expr="//sheet" position="inside">
                 <notebook groups="website_mass_mailing.group_website_popup_on_exit">
                     <page string="Popup Content">
-                        <field name="popup_content" widget="html_frame" options="{
+                        <field name="popup_content" widget="html" options="{
                                 'snippets': 'website.snippets',
-                                'iframeCssAssets': 'website_mass_mailing.wysiwyg_iframe_css_assets',
+                                'cssEdit': 'website_mass_mailing.wysiwyg_iframe_css_assets',
                                 'wrapper': 'website_mass_mailing.edition.wrapper',
                             }"/>
                     </page>
