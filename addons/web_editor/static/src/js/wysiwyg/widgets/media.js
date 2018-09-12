@@ -322,6 +322,8 @@ var ImageWidget = MediaWidget.extend({
     _getAttachmentsDomain: function (needle) {
         var domain = this.options.attachmentIDs && this.options.attachmentIDs.length ? ['|', ['id', 'in', this.options.attachmentIDs]] : [];
         var attachedDocumentDomain = [
+            '|',
+            ['public', '=', true],
             '&',
             ['res_model', '=', this.options.res_model],
             ['res_id', '=', this.options.res_id|0]

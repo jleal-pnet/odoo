@@ -6,10 +6,15 @@
     <t t-call="mass_mailing.mass_mailing_mail_style"/>
 </template>
 
+<template id="assets_mail_themes_edition"> <!-- maybe to remove and convert into a field dumy with attr invisible if template the is not selected -->
+	<t t-call="web._assets_primary_variables"/>
+    <link rel="stylesheet" type="text/scss" href="/mass_mailing/static/src/scss/mass_mailing.ui.scss"/>
+</template>
+
 <template id="wysiwyg_iframe_css_assets" inherit_id="web_editor.wysiwyg_iframe_css_assets" primary="True">
     <xpath expr="." position="inside">
         <t t-call-assets="mass_mailing.assets_mail_themes" t-js="false"/>
-        <link rel="stylesheet" type="text/scss" href="/mass_mailing/static/src/scss/mass_mailing.ui.scss"/>
+        <t t-call-assets="mass_mailing.assets_mail_themes_edition" t-js="false"/>
     </xpath>
 </template>
 </odoo>
