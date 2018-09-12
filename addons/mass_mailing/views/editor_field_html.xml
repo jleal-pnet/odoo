@@ -11,10 +11,14 @@
     <link rel="stylesheet" type="text/scss" href="/mass_mailing/static/src/scss/mass_mailing.ui.scss"/>
 </template>
 
-<template id="wysiwyg_iframe_css_assets" inherit_id="web_editor.wysiwyg_iframe_css_assets" primary="True">
-    <xpath expr="." position="inside">
-        <t t-call-assets="mass_mailing.assets_mail_themes" t-js="false"/>
-        <t t-call-assets="mass_mailing.assets_mail_themes_edition" t-js="false"/>
-    </xpath>
+<template id="iframe_css_assets_edit">
+    <t t-call-assets="web.assets_common" t-js="false"/>
+    <t t-call-assets="web.assets_frontend" t-js="false"/>
+    <t t-call-assets="mass_mailing.assets_mail_themes" t-js="false"/>
+    <t t-call-assets="mass_mailing.assets_mail_themes_edition" t-js="false"/>
+</template>
+
+<template id="iframe_css_assets_readonly">
+    <link rel="stylesheet" type="text/scss" href="/mass_mailing/static/src/css/basic_theme_readonly.css"/>
 </template>
 </odoo>

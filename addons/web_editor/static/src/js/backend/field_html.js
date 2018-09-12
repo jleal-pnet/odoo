@@ -1,6 +1,7 @@
 odoo.define('web_editor.field.html', function (require) {
 'use strict';
 
+var ajax = require('web.ajax');
 var basic_fields = require('web.basic_fields');
 var config = require('web.config');
 var core = require('web.core');
@@ -14,21 +15,28 @@ var QWeb = core.qweb;
 var _t = core._t;
 
 
-console.error("todo: this.nodeOptions['style-inline']");
-
-console.error('todo: readonly in iframe');
 // mass_mailing: /mass_mailing/static/src/css/basic_theme_readonly.css
 
 console.error('insert js mass_mailing');
 /*
 
+todo:
+
+restart animation on cancel
+trigger change when drop snippet
+
+/\S|\u00A0/
+
 mass_mailing/static/src/js/mass_mailing_editor.js
-mass_mailing.FieldTextHtmlInline
 
 To remove: 
 
 FieldTextHtmlInline
-FieldTextHtmlPopupContent
+on_change_model_and_list
+
+ask to fp:
+
+remove choice template crap in mass_mailing
 
 */
 
@@ -38,6 +46,7 @@ FieldTextHtmlPopupContent
  * improved by odoo.
  *
  * nodeOptions:
+ *  - style-inline => convert class to inline style (no re-edition) => for sending by email
  *  - no-attachment
  *  - cssEdit
  *  - cssReadonly
@@ -71,6 +80,9 @@ var FieldHtml = basic_fields.DebouncedField.extend(TranslatableFieldMixin, {
      * @override
      */
     commitChanges: function () {
+        if (!this.wysiwyg) {
+            return this._super();
+        }
         if (this.wysiwyg.isDirty()) {
             this._isDirty = true;
         }
@@ -130,7 +142,7 @@ var FieldHtml = basic_fields.DebouncedField.extend(TranslatableFieldMixin, {
         // but can be async with option like iframe, snippets...
         return this.wysiwyg.attachTo(this.$target).then(function () {
             this.$content = this.wysiwyg.$el;
-            this._onWysiwygIntance();
+            this._onLoadWysiwyg();
         }.bind(this));
     },
     /**
@@ -239,22 +251,15 @@ var FieldHtml = basic_fields.DebouncedField.extend(TranslatableFieldMixin, {
                             '<body class="o_in_iframe o_readonly">\n' +
                                 '<div id="iframe_target">' + value + '</div>\n' +
                             '</body>');
-                    this._resize();
+
+                    var height = cwindow.document.body.scrollHeight;
+                    this.$iframe.css('height', Math.max(30, Math.min(height, 500)) + 'px');
                 }.bind(this));
             }.bind(this));
         } else {
             this.$content = $('<div class="o_readonly"/>').html(value);
             this.$content.appendTo(this.$el);
         }
-    },
-    /**
-     * Sets the height of the iframe.
-     *
-     * @private
-     */
-    _resize: function () {
-        var height = this.$content[0] ? this.$content[0].scrollHeight : 0;
-        this.$('iframe').css('height', Math.max(30, Math.min(height, 500)) + 'px');
     },
     /**
      * @private
@@ -326,7 +331,7 @@ var FieldHtml = basic_fields.DebouncedField.extend(TranslatableFieldMixin, {
      *
      * @private
      */
-    _onWysiwygIntance: function () {
+    _onLoadWysiwyg: function () {
         this.$el.closest('.note.editor').find('.note-toolbar').append(this._renderTranslateButton());
     },
 });

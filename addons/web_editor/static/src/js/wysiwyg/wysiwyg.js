@@ -150,12 +150,16 @@ var Wysiwyg = Widget.extend({
     },
     /*
      * save the content in the target
-     *
-     * @returns {$.Promise} resolve with true if the content was dirty
+     *      - in init option beforeSave
+     *          - receive editable jQuery DOM as attribute
+     *          - called after deactivate codeview if needed
+     * @returns {$.Promise}
+     *      - resolve with true if the content was dirty
      */
     save: function () {
         var isDirty = this.isDirty();
-        var html = this._summernote.code();
+        var $editable = this.getEditable();
+        var html = $editable.html();
         if (this.$target.is('textarea')) {
             this.$target.val(html);
         } else {
@@ -169,7 +173,7 @@ var Wysiwyg = Widget.extend({
      * @returns {boolean}
      */
     isDirty: function () {
-        if (!this._dirty && this._value !== this._summernote.code()) console.warn("not dirty flag ? (eg: font-size)");
+        if (!this._dirty && this._value !== this._summernote.code()) console.warn("not dirty flag ? (eg: font-size, drop snippet)");
         return this._value !== this._summernote.code();
     },
     /*
@@ -192,6 +196,17 @@ var Wysiwyg = Widget.extend({
      */
     isEditableNode: function (node) {
         return this.$el.is(node) || $(node).closest(this.$el).length;
+    },
+    /*
+     * return the editable area
+     *
+     * @returns {jQuery}
+     */
+    getEditable: function () {
+        if (this._summernote.invoke('codeview.isActivated')) {
+            this._summernote.invoke('codeview.deactivate');
+        }
+        return this._summernote.layoutInfo.editable;
     },
 
     //--------------------------------------------------------------------------

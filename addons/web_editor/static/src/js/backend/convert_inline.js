@@ -1,9 +1,9 @@
-odoo.define('web_editor.transcoder', function (require) {
+odoo.define('web_editor.convertInline', function (require) {
 'use strict';
 
+var Wysiwyg = require('web_editor.wysiwyg');
 var fonts = require('wysiwyg.fonts');
-
-var rulesCache = [];
+var FieldHtml = require('web_editor.field.html');
 
 /**
  * Returns the css rules which applies on an element, tweaked so that they are
@@ -14,8 +14,11 @@ var rulesCache = [];
  */
 function getMatchedCSSRules(a) {
     var i, r, k;
+    var doc = a.ownerDocument;
+    var rulesCache = a.ownerDocument._rulesCache || (a.ownerDocument._rulesCache = []);
+
     if (!rulesCache.length) {
-        var sheets = document.styleSheets;
+        var sheets = doc.styleSheets;
         for (i = sheets.length-1 ; i >= 0 ; i--) {
             var rules;
             // try...catch because browser may not able to enumerate rules for cross-domain sheets
@@ -262,9 +265,6 @@ function applyOverDescendants(node, func) {
  * @param {jQuery} $editable
  */
 function classToStyle($editable) {
-    if (!rulesCache.length) {
-        getMatchedCSSRules($editable[0]);
-    }
     applyOverDescendants($editable[0], function (node) {
         var $target = $(node);
         var css = getMatchedCSSRules(node);
@@ -322,9 +322,7 @@ function styleToClass($editable) {
         $(this).after($('a', this));
     }).remove();
 
-    getMatchedCSSRules($editable[0]);
-
-    var $c = $('<span/>').appendTo(document.body);
+    var $c = $('<span/>').appendTo($editable[0].ownerDocument.body);
 
     applyOverDescendants($editable[0], function (node) {
         var $target = $(node);
@@ -378,12 +376,56 @@ function linkImgToAttachmentThumbnail($editable) {
     $editable.find('a[href*="/web/content/"][data-mimetype] > img').remove();
 }
 
+
+//--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
+
+
+FieldHtml.include({
+    //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    /**
+     * @override
+     */
+    commitChanges: function () {
+        if (!this.wysiwyg) {
+            return this._super();
+        }
+        if (this.wysiwyg.isDirty()) {
+            this._isDirty = true;
+        }
+        if (this.nodeOptions['style-inline']) {
+            var $editable = this.wysiwyg.getEditable();
+            attachmentThumbnailToLinkImg($editable);
+            fontToImg($editable);
+            classToStyle($editable);
+        }
+        return this.wysiwyg.save().then(this._super.bind(this));
+    },
+
+    //--------------------------------------------------------------------------
+    // Handler
+    //--------------------------------------------------------------------------
+
+    /**
+     * @override
+     */
+    _onLoadWysiwyg: function () {
+        if (this.nodeOptions['style-inline']) {
+            var $editable = this.wysiwyg.getEditable();
+            styleToClass($editable);
+            imgToFont($editable);
+            linkImgToAttachmentThumbnail($editable);
+        }
+        this._super();
+    },
+});
+
 return {
     fontToImg: fontToImg,
-    imgToFont: imgToFont,
     classToStyle: classToStyle,
-    styleToClass: styleToClass,
     attachmentThumbnailToLinkImg: attachmentThumbnailToLinkImg,
-    linkImgToAttachmentThumbnail: linkImgToAttachmentThumbnail,
 };
 });
