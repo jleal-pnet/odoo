@@ -413,8 +413,18 @@ class Message(models.Model):
         return messages._format_mail_failures()
 
     @api.model
-    def message_fetch(self, domain, limit=20):
-        return self.search(domain, limit=limit).message_format()
+    def message_fetch(self, domain, moderated_channels=None, limit=20):
+        messages = self.search(domain, limit=limit)
+        if moderated_channels and self.env.user.moderation_channel_ids:
+            # Split load moderated and regular messages, as the ORed domain can
+            # cause performance issues on large databases.
+            moderated_messages_dom = [['model', '=', 'mail.channel'],
+                                      ['res_id', 'in', moderated_channels],
+                                      ['need_moderation', '=', True]]
+            messages |= self.search(moderated_messages_dom, limit=limit)
+            # Truncate the results to `limit`
+            messages = messages.sorted(key='id', reverse=True)[:30]
+        return messages.message_format()
 
     @api.multi
     def message_format(self):
