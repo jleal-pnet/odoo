@@ -291,16 +291,43 @@ var FieldHtml = basic_fields.DebouncedField.extend(TranslatableFieldMixin, {
         }
         return $();
     },
-    _onWysiwygIntance: function () {
-        this.$el.closest('.note.editor').find('.note-toolbar').append(this._renderTranslateButton());
+    /**
+     * remove the wrap from the content
+     *
+     * @private
+     * @param {string} html content
+     * @returns {string} html content
+     */
+    _unWrap: function (html) {
+        return $(html).find('#wrapper').html();
     },
+    /**
+     * wrap the content to create a custom display
+     *
+     * The wrapper must be a static xml template who content id="wrapper" where
+     * the content will be include
+     *
+     * @private
+     * @param {string} html content
+     * @returns {string} html content
+     */
     _wrap: function (html) {
         return $(QWeb.render(this.nodeOptions.wrapper))
             .find('#wrapper').html(html)
             .end().prop('outerHTML');
     },
-    _unWrap: function (html) {
-        return $(html).find('#wrapper').html();
+
+    //--------------------------------------------------------------------------
+    // Handler
+    //--------------------------------------------------------------------------
+
+    /**
+     * method called when the wysiwyg instance is loaded
+     *
+     * @private
+     */
+    _onWysiwygIntance: function () {
+        this.$el.closest('.note.editor').find('.note-toolbar').append(this._renderTranslateButton());
     },
 });
 
