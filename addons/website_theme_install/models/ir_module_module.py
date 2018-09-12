@@ -129,9 +129,15 @@ class IrModuleModule(models.Model):
             (views_todel + views_todel2).unlink()
 
     def _remove_theme_on_website(self, website):
-        installed_deps = self + website.theme_id.upstream_dependencies(exclude_states=('',)).filtered(lambda x: x.name.startswith('theme_'))
-        for mod in installed_deps:
+        for mod in website.theme_id._theme_modules_to_load():
             mod._unload_one_theme_module(website)
+
+    def _theme_modules_to_load(self):
+        mods_to_load = self + self.upstream_dependencies(exclude_states=('',)).filtered(lambda x: x.name.startswith('theme_'))
+        sub_mods = self.env['ir.module.module']
+        for mod in mods_to_load:
+            sub_mods += mod.downstream_dependencies().filtered(lambda x: x.name.startswith(mod.name))
+        return sub_mods + mods_to_load
 
     def _copy_theme_on_website(self, website):
         loaded = {
@@ -140,7 +146,7 @@ class IrModuleModule(models.Model):
             'pages': self.env['website.page'],
             'menus': self.env['website.menu'],
         }
-        mods_to_load = reversed(self + self.upstream_dependencies(exclude_states=('',)).filtered(lambda x: x.name.startswith('theme_')))
+        mods_to_load = reversed(self._theme_modules_to_load())
         for mod in mods_to_load:
             mod._load_one_theme_module(website, loaded)
             self.env['theme.utils']._post_copy(mod)
