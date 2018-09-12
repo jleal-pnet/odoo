@@ -499,6 +499,53 @@ var loadXML = (function () {
     };
 })();
 
+/**
+ * Loads an template file according to the given xmlId
+ *
+ * @param {string} [xmlId] - the template xmlId
+ * @returns {Deferred} resolved with an object
+ *          cssLibs: list of css files
+ *          cssContents: list of style tag contents
+ *          jsLibs: list of JS files
+ *          jsContents: list of script tag contents
+ */
+var loadAsset = (function () {
+    var cache = {};
+
+    var load = function loadAsset(xmlId) {
+        if (cache[xmlId]) {
+            return $.when(cache[xmlId]);
+        }
+        var params = {
+            args: [xmlId, {}],
+            kwargs: {
+                context: odoo.session_info.user_context,
+            },
+            method: 'render_template',
+            model: 'ir.ui.view',
+        };
+        return rpc('/web/dataset/call_kw/ir.ui.view/render_template', params).then(function (xml) {
+            var $xml = $(xml);
+            cache[xmlId] = {
+                cssLibs: $xml.filter('link[href]').map(function () {
+                        return $(this).attr('href');
+                    }).get(),
+                cssContents: $xml.filter('style').map(function () {
+                        return $(this).html();
+                    }).get(),
+                jsLibs: $xml.filter('script[src]').map(function () {
+                        return $(this).attr('src');
+                    }).get(),
+                jsContents: $xml.filter('script:not([src])').map(function () {
+                        return $(this).html();
+                    }).get(),
+            };
+            return cache[xmlId];
+        });
+    };
+
+    return load;
+})();
 
 /**
  * Loads the given js and css libraries. Note that the ajax loadJS and loadCSS methods
@@ -511,6 +558,8 @@ var loadXML = (function () {
  *   parallel.
  * @param {Array<string>} [libs.cssLibs=[]] A list of css files, to be loaded in
  *   parallel
+ * @param {Array<string>} [libs.assetLibs=[]] A list of xmlId. The template loaded
+ *   contains the script and link to be loaded
  *
  * @returns {Deferred}
  */
@@ -530,6 +579,11 @@ function loadLibs (libs) {
     _.each(libs.cssLibs || [], function (url) {
         defs.push(ajax.loadCSS(url));
     });
+    _.each(libs.assetLibs || [], function (xmlId) {
+        defs.push(loadAsset(xmlId).then(function (asset) {
+            return loadLibs(asset);
+        }));
+    });
     return $.when.apply($, defs);
 }
 
@@ -540,6 +594,7 @@ var ajax = {
     loadCSS: loadCSS,
     loadJS: loadJS,
     loadXML: loadXML,
+    loadAsset: loadAsset,
     loadLibs: loadLibs,
     get_file: get_file,
     post: post,
