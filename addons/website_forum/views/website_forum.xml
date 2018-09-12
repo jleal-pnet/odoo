@@ -149,7 +149,7 @@
                             </div>
                         </t>
                     </div>
-                    <div class="card" t-if="post"> <!-- t-if="post" -->
+                    <div class="card border-0" t-if="post"> <!-- t-if="post" -->
                         <h5 class="card-header bg-secondary text-uppercase">Writer</h5>
                         <div class="card-body">
                             <div class="o_people_photo_over col-12 pl-0 pr-0">
@@ -177,7 +177,7 @@
                                 style="display: inline-block;"/>
  -->                        </div>
                     </div>
-                    <div class="card mt-2" t-if="post">
+                    <div class="card mt-2 border-0" t-if="post">
                         <h5 class="card-header bg-secondary text-uppercase">Tag</h5>
                         <div class="card-body">
                             <t t-foreach="question.tag_ids" t-as="tag">
@@ -185,7 +185,7 @@
                             </t>
                         </div>
                     </div>
-                    <div class="card mt-2" t-if="post">
+                    <div class="card mt-2 border-0" t-if="post">
                         <h5 class="card-header bg-secondary text-uppercase">Share</h5>
                         <div class="card-body">
                             <div class="list-inline-item">
@@ -218,7 +218,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card mt-2" t-if="post">
+                    <div class="card mt-2 border-0" t-if="post">
                         <h5 class="card-header bg-secondary text-uppercase">Keep Informed</h5>
                         <div class="card-body">
                             <!-- <t t-call="website_mail.follow">
@@ -231,7 +231,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card mt-2" id="about_forum">
+                    <div class="card mt-2 border-0" id="about_forum">
                         <h5 class="card-header bg-secondary text-uppercase">About This Community</h5>
                         <div class="card-body">
                             <span t-field="forum.description"/>
@@ -239,7 +239,7 @@
                             <a t-if="header.get('is_guidelines')" t-attf-href="/forum/#{slug(forum)}" class="btn btn-primary mt-3"><i class="fa fa-arrow-right"/> Back to <span t-field="forum.name"/></a>
                         </div>
                     </div>
-                    <div class="card mt-2" id="moderation_tools" t-if="user.karma>=forum.karma_moderate">
+                    <div class="card mt-2 border-0" id="moderation_tools" t-if="user.karma>=forum.karma_moderate">
                         <h5 class="card-header bg-secondary text-uppercase">Moderation Tools</h5>
                         <div class="card-body text-center">
                             <a t-attf-href="/forum/#{slug(forum)}/validation_queue"><strong><t t-esc="forum.count_posts_waiting_validation"/></strong> waiting for validation</a>
@@ -293,8 +293,11 @@
 
 <!-- Display a post -->
 <template id="display_post_question_block">
-    <span t-if="question.has_validated_answer" title="Question has accepted answer" role="img" aria-label="Question has accepted answer"><i class="fa fa-check-circle oe_answer_true"/></span>
-    <div class="question-block">
+    <div  t-if="question.has_validated_answer" class="validate_answer">
+        <div class="bg-success d-block"></div>
+        <span title="Question has accepted answer" role="img" aria-label="Question has accepted answer"><i class="fa fa-check-circle text-success bg-white"/></span>
+    </div>
+    <div class="offset-1 question-block">
         <div class="tag_post float-right">
             <t t-foreach="question.tag_ids" t-as="question_tag">
                 <a t-attf-href="/forum/#{ slug(forum) }/tag/#{slug(question_tag)}/questions">
@@ -305,7 +308,7 @@
         </div>
         <div class="question-name">
             <a t-attf-href="/forum/#{ slug(forum) }/question/#{ slug(question) }">
-                <h4 t-field="question.name" class="d-inline"/>
+                <h4 t-field="question.name" class="d-inline text-secondary"/>
             </a>
             <span t-if="not question.active and question.state!='offensive'"><b> [Deleted]</b></span>
             <span t-if="not question.active and question.state=='offensive'"><b> [Offensive]</b></span>
@@ -408,44 +411,62 @@
 <template id="faq">
     <t t-call="website_forum.header">
         <div t-field="forum.faq"/>
-        <table class="table table-striped">
-            <tbody>
-                <tr>
-                    <td class="faq-rep-item"><strong t-field="forum.karma_upvote"/></td>
-                    <td>upvote, add comments</td>
-                </tr><tr>
-                    <td class="faq-rep-item"><strong t-field="forum.karma_downvote"/></td>
-                    <td>downvote</td>
-                </tr><tr>
-                    <td class="faq-rep-item"><strong t-field="forum.karma_editor"/></td>
-                    <td>insert text link, upload files</td>
-                </tr><tr>
-                    <td class="faq-rep-item"><strong t-field="forum.karma_user_bio"/></td>
-                    <td>your biography can be seen as tooltip</td>
-                </tr><tr>
-                    <td class="faq-rep-item"><strong t-field="forum.karma_comment_unlink_own"/></td>
-                    <td>delete own comment</td>
-                </tr><tr>
-                    <td class="faq-rep-item"><strong t-field="forum.karma_close_own"/></td>
-                    <td>flag offensive, close own questions</td>
-                </tr><tr>
-                    <td class="faq-rep-item"><strong t-field="forum.karma_edit_all"/></td>
-                    <td>edit any post, view offensive flags</td>
-                </tr><tr>
-                    <td class="faq-rep-item"><strong t-field="forum.karma_answer_accept_all"/></td>
-                    <td>accept any answer</td>
-                </tr><tr>
-                    <td class="faq-rep-item"><strong t-field="forum.karma_comment_unlink_all"/></td>
-                    <td>delete any comment</td>
-                </tr><tr>
-                    <td class="faq-rep-item"><strong t-field="forum.karma_close_all"/></td>
-                    <td>close any posts</td>
-                </tr><tr>
-                    <td class="faq-rep-item"><strong t-field="forum.karma_unlink_all"/></td>
-                    <td>delete any question or answer</td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="card mb-2 border-0">
+            <div class="card-header bg-white" id="headingFour">
+              <h4 class="mb-0 d-block">
+                <button class="btn btn-link collapsed d-block col-12 text-left text-secondary" data-toggle="collapse" data-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                  <b>Why can other people edit my questions/answers?</b> <i class="fa fa-caret-down float-right"/>
+                </button>
+              </h4>
+            </div>
+            <div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#accordion">
+              <div class="card-body pt-5 pb-5 pl-5 pr-5">
+                <p>The goal of this site is create a relevant knowledge base that would answer questions related to Odoo.</p>
+                <p>Therefore questions and answers can be edited like wiki pages by experienced users of this site in order to improve the overall quality of the knowledge base content. Such privileges are granted based on user karma level: you will be able to do the same once your karma gets high enough.</p>
+                <p>If this approach is not for you, please respect the community and use Google+ communities instead.</p>
+              
+          
+                    <table class="table table-striped mt-5">
+                        <tbody>
+                            <tr>
+                                <td class="faq-rep-item"><strong t-field="forum.karma_upvote"/></td>
+                                <td>upvote, add comments</td>
+                            </tr><tr>
+                                <td class="faq-rep-item"><strong t-field="forum.karma_downvote"/></td>
+                                <td>downvote</td>
+                            </tr><tr>
+                                <td class="faq-rep-item"><strong t-field="forum.karma_editor"/></td>
+                                <td>insert text link, upload files</td>
+                            </tr><tr>
+                                <td class="faq-rep-item"><strong t-field="forum.karma_user_bio"/></td>
+                                <td>your biography can be seen as tooltip</td>
+                            </tr><tr>
+                                <td class="faq-rep-item"><strong t-field="forum.karma_comment_unlink_own"/></td>
+                                <td>delete own comment</td>
+                            </tr><tr>
+                                <td class="faq-rep-item"><strong t-field="forum.karma_close_own"/></td>
+                                <td>flag offensive, close own questions</td>
+                            </tr><tr>
+                                <td class="faq-rep-item"><strong t-field="forum.karma_edit_all"/></td>
+                                <td>edit any post, view offensive flags</td>
+                            </tr><tr>
+                                <td class="faq-rep-item"><strong t-field="forum.karma_answer_accept_all"/></td>
+                                <td>accept any answer</td>
+                            </tr><tr>
+                                <td class="faq-rep-item"><strong t-field="forum.karma_comment_unlink_all"/></td>
+                                <td>delete any comment</td>
+                            </tr><tr>
+                                <td class="faq-rep-item"><strong t-field="forum.karma_close_all"/></td>
+                                <td>close any posts</td>
+                            </tr><tr>
+                                <td class="faq-rep-item"><strong t-field="forum.karma_unlink_all"/></td>
+                                <td>delete any question or answer</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </t>
 </template>
 
@@ -824,18 +845,19 @@
                     </div>
                 </t>
             </div>
-            <div t-attf-class="question-block #{not question.active and 'alert alert-danger' or ''}" role="alert">
-                <h1 class="mt0 mb0">
-                    <t t-if="question.post_type == 'link'">
-                        <a t-att-href="question.content_link">
+            <div t-attf-class="offset-1 question-block mb-5 #{not question.active and 'alert alert-danger' or ''}" role="alert">
+                 <span t-if="question.has_validated_answer" title="Question has accepted answer" role="img" aria-label="Question has accepted answer"><i class="fa fa-check-circle text-success"/> <b class="text-success">Resolved</b></span>
+                <h1 class="mt0 mb0 text-secondary font-weight-bold">
+                    <!-- <t t-if="question.post_type == 'link'"> -->
+                        <!-- <a t-att-href="question.content_link"> -->
                             <t t-esc="question.name"/>
-                        </a>
-                    </t>
-                    <t t-if="question.post_type in ('question', 'discussion')">
+                        <!-- </a> -->
+                    <!-- </t> -->
+                    <!-- <t t-if="question.post_type in ('question', 'discussion')">
                         <a t-attf-href="/forum/#{ slug(forum) }/question/#{ slug(question) }" >
                             <t t-esc="question.name"/>
                         </a>
-                    </t>
+                    </t> -->
                     <span t-if="not question.active and question.state!='offensive'"><b> [Deleted]</b></span>
                     <span t-if="not question.active and question.state=='offensive'"><b> [Offensive]</b></span>
                     <span t-if="question.state == 'close'"><b> [Closed]</b></span>
@@ -884,7 +906,7 @@
                 <div t-if="question.post_type != 'link'"><span t-field="question.content" class="oe_no_empty"/></div>
 
                 <div class="clearfix">
-                    <ul class="float-right list-inline mb0 border rounded pt-1 pb-1 pl-2 pr-3" id="options">
+                    <ul class="float-right list-inline mb0 bg-white rounded pt-1 pb-1 pl-2 pr-3" id="options">
                         <li t-if="question.state == 'close'" class="list-inline-item" title="Reopen">
                             <t t-call="website_forum.link_button">
                                 <t t-set="url" t-value="'/forum/' + slug(forum) +'/question/' + slug(question) + '/reopen'"/>
@@ -948,13 +970,13 @@
                             </a>
                         </li>
                     </ul>
-                    <ul class="list-inline mb0 border rounded pt-2 pb-2 pl-3 pr-3 float-left">
+                    <ul class="list-inline mb0 bg-white rounded pt-2 pb-2 pl-3 pr-3 float-left">
                         <li class="list-inline-item ">   <!-- t-if="(question.post_type in ('link','question') and not question.uid_has_answered) and question.state != 'close' and question.active != False"  -->
                             <a t-attf-class="fa fa-reply #{not question.can_answer and 'karma_required text-muted' or ''}"  
                             t-att-data-karma="question.forum_id.karma_answer"   
                             href="#post_reply"> Reply</a>   
                         </li>
-                        <li t-if="question.post_type == 'discussion'" class="list-inline-item">
+                        <!-- <li t-if="question.post_type == 'discussion'" class="list-inline-item">
                             <a t-attf-class="#{not question.can_answer and 'karma_required text-muted' or None}"
                                 t-att-data-karma="question.forum_id.karma_answer"
                                 href="#post_reply">
@@ -967,7 +989,7 @@
                                 t-attf-data-target="#comment#{ question._name.replace('.','') + '-' + str(question.id) }">
                                 <i class="fa fa-comment text-primary"/> Comment
                             </a>
-                        </li>
+                        </li> -->
                         <!-- <li class="list-inline-item">
                             <a href="javascript:void(0)" class="oe_social_share fa fa-share-square-o"
                                 t-attf-data-hashtags="#{question.post_type}"> Share</a>
@@ -977,6 +999,14 @@
 
                 <t t-call="website_forum.post_comment">
                     <t t-set="object" t-value="question"/>
+                </t>
+            </div>
+            <div class="border-primary o_count_post_answer pl-4 pt-2 pb-2">
+                <i class="fa fa-comments text-primary"/>
+                <t t-esc="question.child_count"/>
+                <t>
+                    <t t-if="question.child_count&lt;=1">Answer</t>
+                    <t t-else="">Answers</t>
                 </t>
             </div>
         </div>
@@ -993,7 +1023,7 @@
             <t t-call="website_forum.post_answer"/>
         </div>
         <div t-if="question.post_type == 'question' and question.uid_has_answered" class="mb16">
-            <a role="button" class="btn btn-primary" t-attf-href="/forum/#{slug(forum)}/question/#{slug(question)}/edit_answer">Edit Your Previous Answer</a>
+            <a role="button" class="btn btn-primary" t-attf-href="/forum/#{slug(forum)}/question/#{slug(question)}/edit_answer">Edit Your ²vious Answer</a>
             <span class="text-muted">(only one answer per question is allowed)</span>
         </div>
     </t>
@@ -1001,7 +1031,12 @@
 
 <template id="post_answers">
     <a t-attf-id="answer-#{str(answer.id)}"/>
-    <div t-attf-class="forum_answer border rounded pt-3 pb-3 pl-3 pr-3" t-attf-id="answer_#{answer.id}" >
+    <div t-attf-class="forum_answer bg-white rounded pt-3 pb-3 pl-3 pr-3" t-attf-id="answer_#{answer.id}" >
+        <!-- Need to fix - actually display all the answer in green when the post is resolved -->
+        <!-- <div  t-if="question.has_validated_answer" class="validate_answer">
+            <div class="bg-success d-block"></div>
+            <span title="Question has accepted answer" role="img" aria-label="Question has accepted answer"><i class="fa fa-check-circle text-success bg-white"/></span>
+        </div> -->
         <div class="float-left">
             <t t-call="website_forum.vote">
                 <t t-set="post" t-value="answer"/>
@@ -1013,7 +1048,7 @@
                 </div>
             </t>
         </div>
-        <div class="question-block">
+        <div class="question-block offset-1">
             <div class="dropdown dropleft float-right">
               <a class="btn  bg-white" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="fa fa-ellipsis-v text-primary"/>
@@ -1074,12 +1109,21 @@
                         t-attf-data-karma="#{not answer.can_comment and answer.karma_comment or 0}"
                         style="cursor: pointer" t-att-data-toggle="answer.can_comment and 'collapse' or None"
                         t-attf-data-target="#comment#{ answer._name.replace('.','') + '-' + str(answer.id) }"><i class="fa fa-comment text-primary"/> Comment
-                    </a>
+                    </a> <!-- t-if comment < 1 -->
+                    <div class="text-muted font-weight-bold d-inline"> <!-- t-if  comment =>1 -->
+                        <t t-esc="question.child_count" class="text-muted"/>
+                        <t class="text-muted">
+                            <t t-if="question.child_count&lt;=1">Answer</t>
+                            <t t-else="">Answers</t>
+                        </t>
+                    </div>
                 </div>
                 <div class="list-inline-item">
                     <a href="javascript:void(0)" class="oe_social_share text-black"
                         t-attf-data-hashtags="#{question.post_type}"><i class="fa fa-share-alt text-primary"/> Share</a>
                 </div>
+
+                
 
 
                <!--  <div t-if="question.post_type == 'question' and not (len(answer.website_message_ids))"
@@ -1201,9 +1245,9 @@
 <template id="post_comment">
     <div class="row clearfix">
         <div class="col-md-12">
-            <div t-foreach="reversed(object.website_message_ids)" t-as="message" class="comment border pt-4 pl-4 pr-4 pb-1 rounded mt-2">
+            <div t-foreach="reversed(object.website_message_ids)" t-as="message" class="comment bg-100 pt-4 pl-4 pr-4 pb-1 rounded mt-2 border">
                 <div class="dropdown dropleft float-right">
-                  <a class="btn  bg-white" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  <a class="btn  bg-100" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i class="fa fa-ellipsis-v text-primary"/>
                   </a>
                   <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -1259,7 +1303,7 @@
                     <a t-attf-href="/forum/#{slug(forum)}/partner/#{message.author_id.id}"
                         t-field="message.author_id" t-options='{"widget": "contact", "country_image": True, "fields": ["name", "country_id"]}'/>
                     <i class="fa fa-calendar mr-1"/><span t-field="message.date" t-options='{"format":"short"}'/>
-                    <div class="mt-3"><span t-field="message.body" class="oe_no_empty"/></div>
+                    <div class="mt-3"><span t-field="message.body" class="oe_no_empty text-dark"/></div>
                 </small>
             </div>
             <div class="css_editable_mode_hidden">
@@ -1385,8 +1429,8 @@
                 </div>
             </div>
         </div>
-        <div t-foreach="posts_ids" t-as="question" class="mb16 row post_to_validate border rounded pt-4 pl-3 pr-3 pb-4">
-            <div class="col-2 o_js_validation_queue">
+        <div t-foreach="posts_ids" t-as="question" class="mb16 post_to_validate bg-white rounded pt-4 pl-3 pr-3 pb-4">
+            <div class="col-2 o_js_validation_queue float-left">
                 <div class="text-center border-right pr-4">
                     <a t-attf-href="/forum/#{slug(forum)}/post/#{slug(question)}/validate" title="Validate" aria-label="Validate" class="d-block border rounded col-12 pr-1 pl-1 pt-1 pb-1 mb-1 border-success"><i class="fa fa-check text-success"/></a>
                     <a t-if="queue_type == 'validation'" t-attf-href="/forum/#{slug(forum)}/post/#{slug(question)}/refuse" title="Refuse" aria-label="Refuse" class="d-block border rounded col-12 pr-1 pl-1 pt-1 pb-1 mb-1 border-danger"><i class="fa fa-times text-danger"/></a>
@@ -1394,7 +1438,7 @@
                     <a href="#" t-if="queue_type == 'offensive'" disabled="True" aria-label="Offensive" title="Offensive" class="d-block border rounded col-12 pr-1 pl-1 pt-1 pb-1 border-danger"><i class="fa fa-times text-danger"/></a>
                 </div>
             </div>
-            <div class="col-10">
+            <div class="col-10 float-right">
                 <t t-if="question.parent_id">
                     <div t-foreach="question" t-as="answer" style="display: inline-block;">
                         <t t-call="website_forum.moderation_display_post_answer"/>
@@ -1410,6 +1454,7 @@
 
 <template id="users">
     <t t-call="website_forum.header">
+        <!-- <t t-call="website.website_search_box"/> -->
         <div t-foreach="users" t-as="row_users">
             <div t-foreach="row_users" t-as="user" class="rounded bg-white pl-4 pr-4 pb-4 o_card_people d-inline-block mb-2">
                 <div class="float-left col-12 pt-0 pr-0 pb-0 pl-0 o_people_photo_over rounded" t-attf-style="background-image: url('/forum/user/#{user.id}/avatar')">
@@ -1465,9 +1510,10 @@
             <form t-attf-action="/forum/#{slug(forum)}/user/#{slug(user)}/save" method="post" role="form" class="js_website_submit_form col-12 pl-0 pr-0" enctype="multipart/form-data">
                 <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                 <input type="file" class="d-none o_forum_file_upload" name="ufile" accept="image/*"/>
-                <div class="col-3 float-left rounded border">
-                    <img class="img img-fluid o_forum_avatar_img col-12 pl-0 pr-0" t-attf-src="/forum/user/#{user.id}/avatar" alt="Avatar"/>
-                    <div class="text-center mt-3 col-10 offset-1">
+                <div class="col-3 float-left rounded bg-white o_card_people">
+                    <div class="o_people_photo_over rounded" t-attf-style="background-image: url('/forum/user/#{user.id}/avatar')"></div>
+                   <!--  <img class="img img-fluid o_forum_avatar_img col-12 pl-0 pr-0" t-attf-src="/forum/user/#{user.id}/avatar" alt="Avatar"/> -->
+                    <div class="text-center col-10 offset-1">
                         <a href="#" class="o_forum_profile_pic_edit" aria-label="Edit">
                             <i class="fa fa-pencil fa-1g float-left bg-primary pt-2 pl-3 pr-3 pb-2" title="Edit"></i>
                         </a>
@@ -1483,7 +1529,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-9 float-right row border rounded pt-4">
+                <div class="col-9 float-right row bg-white rounded pt-4">
                     <input name="user_id" t-att-value="user.id" type="hidden"/>
                     <div class="form-group col-12">
                         <label class="text-secondary mb-1 d-block" for="user_name"><b>Real name</b></label>

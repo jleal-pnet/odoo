@@ -11,6 +11,19 @@
 .question-block .question-name{
     max-width: 80%;
 }
+pre{
+    background-color: #616161;
+    color: white;
+    border-radius: 5px;
+    padding: 2rem;
+}
+blockquote{
+    border-left: 2px solid #B0B0B0;
+    padding-left: 3rem;
+    position: relative;
+    font-style: italic;
+    font-weight: lighter;
+}
 
 .vote {
     min-width: 38px;
@@ -49,6 +62,7 @@
 
 .question {
     clear: left;
+    position: relative;
 }
 
 .question {
@@ -66,15 +80,55 @@
     }
 
     img {
+        width:100%;
         max-width: 600px;
+        margin:0 auto;
+        display: block;
         height: auto !important;
     }
 }
 
 .forum_answer {
+    position: relative;
     img {
         max-width: 600px;
         height: auto !important;
+    }
+}
+.post_to_validate{
+    overflow: hidden;
+    .validate_answer{
+        display: none;
+    }
+    .offset-1{
+        margin: 0 !important;
+    }
+}
+
+.o_count_post_answer{
+    border-left: 3px solid;
+}
+.validate_answer{
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    .bg-success{
+        height:100%;
+        width:4px;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+    span{
+        position: absolute;
+        top: 10px;
+        left: -9px;
+        font-size: 20px;
+        i{
+            padding: 2px 3px;
+            border-radius: 100%;
+        }
     }
 }
 .o_card_people{
@@ -94,6 +148,7 @@
     top: 0;
     left: 0;
     height: 180px;
+    width: 100%;
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center;
@@ -101,12 +156,13 @@
 .o_profile_main{
     overflow: hidden;
 }
-/*img.o_forum_avatar {*/
-    /*max-height: 40px;*/
-    /*margin-right: 10px;*/
-    /*width: 100%;
-}*/
-
+img.o_forum_avatar {
+    max-height: 40px;
+    margin-right: 10px;
+}
+#accordion button, #headingFour button{
+    text-decoration: none;
+}
 img.o_forum_avatar_big {
     max-width: 75px;
     margin-right: 10px;
@@ -184,7 +240,8 @@ a.no-decoration {
 
 .country_flag {
     max-height: 13px;
-    display: inline-block;
+    width: auto !important;
+    display: inline-block !important;
     margin-left: 2px;
 }
 .country_flag_people{
