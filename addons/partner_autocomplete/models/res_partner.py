@@ -44,6 +44,16 @@ class ResPartner(models.Model):
         return formatted
 
     @api.model
+    def _format_preview_data(self, company_data):
+        return {
+            'website': company_data.get('domain', ''),
+            'name': company_data.get('name', ''),
+            'company_data_id': company_data.get('company_data_id'),
+            'vat': company_data.get('vat', ''),
+            'logo': company_data.get('logo', ''),
+        }
+
+    @api.model
     def _format_data_company(self, company_data):
         lang_code = self._context.get('lang') or 'en_US'
         lang = self.env['res.lang']._lang_get(lang_code)
@@ -66,92 +76,93 @@ class ResPartner(models.Model):
         if len(emails) > 0:
             email = emails.pop(0)
 
-        paragraphs = []
-        lines = []
-
-        lines.append({
-            'title': _('Description'),
-            'content': company_data.get('description', ''),
-            'new_line': True
-        })
-
-        paragraphs.append(lines)
-        lines = []
-
-        if company_data.get('employees'):
-            lines.append({
-                'title': _('Employees'),
-                'content': lang.format('%.0f', float(company_data.get('employees')), True, True),
-            })
-        if company_data.get('annual_revenue'):
-            lines.append({
-                'title': _('Annual revenue'),
-                'content': '$%s' % lang.format('%.0f', float(company_data.get('annual_revenue')), True, True),
-            })
-        if company_data.get('estimated_annual_revenue'):
-            lines.append({
-                'title': _('Estimated annual revenue'),
-                'content': company_data.get('estimated_annual_revenue'),
-            })
-        if company_data.get('sector'):
-            lines.append({
-                'title': _('Sector'),
-                'content': company_data.get('sector'),
-            })
-        if company_data.get('tech'):
-            lines.append({
-                'title': _('Tech'),
-                'content': ' / '.join(company_data.get('tech', [])),
-            })
-
-        if lines:
-            paragraphs.append(lines)
-            lines = []
-
-        social_medias = 'facebook,linkedin,crunchbase,twitter'.split(',')
-        for social_media in social_medias:
-            if company_data.get(social_media):
-                lines.append({
-                    'content': "&nbsp;&nbsp;&nbsp; www.%s.com/%s" % (social_media, company_data.get(social_media)),
-                })
-
-        if lines:
-            lines.insert(0, {
-                'title': _('Social networks'),
-            })
-            paragraphs.append(lines)
-            lines = []
-
-        if emails:
-            lines.append({
-                'title': _('Email addresses'),
-            })
-            for email in emails:
-                lines.append({
-                    'content': '&nbsp;&nbsp;&nbsp; <a href="mailto:%s">%s</a>' % (email, email),
-                })
-            paragraphs.append(lines)
-            lines = []
-
-        if phones:
-            lines.append({
-                'title': _('Phone numbers'),
-            })
-            for phone in phones:
-                lines.append({
-                    'content': '&nbsp;&nbsp;&nbsp; %s' % phone,
-                })
-
         additional_info = ""
-        for paragraph in paragraphs:
-            additional_info += '<p>'
-            for line in paragraph:
-                if line.get('title', ''):
-                    additional_info += "<b>%s</b>" % line.get('title', '')
-                    additional_info += '<br>' if line.get('new_line') else ' : '
-                additional_info += line.get('content', '')
-                additional_info += '<br>'
-            additional_info += '</p>'
+        if company_data.get('company_data_id'):
+            paragraphs = []
+            lines = []
+
+            lines.append({
+                'title': _('Description'),
+                'content': company_data.get('description', ''),
+                'new_line': True
+            })
+
+            paragraphs.append(lines)
+            lines = []
+
+            if company_data.get('employees'):
+                lines.append({
+                    'title': _('Employees'),
+                    'content': lang.format('%.0f', float(company_data.get('employees')), True, True),
+                })
+            if company_data.get('annual_revenue'):
+                lines.append({
+                    'title': _('Annual revenue'),
+                    'content': '$%s' % lang.format('%.0f', float(company_data.get('annual_revenue')), True, True),
+                })
+            if company_data.get('estimated_annual_revenue'):
+                lines.append({
+                    'title': _('Estimated annual revenue'),
+                    'content': company_data.get('estimated_annual_revenue'),
+                })
+            if company_data.get('sector'):
+                lines.append({
+                    'title': _('Sector'),
+                    'content': company_data.get('sector'),
+                })
+            if company_data.get('tech'):
+                lines.append({
+                    'title': _('Tech'),
+                    'content': ' / '.join(company_data.get('tech', [])),
+                })
+
+            if lines:
+                paragraphs.append(lines)
+                lines = []
+
+            social_medias = 'facebook,linkedin,crunchbase,twitter'.split(',')
+            for social_media in social_medias:
+                if company_data.get(social_media):
+                    lines.append({
+                        'content': "&nbsp;&nbsp;&nbsp; www.%s.com/%s" % (social_media, company_data.get(social_media)),
+                    })
+
+            if lines:
+                lines.insert(0, {
+                    'title': _('Social networks'),
+                })
+                paragraphs.append(lines)
+                lines = []
+
+            if emails:
+                lines.append({
+                    'title': _('Email addresses'),
+                })
+                for email in emails:
+                    lines.append({
+                        'content': '&nbsp;&nbsp;&nbsp; <a href="mailto:%s">%s</a>' % (email, email),
+                    })
+                paragraphs.append(lines)
+                lines = []
+
+            if phones:
+                lines.append({
+                    'title': _('Phone numbers'),
+                })
+                for phone in phones:
+                    lines.append({
+                        'content': '&nbsp;&nbsp;&nbsp; %s' % phone,
+                    })
+
+            for paragraph in paragraphs:
+                additional_info += '<p>'
+                for line in paragraph:
+                    if line.get('title', ''):
+                        additional_info += "<b>%s</b>" % line.get('title', '')
+                        additional_info += '<br>' if line.get('new_line') else ' : '
+                    additional_info += line.get('content', '')
+                    additional_info += '<br>'
+                additional_info += '</p>'
 
         company = {
             'country_id': country_data.get('country_id'),
@@ -224,32 +235,23 @@ class ResPartner(models.Model):
 
     @api.model
     def autocomplete(self, query):
-        def format_results(suggestions):
-            results = []
-            for suggestion in suggestions:
-                # If coming from our IAP DB, should be reformatted
-                # ex: company.domain -> company.website
-                #     concat comments
-                #     etc...
-                if suggestion.get('company_data_id') or suggestion.get('vat'):
-                    results.append(self._format_data_company(suggestion))
-                else:
-                    results.append(suggestion)
-            return results
-
         suggestions, error = self._rpc_remote_api('search', {
             'query': query,
         })
         if suggestions:
-            return format_results(suggestions)
+            results = []
+            for suggestion in suggestions:
+                results.append(self._format_preview_data(suggestion))
+            return results
         else:
             return []
 
     @api.model
-    def enrich_company(self, company_domain, company_data_id):
+    def enrich_company(self, company_domain, company_data_id, vat):
         enrichment_data, error = self._rpc_remote_api('enrich', {
             'domain': company_domain,
             'company_data_id': company_data_id,
+            'vat': vat,
         })
         if enrichment_data:
             return self._format_data_company(enrichment_data)
@@ -262,7 +264,7 @@ class ResPartner(models.Model):
             'vat': vat,
         })
         if vies_vat_data:
-            return [self._format_data_company(vies_vat_data)]
+            return [self._format_preview_data(vies_vat_data)]
         else:
             return []
 

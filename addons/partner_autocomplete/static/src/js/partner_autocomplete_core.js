@@ -68,7 +68,7 @@ return {
         return rpc.query({
             model: 'res.partner',
             method: 'enrich_company',
-            args: [company.website, company.company_data_id],
+            args: [company.website, company.company_data_id, company.vat],
         });
     },
 
@@ -108,7 +108,8 @@ return {
         var def = $.Deferred();
 
         // Fetch additional company info via Autocomplete Enrichment API
-        var enrichPromise = company.company_data_id || !company.website ? company : this.enrichCompany(company);
+        // var enrichPromise = company.company_data_id || !company.website ? company : this.enrichCompany(company);
+        var enrichPromise = this.enrichCompany(company);
 
         // Get logo
         var logoPromise = company.logo ? this.getCompanyLogo(company.logo) : false;
@@ -124,6 +125,8 @@ return {
                 logo: logo_data
             });
         });
+
+        this.increaseUsage
 
         return def;
     },

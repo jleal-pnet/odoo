@@ -155,7 +155,7 @@ var FieldAutocomplete = FieldChar.extend({
 
                 self.trigger_up('field_changed', {
                     dataPointID: self.dataPointID,
-                    changes: changes
+                    changes: changes,
                 });
             });
         }
