@@ -73,7 +73,7 @@ var _t = core._t;
  *              id: integer
  *              display_name: string
  *          }
- *          tax_id: {
+ *          tax_ids: {
  *              id: integer
  *              display_name: string
  *          }
@@ -94,7 +94,7 @@ var _t = core._t;
  */
 var StatementModel = BasicModel.extend({
     avoidCreate: false,
-    quickCreateFields: ['account_id', 'amount', 'analytic_account_id', 'label', 'tax_id', 'force_tax_included', 'analytic_tag_ids'],
+    quickCreateFields: ['account_id', 'amount', 'analytic_account_id', 'label', 'tax_ids', 'force_tax_included', 'analytic_tag_ids'],
 
     /**
      * @override
@@ -395,13 +395,13 @@ var StatementModel = BasicModel.extend({
         var def_taxes = this._rpc({
                 model: 'account.tax',
                 method: 'search_read',
-                fields: ['price_include', 'amount_type'],
+                fields: ['price_include', 'name'],
             })
             .then(function (taxes) {
                 _.each(taxes, function(tax){
                     self.taxes[tax.id] = {
                         price_include: tax.price_include,
-                        amount_type: tax.amount_type,
+                        display_name: tax.name,
                     }
                 })
             });
@@ -462,9 +462,8 @@ var StatementModel = BasicModel.extend({
     quickCreateProposition: function (handle, reconcileModelId) {
         var line = this.getLine(handle);
         var reconcileModel = _.find(this.reconcileModels, function (r) {return r.id === reconcileModelId;});
-        var fields = ['account_id', 'amount', 'amount_type', 'analytic_account_id', 'journal_id', 'label', 'force_tax_included', 'tax_id', 'analytic_tag_ids'];
+        var fields = ['account_id', 'amount', 'amount_type', 'analytic_account_id', 'journal_id', 'label', 'force_tax_included', 'tax_ids', 'analytic_tag_ids'];
         this._blurProposition(handle);
-
         var focus = this._formatQuickCreate(line, _.pick(reconcileModel, fields));
         focus.reconcileModelId = reconcileModelId;
         line.reconciliation_proposition.push(focus);
@@ -619,7 +618,26 @@ var StatementModel = BasicModel.extend({
                         });
                         break;
                 }
-            } else {
+            } 
+            else if (fieldName === 'tax_ids') {
+                switch(value.operation) {
+                    case "ADD_M2M":
+                        prop.__tax_to_recompute = true;
+                        if (!_.findWhere(prop.tax_ids, {id: value.ids.id})) {
+                            value.ids.price_include = self.taxes[value.ids.id] ? self.taxes[value.ids.id].price_include : false;
+                            prop.tax_ids.push(value.ids);
+                        }
+                        break;
+                    case "FORGET":
+                        prop.__tax_to_recompute = true;
+                        var id = self.localData[value.ids[0]].ref;
+                        prop.tax_ids = _.filter(prop.tax_ids, function (val) {
+                            return val.id !== id;
+                        });
+                        break;
+                }
+            }
+            else {
                 prop[fieldName] = values[fieldName];
             }
         });
@@ -632,21 +650,19 @@ var StatementModel = BasicModel.extend({
                 this._computeReconcileModels(handle, prop.reconcileModelId);
             }
         }
-        if ('account_id' in values || 'amount' in values || 'tax_id' in values  || 'force_tax_included' in values) {
+        if ('force_tax_included' in values || 'amount' in values || 'account_id' in values) {
             prop.__tax_to_recompute = true;
-
-            if(values.tax_id){
-                values.tax_id.amount_type = this.taxes[values.tax_id.id].amount_type;
-                values.tax_id.price_include = prop.force_tax_included = this.taxes[values.tax_id.id].price_include;
-            }else if('tax_id' in values && prop.base_amount && prop.base_amount != prop.amount)
-                // When removing a price_included tax, reset the amount to the base_amount.
-                prop.amount = prop.base_amount;
         }
         line.createForm = _.pick(prop, this.quickCreateFields);
 
         // If you check/uncheck the force_tax_included box, reset the createForm amount.
         if(prop.base_amount)
             line.createForm.amount = prop.base_amount;
+        if (prop.tax_ids.length !== 1 ) {
+            // When we have 0 or more than 1 taxes, reset the base_amount and force_tax_included, otherwise weird behavior can happen
+            prop.amount = prop.base_amount;
+            line.createForm.force_tax_included = false;
+        }
         return this._computeLine(line);
     },
     /**
@@ -800,7 +816,7 @@ var StatementModel = BasicModel.extend({
     /**
      * Calculates the balance; format each proposition amount_str and mark as
      * invalid the line with empty account_id, amount or label
-     * Check the taxes server side for each updated propositions with tax_id
+     * Check the taxes server side for each updated propositions with tax_ids
      *
      * @private
      * @param {Object} line
@@ -825,14 +841,13 @@ var StatementModel = BasicModel.extend({
             }
             reconciliation_proposition.push(prop);
 
-            if (prop.tax_id && prop.__tax_to_recompute && prop.base_amount) {
-                line.reconciliation_proposition = _.filter(line.reconciliation_proposition, function (p) {
+            if (prop.tax_ids && prop.tax_ids.length && prop.__tax_to_recompute && prop.base_amount) {
+                reconciliation_proposition = _.filter(line.reconciliation_proposition, function (p) {
                     return !p.is_tax || p.link !== prop.id;
                 });
-
-                var args = [[prop.tax_id.id], prop.base_amount, formatOptions.currency_id];
+                var args = [prop.tax_ids.map(function(el){return el.id;}), prop.base_amount, formatOptions.currency_id];
                 var add_context = {'round': true};
-                if(line.createForm.force_tax_included && prop.tax_id.amount_type !== "group")
+                if(prop.tax_ids.length === 1 && line.createForm.force_tax_included)
                     add_context.force_price_include = true;
                 tax_defs.push(self._rpc({
                         model: 'account.tax',
@@ -844,7 +859,7 @@ var StatementModel = BasicModel.extend({
                         _.each(result.taxes, function(tax){
                             var tax_prop = self._formatQuickCreate(line, {
                                 'link': prop.id,
-                                'tax_id': [tax.id, null],
+                                'tax_ids': [tax.id],
                                 'amount': tax.amount,
                                 'label': tax.name,
                                 'account_id': tax.account_id ? [tax.account_id, null] : prop.account_id,
@@ -935,6 +950,13 @@ var StatementModel = BasicModel.extend({
         var res = [];
         for (var i=0, len=value.length; i<len; i++) {
             res[i] = {data: {'id': value[i][0], 'display_name': value[i][1]}};
+        }
+        return res;
+    },
+    _formatMany2ManyTagsTax: function(value) {
+        var res = [];
+        for (var i=0; i<value.length; i++) {
+            res.push({id: value[i], display_name: this.taxes[value[i]] ? this.taxes[value[i]].display_name : ''});
         }
         return res;
     },
@@ -1070,9 +1092,10 @@ var StatementModel = BasicModel.extend({
             'analytic_account_id': this._formatNameGet(values.analytic_account_id),
             'analytic_tag_ids': this._formatMany2ManyTags(values.analytic_tag_ids || []),
             'journal_id': this._formatNameGet(values.journal_id),
-            'tax_id': this._formatNameGet(values.tax_id),
+            'tax_ids': this._formatMany2ManyTagsTax(values.tax_ids || []),
             'debit': 0,
             'credit': 0,
+            'force_tax_included': values.force_tax_included || false,
             'base_amount': values.amount_type !== "percentage" ?
                 (amount) : line.balance.amount * values.amount / 100,
             'percent': values.amount_type === "percentage" ? values.amount : null,
@@ -1090,18 +1113,6 @@ var StatementModel = BasicModel.extend({
             prop.base_amount = sign * field_utils.parse.monetary(amount, {}, formatOptions);
         }
 
-        if(prop.tax_id){
-            // Set the amount_type value.
-            prop.tax_id.amount_type = this.taxes[prop.tax_id.id].amount_type;
-            // Set the price_include value.
-            prop.tax_id.price_include = this.taxes[prop.tax_id.id].price_include;
-        }
-
-        // Set the force_tax_included value.
-        if(prop.tax_id && values.force_tax_included !== undefined)
-            prop.force_tax_included = values.force_tax_included;
-        else if(prop.tax_id && this.taxes[prop.tax_id.id].price_include)
-            prop.force_tax_included = this.taxes[prop.tax_id.id].price_include;
         prop.amount = prop.base_amount;
         return prop;
     },
@@ -1210,8 +1221,8 @@ var StatementModel = BasicModel.extend({
         }
         if (!isNaN(prop.id)) result.counterpart_aml_id = prop.id;
         if (prop.analytic_account_id) result.analytic_account_id = prop.analytic_account_id.id;
-        if (prop.tax_id && !prop.is_tax) result.tax_ids = [[4, prop.tax_id.id, null]];
-        if (prop.tax_id && prop.is_tax) result.tax_line_id = prop.tax_id.id;
+        if (prop.tax_ids && prop.tax_ids.length && !prop.is_tax) result.tax_ids = [[6, null, _.pluck(prop.tax_ids, 'id')]];
+        if (prop.tax_ids && prop.tax_ids.length && prop.is_tax) result.tax_line_id = prop.tax_ids[0].id;
         return result;
     },
 });
@@ -1222,7 +1233,7 @@ var StatementModel = BasicModel.extend({
  * datas allowing manual reconciliation
  */
 var ManualModel = StatementModel.extend({
-    quickCreateFields: ['account_id', 'journal_id', 'amount', 'analytic_account_id', 'label', 'tax_id', 'force_tax_included', 'analytic_tag_ids'],
+    quickCreateFields: ['account_id', 'journal_id', 'amount', 'analytic_account_id', 'label', 'tax_ids', 'force_tax_included', 'analytic_tag_ids'],
 
     //--------------------------------------------------------------------------
     // Public
