@@ -2,9 +2,9 @@
 <odoo>
     <data>
         <template id="l10n_ch_swissqr_template" inherit_id="account.report_invoice_document">
-            <xpath expr="//p[@id='qrcode']" position="after">
+            <xpath expr="//div[@id='qrcode']" position="after">
                 <link rel="stylesheet" type="text/scss" href="/l10n_ch/static/src/scss/report_swissqr.scss"/>
-                <div class="swissqr_content">
+                <div class="swissqr_content" t-if="o.partner_id.country_id.code == 'CH'">
                     <div class="swissqr_body" t-if="o.partner_bank_id.validate_swiss_code_arguments(o.partner_bank_id.currency_id, o.partner_id) and ((o.currency_id.name == 'EUR') or (o.currency_id.name == 'CHF'))">
                         <div id="title_zone" class="swissqr_column_left title_zone">
                             <span class="swissqr_text title title_zone">QR-bill payment part</span><br/>

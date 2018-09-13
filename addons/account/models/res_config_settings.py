@@ -84,8 +84,6 @@ class ResConfigSettings(models.TransientModel):
     account_sanitize_invoice_ref = fields.Boolean(string="Sanitize Invoice References", related='company_id.account_sanitize_invoice_ref', help="If checked, customer invoices' and vendor bills' referneces will automatically correct their reference so that they are maximum 140 characters long, consist only of latin characters, contain no '//' sequence, and have no leading or trailing /.")
 
     qr_code = fields.Boolean(string='Display SEPA QR code', related='company_id.qr_code')
-    qr_code_payment_journal_id = fields.Many2one('account.journal', related='company_id.qr_code_payment_journal_id', string="Payment Journal", domain="['&',('type', '=', 'bank'), ('currency_id.name','=','EUR')]")
-    qr_code_valid = fields.Boolean(string='Has all required arguments', related="qr_code_payment_journal_id.bank_account_id.qr_code_valid")
     invoice_is_print = fields.Boolean(string='Print', related='company_id.invoice_is_print')	
     invoice_is_email = fields.Boolean(string='Send Email', related='company_id.invoice_is_email')
 

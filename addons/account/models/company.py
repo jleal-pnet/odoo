@@ -68,8 +68,6 @@ Best Regards,'''))
     account_sanitize_invoice_ref = fields.Boolean(string="Sanitize Invoice References", default=True, help="Whether or not customer invoices and vendor bills should automatically correct their reference they are maximum 140 characters long, consist only of latin characters, contain no '//' sequence, and have no leading or trailing /. (these are the SEPA criteria for payment communications)")
 
     qr_code = fields.Boolean(string='Display SEPA QR code')
-    qr_code_payment_journal_id = fields.Many2one('account.journal', string='SEPA QR Code Bank Journal account')
-    qr_code_valid = fields.Boolean(string='Has all required arguments', related="qr_code_payment_journal_id.bank_account_id.qr_code_valid")
 
     invoice_is_email = fields.Boolean('Email by default', default=True)
     invoice_is_print = fields.Boolean('Print by default', default=True)

@@ -100,6 +100,7 @@ class ResPartnerBank(models.Model):
     @api.model
     def validate_swiss_code_arguments(self, currency, debitor):
         if(currency.name == 'EUR'):
+            print("1")
             return (self.bank_id.l10n_ch_postal_eur and
                     self.company_id.zip and
                     self.company_id.city and
@@ -108,6 +109,7 @@ class ResPartnerBank(models.Model):
                     debitor.city and
                     debitor.country_id.code)
         elif(currency.name == 'CHF'):
+            print("2")
             return (self.bank_id.l10n_ch_postal_chf and
                     self.company_id.zip and
                     self.company_id.city and
@@ -116,4 +118,5 @@ class ResPartnerBank(models.Model):
                     debitor.city and
                     debitor.country_id.code)
         else:
+            print("3")
             return False
