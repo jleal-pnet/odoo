@@ -183,11 +183,11 @@ class CustomerPortal(CustomerPortal):
             ])
             acquirers = request.env['payment.acquirer'].sudo().search(domain)
 
-            values['form_acquirers'] = [acq for acq in acquirers if acq.payment_flow == 'form' and acq.view_template_id]
-            values['s2s_acquirers'] = [acq for acq in acquirers if acq.payment_flow == 's2s' and acq.registration_view_template_id]
+            values['acquirers'] = acquirers.filtered(lambda acq: (acq.payment_flow == 'form' and acq.view_template_id) or
+                                                     (acq.payment_flow == 's2s' and acq.registration_view_template_id))
             values['pms'] = request.env['payment.token'].search(
                 [('partner_id', '=', order_sudo.partner_id.id),
-                ('acquirer_id', 'in', [acq.id for acq in values['s2s_acquirers']])])
+                ('acquirer_id', 'in', acquirers.filtered(lambda acq: acq.payment_flow == 's2s').ids)])
 
         history = request.session.get('my_quotes_history', [])
         values.update(get_records_pager(history, order_sudo))

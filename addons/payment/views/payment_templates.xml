@@ -40,7 +40,7 @@
             <input type="hidden" t-if="callback_method" name="callback_method" t-att-value="callback_method"/>
 
             <div class="card">
-                <t t-set="acquirers_count" t-value="len(acquirers) if form_acquirers else 0"/>
+                <t t-set="acquirers_count" t-value="len(acquirers) if acquirers else 0"/>
                 <t t-set="pms_count" t-value="len(pms) if pms else 0"/>
                 <t t-set="MAX_BRAND_LINE" t-value="3"/>
                 <t t-foreach="acquirers" t-as="acq">
