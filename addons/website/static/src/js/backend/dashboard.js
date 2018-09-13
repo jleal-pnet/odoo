@@ -9,6 +9,7 @@ var Dialog = require('web.Dialog');
 var field_utils = require('web.field_utils');
 var session = require('web.session');
 var web_client = require('web.web_client');
+var config = require('web.config');
 
 var _t = core._t;
 var QWeb = core.qweb;
@@ -305,6 +306,7 @@ var Dashboard = AbstractAction.extend(ControlPanelMixin, {
         if (!this.$searchview) {
             this.$searchview = $(QWeb.render("website.DateRangeButtons", {
                 widget: this,
+                'isMobile': config.device.isMobile,
             }));
             this.$searchview.find('button.js_date_range').click(function(ev) {
                 self.$searchview.find('button.js_date_range.active').removeClass('active');
