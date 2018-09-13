@@ -13,47 +13,23 @@ import re
 from odoo import http
 import urllib3
 from odoo.http import request as httprequest
+import datetime
 
 from uuid import getnode as get_mac
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(name)s: %(message)s')
 _logger = logging.getLogger('dispatcher')
 
-to_reload = {}
+owner_dict = {}
 last_ping = {}
 
 class StatusController(http.Controller):
-
-
-    @http.route('/box/check_reload', type='http', auth='none', cors='*')
-    def connect_box(self, tab_id, workcenter_id):
-        if not tab_id:
-            #check new id
-            tab_id = max(to_reload.keys() + 1)
-            return tab_id
-        if tab_id and workcenter_id:
-            if to_reload.get[tab_id]:
-                if to_reload[tab_id].get(workcenter_id):
-                    if to_reload[tab_id][workcenter_id]:
-                        result = to_reload[tab_id][workcenter_id]
-                        to_reload[tab_id][workcenter_id] = ''
-                    else:
-                        to_reload[tab_id][workcenter_id] = ''
-
-
-    def click_pedal(self, path):
-        # use urllib3
-        # Call server with pedal
-        # server.check_pedal(device_id)
-        pass
-
-    owner_dict = {}
 
     @http.route('/owner/check', type='json', auth='none', cors='*', csrf=False)
     def check_cantakeowner(self): #, devices, tab
         data = httprequest.jsonrequest
         for device in data['devices']:
-            if self.owner_dict.get(device) and self.owner_dict[device] != data['tab']:
+            if owner_dict.get(device) and owner_dict[device] != data['tab']:
                 return 'no'
         return 'yes'
 
@@ -61,7 +37,8 @@ class StatusController(http.Controller):
     def take_ownership(self): #, devices, tab
         data = httprequest.jsonrequest
         for device in data['devices']:
-            self.owner_dict[device] = data['tab']
+            owner_dict[device] = data['tab']
+        print('Took ownership: ', data['tab'])
         return data['tab']
 
     @http.route('/owner/ping', type='json', auth='none', cors='*', csrf=False)
@@ -70,12 +47,13 @@ class StatusController(http.Controller):
         ping_dict = {}
         #last_ping[data['tab']] = datetime.datetime.utcnow()
         for dev in data['devices']:
-            if self.owner_dict.get(dev) and self.owner_dict[dev] == data['tab']:
+            if owner_dict.get(dev) and owner_dict[dev] == data['tab']:
                 if drivers[dev].ping_value:
                     ping_dict[dev] = drivers[dev].ping_value
                     drivers[dev].ping_value = '' #or set it to nothing
             else:
                 ping_dict[dev] = 'STOP'
+        print("Did ping: ", data['tab'])
         return ping_dict
 
     @http.route('/box/connect', type='http', auth='none', cors='*', csrf=False)
