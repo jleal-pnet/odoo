@@ -33,8 +33,9 @@
                         </group>
                         <group>
                             <field name="next_type_ids" widget="many2many_tags"
-                                context="{'default_res_model_id': res_model_id}"/>
-                            <field name="default_next_type_id" context="{'default_res_model_id': res_model_id}"/>
+                                attrs="{'readonly': [('force_next', '=', True)]}" context="{'default_res_model_id': res_model_id}"/>
+                            <field name="force_next"/>
+                            <field name="default_next_type_id" attrs="{'required': [('force_next', '=', True)]}" context="{'default_res_model_id': res_model_id}"/>
                             <field name="mail_template_ids" widget="many2many_tags"
                                 domain="[('model_id', '=', res_model_id)]"
                                 attrs="{'invisible': [('res_model_id', '=', False)]}"
