@@ -170,7 +170,7 @@ class Property(models.Model):
                 remaining_props.append(p)
         comodel_name = self.env[model]._fields[name].comodel_name
         if comodel_name:
-            existing = self.env[comodel_name].browse(r.values()).exists()
+            existing = self.env[comodel_name].browse(set(r.values())).exists()
             for k, v in r.items():
                 if v in existing.ids:
                     result[k] = self.env[comodel_name].browse(v)
