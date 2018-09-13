@@ -46,6 +46,7 @@ Wysiwyg.include({
         } else {
             this.defAsset = $.when({cssLibs: [], cssContents: []});
         }
+        this.$target = this.$el;
         return this.defAsset
             .then(this._loadIframe.bind(this))
             .then(this._super.bind(this)).then(function () {
@@ -128,29 +129,27 @@ Wysiwyg.include({
      * then inject the target inside
      */
     _loadIframe: function () {
-        var $target = this.$el;
-        if (!document.body.contains($target[0])) {
-            console.error('Target must be present in the DOM');
-        }
-
         this.$iframe = $('<iframe class="wysiwyg_iframe">').css({
             'min-height': '400px',
             width: '100%'
         });
-        this.$iframe.insertAfter($target);
+        this.$iframe.insertAfter(this.$target);
 
         // resolve deferred on load
 
         var def = $.Deferred();
         window.top[this._onUpdateIframeSummernoteId] = function () {
             delete window.top[this._onUpdateIframeSummernoteId];
-            this.$iframe.contents().find('#iframe_target').append($target);
+            var $iframeTarget = this.$iframe.contents().find('#iframe_target');
+            $iframeTarget.append(this.$target);
             def.resolve();
+            this.$iframe.trigger('load');
         }.bind(this);
 
         // inject content in iframe
 
-        this.$iframe.one('load', function onLoad () {
+        this.$iframe.one('load', function onLoad (ev) {
+            ev.stopImmediatePropagation();
             this.defAsset.then(function (asset) {
                 var cwindow = this.$iframe[0].contentWindow;
                 cwindow.document

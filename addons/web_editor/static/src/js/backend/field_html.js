@@ -182,7 +182,7 @@ var FieldHtml = basic_fields.DebouncedField.extend(TranslatableFieldMixin, {
 
         if (this.nodeOptions.cssEdit) {
             // must be async because the target must be append in the DOM
-            setTimeout(this._createWysiwygIntance.bind(this));
+            this._createWysiwygIntance();
         } else {
             return this._createWysiwygIntance();
         }

@@ -356,10 +356,9 @@ QUnit.test('field html widget with cssReadonly', function (assert) {
                 '<field name="body" widget="html" style="height: 100px" options="{\'cssReadonly\': \'template.assets\'}"/>' +
             '</form>',
         res_id: 1,
-        debug: true
     }).then(function (form) {
         var $field = form.$('.oe_form_field[name="body"]');
-        $field.children('iframe.o_readonly').on('load', function () {
+        $field.find('iframe.o_readonly').on('load', function () {
             var doc = $(this).contents()[0];
             assert.strictEqual($(doc).find('#iframe_target').html(),
                 '<p>toto toto toto</p><p>tata</p>',
@@ -375,6 +374,55 @@ QUnit.test('field html widget with cssReadonly', function (assert) {
             assert.strictEqual($field.find('.note-editable').html(),
                 '<p>toto toto toto</p><p>tata</p>',
                 "should have rendered the field correctly in edit");
+
+            testUtils.unpatch(ajax);
+
+            form.destroy();
+            done();
+        });
+    });
+});
+
+QUnit.test('field html widget with cssEdit', function (assert) {
+    var done = assert.async();
+    assert.expect(3);
+
+    testUtils.patch(ajax, {
+        loadAsset: function (xmlId) {
+            if (xmlId !== 'template.assets') {
+                throw 'Wrong template';
+            }
+            return $.when({cssLibs: [], cssContents: ['body {background-color: red;}']});
+        },
+    });
+
+    testUtils.createAsyncView({
+        View: FormView,
+        model: 'note.note',
+        data: this.data,
+        arch: '<form>' +
+                '<field name="body" widget="html" style="height: 100px" options="{\'cssEdit\': \'template.assets\'}"/>' +
+            '</form>',
+        res_id: 1,
+    }).then(function (form) {
+        var $field = form.$('.oe_form_field[name="body"]');
+        assert.strictEqual($field.children('.o_readonly').html(),
+            '<p>toto toto toto</p><p>tata</p>',
+            "should have rendered a div with correct content in readonly");
+
+        form.$buttons.find('.o_form_button_edit').click();
+
+        $field = form.$('.oe_form_field[name="body"]');
+
+        $field.find('iframe').on('load', function () {
+            var doc = $(this).contents()[0];
+            assert.strictEqual($(doc).find('#iframe_target .note-editable').html(),
+                '<p>toto toto toto</p><p>tata</p>',
+                "should have rendered a div with correct content in edit mode");
+
+            assert.strictEqual(doc.defaultView.getComputedStyle(doc.body).backgroundColor,
+                'rgb(255, 0, 0)',
+                "should load the asset css");
 
             testUtils.unpatch(ajax);
 
