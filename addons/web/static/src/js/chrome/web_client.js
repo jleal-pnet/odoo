@@ -60,7 +60,7 @@ return AbstractWebClient.extend({
         var company = session.company_id;
         var img = session.url('/web/binary/company_logo' + '?db=' + session.db + (company ? '&company=' + company : ''));
         this.$('.o_sub_menu_logo img').attr('src', '').attr('src', img + (reload ? "&t=" + Date.now() : ''));
-        this.$('.oe_logo_edit').toggleClass('oe_logo_edit_admin', session.is_superuser);
+        this.$('.oe_logo_edit').toggleClass('oe_logo_edit_admin', session.is_admin);
     },
     logo_edit: function(ev) {
         var self = this;
