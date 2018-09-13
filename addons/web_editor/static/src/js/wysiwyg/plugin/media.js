@@ -126,31 +126,23 @@ var MediaPlugin = AbstractPlugin.extend({
     insertMedia: function (previous, data) {
         var deferred = $.Deferred();
         var newMedia = data.media;
-        var $img = $('<img>')
-            .one('load', this._wrapCommand(function () {
-                $img.remove();
+        this._wrapCommand(function () {
+            if (newMedia.tagName !== "IMG") {
                 $(newMedia).filter('a.o_image:empty, span.fa:empty').text(" "); // Required for editing (delete, backspace) with summernote
-                range.create(this.editable).insertNode(newMedia);
-                $(previous).remove();
-                range.createFromNodeAfter(newMedia).select();
-                deferred.resolve(newMedia);
-            })).one('error abort', function () {
-                $img.remove();
-                deferred.reject();
-            });
-        $img.hide()
-            .appendTo(document.body)
-            .attr('src', newMedia.tagName === "IMG" ? newMedia.src : '/web_editor/static/src/img/transparent.png');
+                deferred.resolve();
+            } else {
+                $(newMedia).one('load error abort', deferred.resolve.bind(deferred));
+            }
+            range.create(this.editable).insertNode(newMedia);
+        })();
 
         deferred.then(function () {
             // select new media
-            setTimeout(function () {
-                window.event = { // because summernote use global 'event' for position ; Todo, create not jquery event
-                    pageX: $(newMedia).offset().left,
-                    pageY: $(newMedia).offset().top,
-                };
-                $(newMedia).trigger('mousedown').trigger('mouseup');
-            });
+            window.event = { // because summernote use global 'event' for position ; Todo, create not jquery event
+                pageX: $(newMedia).offset().left,
+                pageY: $(newMedia).offset().top,
+            };
+            $(newMedia).trigger('mousedown').trigger('mouseup');
         });
 
         return deferred.promise();
@@ -262,8 +254,8 @@ var AbstractMediaPlugin = AbstractPlugin.extend({
         pos.left -= posContainer.left;
         this.$popover.css({
             display: 'block',
-            left: this.options.popatmouse ? event.pageX - posContainer.left - 20 : pos.left,
-            top: this.options.popatmouse ? event.pageY - posContainer.top : pos.top,
+            left: event.pageX - posContainer.left - 20,
+            top: event.pageY - posContainer.top,
         });
     },
     _isMedia: function (target) {},
@@ -318,6 +310,8 @@ var ImagePlugin = AbstractMediaPlugin.extend({
     show: function (target) {
         this._super(target);
         var $target = $(target);
+
+        this.context.invoke('handle.update', target);
 
         var iconShape = this.options.icons.imageShape;
         _.each(this.options.icons.imageShape, function (icon, className) {

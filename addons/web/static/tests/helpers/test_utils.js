@@ -763,6 +763,7 @@ function removeSrcAttribute(el, widget) {
             if (widget) {
                 widget._rpc({route: src});
             }
+            $(node).trigger('load');
         }
     }
 }

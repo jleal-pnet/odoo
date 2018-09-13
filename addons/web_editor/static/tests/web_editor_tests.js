@@ -6,6 +6,7 @@ var testUtils = require('web.test_utils');
 var core = require('web.core');
 var FieldHtml = require('web_editor.field.html');
 var Wysiwyg = require('web_editor.wysiwyg');
+var MediaDialog = require('wysiwyg.widgets.MediaDialog');
 
 var _t = core._t;
 
@@ -84,7 +85,6 @@ QUnit.test('field html widget', function (assert) {
                 '<field name="body" widget="html" style="height: 100px"/>' +
             '</form>',
         res_id: 1,
-        debug: true
     }).then(function (form) {
         var $field = form.$('.oe_form_field[name="body"]');
         assert.strictEqual($field.children('.o_readonly').html(),
@@ -148,7 +148,6 @@ QUnit.test('field html widget: colorpicker', function (assert) {
                 '<field name="body" widget="html" style="height: 100px"/>' +
             '</form>',
         res_id: 1,
-        debug: true,
     }).then(function (form) {
         form.$buttons.find('.o_form_button_edit').click();
         var $field = form.$('.oe_form_field[name="body"]');
@@ -201,6 +200,78 @@ QUnit.test('field html widget: colorpicker', function (assert) {
 
         form.destroy();
         done();
+    });
+});
+
+QUnit.test('field html widget: media dialog', function (assert) {
+    var done = assert.async();
+    assert.expect(1);
+
+    testUtils.createAsyncView({
+        View: FormView,
+        model: 'note.note',
+        data: this.data,
+        arch: '<form>' +
+                '<field name="body" widget="html" style="height: 100px"/>' +
+            '</form>',
+        res_id: 1,
+        mockRPC: function (route, args) {
+            if (args.model === 'ir.attachment') {
+                if (args.method === "generate_access_token") {
+                    return $.when();
+                }
+                if (args.kwargs.domain[7][2].join(',') === "image/gif,image/jpe,image/jpeg,image/jpg,image/gif,image/png") {
+                    return $.when([{
+                        "id": 1,
+                        "public": true,
+                        "name": "image",
+                        "datas_fname": "image.png",
+                        "mimetype": "image/png",
+                        "checksum": false,
+                        "url": "/web_editor/static/src/img/transparent.png",
+                        "type": "url",
+                        "res_id": 0,
+                        "res_model": false,
+                        "access_token": false
+                    }]);
+                }
+            }
+            return this._super(route, args);
+        },
+    }).then(function (form) {
+        form.$buttons.find('.o_form_button_edit').click();
+        var $field = form.$('.oe_form_field[name="body"]');
+
+        // the dialog load some xml assets
+        var defMediaDialog = $.Deferred();
+        testUtils.patch(MediaDialog, {
+            init: function () {
+                this._super.apply(this, arguments);
+                this.opened(defMediaDialog.resolve.bind(defMediaDialog));
+            }
+        });
+
+        var pText = $field.find('.note-editable p').first().contents()[0];
+        Wysiwyg.setRange(pText, 1);
+
+        $field.find('.note-toolbar .note-insert button:has(.note-icon-picture)').mousedown().click();
+
+        // load static xml file (dialog, media dialog, unsplash image widget)
+        defMediaDialog.then(function () {
+            $('.modal .o_select_media_dialog .o_image:first').click();
+            $('.modal .modal-footer button.btn-primary').click();
+
+            var $editable = form.$('.oe_form_field[name="body"] .note-editable');
+
+            assert.strictEqual($editable.html(),
+                '<p>t<img class="img-fluid o_we_custom_image" data-src="/web_editor/static/src/img/transparent.png">oto toto toto</p><p>tata</p>',
+                "should have the image in the dom");
+
+            testUtils.unpatch(MediaDialog);
+
+            form.destroy();
+            done();
+        }, 200);
     });
 });
 
