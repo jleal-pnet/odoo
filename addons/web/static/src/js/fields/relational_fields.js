@@ -402,7 +402,7 @@ var FieldMany2One = AbstractField.extend({
         var domain = this.record.getDomain(this.recordParams);
 
         // Add the additionalContext
-        _.extend(context, this.additionalContext)
+        _.extend(context, this.additionalContext);
 
         var blacklisted_ids = this._getSearchBlacklist();
         if (blacklisted_ids.length > 0) {
@@ -848,9 +848,8 @@ var FieldX2Many = AbstractField.extend({
 
     /**
      * @override
-     * @param {Object} [options]
      */
-    activate: function (options) {
+    activate: function () {
         if (!this.activeActions.create || this.isReadonly || !this.$el.is(":visible")) {
             return false;
         }
@@ -858,7 +857,7 @@ var FieldX2Many = AbstractField.extend({
             this.$buttons.find(".o-kanban-button-new").focus();
         }
         if (this.view.arch.tag === 'tree') {
-            this.renderer.$('.o_field_x2many_list_row_add a').focus();
+            this.renderer.$('.o_field_x2many_list_row_add a:first').focus();
         }
         return true;
     },
@@ -1164,6 +1163,31 @@ var FieldX2Many = AbstractField.extend({
                 }
             });
         }
+    },
+    /**
+     * Override to handle the navigation inside editable list controls
+     *
+     * @override
+     * @private
+     */
+    _onNavigationMove: function (ev) {
+        if (this.view.arch.tag === 'tree') {
+            var $curA = this.renderer.$('.o_field_x2many_list_row_add a:focus');
+            if ($curA.length) {
+                var $nextA;
+                if (ev.data.direction === 'right') {
+                    $nextA = $curA.next('a');
+                } else if (ev.data.direction === 'left') {
+                    $nextA = $curA.prev('a');
+                }
+                if ($nextA && $nextA.length) {
+                    ev.stopPropagation();
+                    $nextA.focus();
+                    return;
+                }
+            }
+        }
+        this._super.apply(this, arguments);
     },
     /**
      * Called when the user clicks on a relational record.
