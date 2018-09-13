@@ -90,7 +90,7 @@ class ProductProduct(models.Model):
         digits=dp.get_precision('Product Price'),
         help="This is the sum of the extra price of all attributes")
     lst_price = fields.Float(
-        'Sale Price', compute='_compute_product_lst_price',
+        'Sales Price', compute='_compute_product_lst_price',
         digits=dp.get_precision('Product Price'), inverse='_set_product_lst_price',
         help="The sale price is managed from the product template. Click on the 'Variant Prices' button to set the extra attribute prices.")
 
@@ -475,6 +475,20 @@ class ProductProduct(models.Model):
                 'res_id': self.product_tmpl_id.id,
                 'target': 'new'}
 
+    @api.multi
+    def open_list_attribute(self):
+        action = self.env.ref('product.action_open_list_attribute').read()[0]
+        action['domain'] = [
+            ('product_ids.product_tmpl_id', '=', self._context.get('active_id')),
+            ('product_ids', '=', self.partner_ref)
+        ]
+        action['context'] = {
+            'default_product_tmpl_id': self._context.get('active_id'),
+            'active_id': self._context.get('active_id'),
+            'active_model': 'product.attribute.value'
+        }
+        return action
+
     def _prepare_sellers(self, params):
         return self.seller_ids
 
@@ -582,6 +596,15 @@ class ProductProduct(models.Model):
             name += '\n' + self.description_sale
         return name
 
+    @api.multi
+    def toggle_active(self):
+        """ Archiving related product.template if there is only one active product.product """
+        product_id = self.with_context().id
+        product_name = self.with_context().name
+        product_template_name = self.env['product.template'].search([['name','=',product_name]]).name
+        if len(self.env['product.product'].search([['name','=',product_name]])) == 1 and product_template_name != False:
+            self.env['product.template'].search([['name','=',product_name]]).toggle_active()
+        return super(ProductProduct, self.with_context()).toggle_active()
 
 class ProductPackaging(models.Model):
     _name = "product.packaging"
