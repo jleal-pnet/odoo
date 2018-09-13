@@ -526,6 +526,21 @@ var FieldDate = InputField.extend({
     },
 
     //--------------------------------------------------------------------------
+    // Public
+    //--------------------------------------------------------------------------
+
+    /**
+     * Ask the datepicker widget to activate the input, instead of doing it
+     * ourself, such that 'input' events triggered by the lib are correctly
+     * intercepted, and don't produce unwanted 'field_changed' events.
+     *
+     * @override
+     */
+    activate: function () {
+        this.datewidget.focus();
+    },
+
+    //--------------------------------------------------------------------------
     // Private
     //--------------------------------------------------------------------------
 
