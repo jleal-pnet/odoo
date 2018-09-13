@@ -308,10 +308,7 @@ class PaymentAcquirer(models.Model):
 
         It contains
 
-         * form_acquirers: record set of acquirers based on a local form that
-                           sends customer to the acquirer website;
-         * s2s_acquirers: reset set of acquirers that send customer data to
-                          acquirer without redirecting to any other website;
+         * acquirers: record set of both form and s2s acquirers;
          * pms: record set of stored credit card data (aka payment.token)
                 connected to a given partner to allow customers to reuse them """
         if not company:
@@ -319,13 +316,13 @@ class PaymentAcquirer(models.Model):
         if not partner:
             partner = self.env.user.partner_id
         active_acquirers = self.sudo().search([('website_published', '=', True), ('company_id', '=', company.id)])
-        form_acquirers = active_acquirers.filtered(lambda acq: (acq.payment_flow == 'form' and acq.view_template_id) or
+        acquirers = active_acquirers.filtered(lambda acq: (acq.payment_flow == 'form' and acq.view_template_id) or
                                                                (acq.payment_flow == 's2s' and acq.registration_view_template_id))
         return {
-            'form_acquirers': form_acquirers,
+            'acquirers': acquirers,
             'pms': self.env['payment.token'].search([
                 ('partner_id', '=', partner.id),
-                ('acquirer_id', 'in', form_acquirers.filtered(lambda acq: acq.payment_flow == 's2s').ids)]),
+                ('acquirer_id', 'in', acquirers.filtered(lambda acq: acq.payment_flow == 's2s').ids)]),
         }
 
     @api.multi

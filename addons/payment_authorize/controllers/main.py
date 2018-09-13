@@ -38,8 +38,10 @@ class AuthorizeController(http.Controller):
             kwargs = dict(kwargs, partner_id=request.env.user.partner_id.id)
         try:
            return acquirer.s2s_process(kwargs).id
-        except:
-           return False
+        except ValidationError as e:
+           return {
+               'error': str(e),
+           }
 
     @http.route(['/payment/authorize/s2s/create_json_3ds'], type='json', auth='public', csrf=False)
     def authorize_s2s_create_json_3ds(self, verify_validity=False, **kwargs):

@@ -19,7 +19,7 @@
                             <div class="col-md-8">
                                 <h3>Manage your Payment Methods</h3>
                                 <t t-call="payment.payment_tokens_list">
-                                    <t t-set="form_acquirers" t-value="acquirers"/>
+                                    <t t-set="acquirers" t-value="acquirers"/>
                                     <t t-set="mode" t-value="'manage'"/>
                                     <t t-set="verify_validity" t-value="True"/>
                                 </t>
@@ -64,7 +64,7 @@
                                     <t t-set="form_action" t-value="'/payment/token/' + str(amount) + '/' + str(currency.id) + '/' + reference"/>
                                 </t>
                             </t>
-                            <div t-if="not form_acquirers" class="alert alert-danger" role="alert">
+                            <div t-if="not acquirers" class="alert alert-danger" role="alert">
                                 <p>No payment acquirer found.</p>
                                 <p>Please configure a payment acquirer.</p>
                             </div>

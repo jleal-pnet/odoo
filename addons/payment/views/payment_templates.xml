@@ -17,12 +17,11 @@
             - 'checked_pm_id' the payment token that should be checked (for radio buttons)
             - 'mode' can take two values, either 'payment' or 'manage'. 'manage' displays the add a new card and delete buttons. 'payment'
                 display a form that is used to pay and send the information to the form action url.
-            - 's2s_acquirers' the list of the server2server acquirers
-            - 'form_acquirers' the list of the payment acquirers to pay with forms
+            - 'acquirers' the list of both server2server and form payment acquirers
             - 'verify_validity' if we need to verify if the payment method is valid when adding a new one
             - 'prepare_tx_url' the url of the route which will handle the creation of a transaction for a form base payment (handles if the transaction is form or form_save)
         -->
-        <form t-if="pms or form_acquirers" method="post" class="o_payment_form mt-3 clearfix"
+        <form t-if="pms or acquirers" method="post" class="o_payment_form mt-3 clearfix"
                 t-att-action="form_action if form_action else '#'"
                 t-att-data-success-url="success_url or ''"
                 t-att-data-error-url="error_url or ''"
@@ -41,10 +40,10 @@
             <input type="hidden" t-if="callback_method" name="callback_method" t-att-value="callback_method"/>
 
             <div class="card">
-                <t t-set="acquirers_count" t-value="len(form_acquirers) if form_acquirers else 0"/>
+                <t t-set="acquirers_count" t-value="len(acquirers) if form_acquirers else 0"/>
                 <t t-set="pms_count" t-value="len(pms) if pms else 0"/>
                 <t t-set="MAX_BRAND_LINE" t-value="3"/>
-                <t t-foreach="form_acquirers" t-as="acq">
+                <t t-foreach="acquirers" t-as="acq">
                     <div class="card-body">
                         <label>
                             <t t-if="acq.payment_flow == 'form'">
@@ -53,7 +52,7 @@
                                        t-att-data-provider="acq.provider"
                                        t-att-class="'d-none' if (acquirers_count==1 and pms_count==0) else ''"
                                        name="pm_id" t-attf-value="form_{{acq.id}}"
-                                       t-att-checked="acquirers_count==1 and pms_count==0 or form_acquirers[0] == acq"/>
+                                       t-att-checked="acquirers_count==1 and pms_count==0 or acquirers[0] == acq"/>
                             </t>
                             <t t-else="acq.payment_flow == 's2s'">
                                 <input type="radio" t-att-data-acquirer-id="acq.id"
@@ -61,7 +60,7 @@
                                        t-att-data-provider="acq.provider"
                                        name="pm_id" t-attf-value="new_{{acq.id}}"
                                        t-att-class="'d-none' if (acquirers_count==1 and pms_count==0) else ''"
-                                       t-att-checked="acquirers_count==1 and pms_count==0 or form_acquirers[0] == acq"/>
+                                       t-att-checked="acquirers_count==1 and pms_count==0 or acquirers[0] == acq"/>
                             </t>
                             <span class="payment_option_name" t-esc="acq.name"/>
                         </label>
@@ -92,7 +91,7 @@
                     </t>
                     <t t-else="acq.payment_flow == 's2s'">
                         <div t-attf-id="o_payment_add_token_acq_{{acq.id}}"
-                             t-attf-class="card-footer {{'d-none' if(acquirers_count &gt; 1 and pms_count==0 and form_acquirers[0]!=acq) else 'd-none' if pms_count &gt;0 else ''}}">
+                             t-attf-class="card-footer {{'d-none' if(acquirers_count &gt; 1 and pms_count==0 and acquirers[0]!=acq) else 'd-none' if pms_count &gt;0 else ''}}">
                             <div class="clearfix">
                                 <t t-call="{{acq.sudo().get_s2s_form_xml_id()}}">
                                     <t t-set="id" t-value="acq.id"/>
@@ -138,7 +137,7 @@
                         <i class="fa fa-lock"> Pay</i>
                     </t>
                 </button>
-                <button t-if="mode == 'manage' and form_acquirers" id="o_payment_form_add_pm" class="btn btn-primary btn-lg mb8 mt8">
+                <button t-if="mode == 'manage' and acquirers.filtered(lambda x: x.payment_flow == 's2s')" id="o_payment_form_add_pm" class="btn btn-primary btn-lg mb8 mt8">
                     <i class="fa fa-plus-circle"> Add new card</i>
                 </button>
             </div>

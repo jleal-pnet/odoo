@@ -801,7 +801,7 @@ class WebsiteSale(http.Controller):
         acquirers = request.env['payment.acquirer'].search(domain)
 
         values['access_token'] = order.access_token
-        values['form_acquirers'] = [acq for acq in acquirers if (acq.payment_flow == 'form' and acq.view_template_id) or
+        values['acquirers'] = [acq for acq in acquirers if (acq.payment_flow == 'form' and acq.view_template_id) or
                                     (acq.payment_flow == 's2s' and acq.registration_view_template_id)]
         values['tokens'] = request.env['payment.token'].search(
             [('partner_id', '=', order.partner_id.id),
