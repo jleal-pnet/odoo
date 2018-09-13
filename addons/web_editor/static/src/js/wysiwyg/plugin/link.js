@@ -1,11 +1,11 @@
-odoo.define('web_editor.summernote.plugin.Link', function (require) {
+odoo.define('web_editor.plugin.Link', function (require) {
 'use strict';
 
 var core = require('web.core');
 var Class = require('web.Class');
 var LinkDialog = require('wysiwyg.widgets.LinkDialog');
-var Plugins = require('web_editor.summernote.plugins');
-var registry = require('web_editor.summernote.plugin.registry');
+var Plugins = require('web_editor.plugins');
+var registry = require('web_editor.plugin.registry');
 
 var _t = core._t;
 var dom = $.summernote.dom;

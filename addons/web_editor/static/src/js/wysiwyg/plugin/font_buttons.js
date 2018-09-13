@@ -1,7 +1,7 @@
-odoo.define('web_editor.summernote.plugin.Font.buttons', function (require) {
+odoo.define('web_editor.plugin.Font.buttons', function (require) {
 'use strict';
 
-var Buttons = require('web_editor.summernote.plugin.Buttons');
+var Buttons = require('web_editor.plugin.Buttons');
 
 //--------------------------------------------------------------------------
 // override the ColorPicker button into the Toolbar and the font size button

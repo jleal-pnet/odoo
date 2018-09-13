@@ -1,8 +1,8 @@
-odoo.define('web_editor.summernote.plugin.unbreakable', function (require) {
+odoo.define('web_editor.plugin.unbreakable', function (require) {
 'use strict';
 
-var AbstractPlugin = require('web_editor.summernote.plugin.abstract');
-var registry = require('web_editor.summernote.plugin.registry');
+var AbstractPlugin = require('web_editor.plugin.abstract');
+var registry = require('web_editor.plugin.registry');
 
 var dom = $.summernote.dom;
 

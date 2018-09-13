@@ -1,8 +1,8 @@
-odoo.define('web_editor.summernote.plugins', function (require) {
+odoo.define('web_editor.plugins', function (require) {
 'use strict';
 
-var AbstractPlugin = require('web_editor.summernote.plugin.abstract');
-var registry = require('web_editor.summernote.plugin.registry');
+var AbstractPlugin = require('web_editor.plugin.abstract');
+var registry = require('web_editor.plugin.registry');
 
 
 return _.mapObject($.summernote.options.modules, function (Module, pluginName) {

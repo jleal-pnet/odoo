@@ -4,24 +4,69 @@ odoo.define('web_editor.web_editor_tests', function (require) {
 var FormView = require('web.FormView');
 var testUtils = require('web.test_utils');
 var core = require('web.core');
-var web_editor = require('web_editor.editor');
+var FieldHtml = require('web_editor.field.html');
+var Wysiwyg = require('web_editor.wysiwyg');
 
 var _t = core._t;
+
 
 QUnit.module('web_editor', {
     beforeEach: function() {
         this.data = {
-            'mass.mailing': {
+            'ir.ui.view': {
                 fields: {
                     display_name: { string: "Displayed name", type: "char" },
-                    body: {string: "Message Body", type: "html"},
+                },
+                records: [],
+                read_template: function (args) {
+                    if (args[0] === 'web_editor.colorpicker') {
+                        return '<templates><t t-name="web_editor.colorpicker">' +
+                            '<colorpicker>' +
+                            '    <div class="o_colorpicker_section" data-name="theme" data-display="Theme Colors" data-icon-class="fa fa-flask">' +
+                            '        <button data-color="alpha"></button>' +
+                            '        <button data-color="beta"></button>' +
+                            '        <button data-color="gamma"></button>' +
+                            '        <button data-color="delta"></button>' +
+                            '        <button data-color="epsilon"></button>' +
+                            '    </div>' +
+                            '    <div class="o_colorpicker_section" data-name="transparent_grayscale" data-display="Transparent Colors" data-icon-class="fa fa-eye-slash">' +
+                            '        <button class="o_btn_transparent"></button>' +
+                            '        <button data-color="black-25"></button>' +
+                            '        <button data-color="black-50"></button>' +
+                            '        <button data-color="black-75"></button>' +
+                            '        <button data-color="white-25"></button>' +
+                            '        <button data-color="white-50"></button>' +
+                            '        <button data-color="white-75"></button>' +
+                            '    </div>' +
+                            '    <div class="o_colorpicker_section" data-name="common" data-display="Common Colors" data-icon-class="fa fa-paint-brush"></div>' +
+                            '</colorpicker>' +
+                        '</t></templates>';
+                    }
+                },
+            },
+            'note.note': {
+                fields: {
+                    display_name: { string: "Displayed name", type: "char" },
+                    body: {string: "Message", type: "html"},
                 },
                 records: [{
                     id: 1,
                     display_name: "first record",
-                    body: "<div class='field_body'>yep</div>",
+                    body: "<p>toto toto toto</p><p>tata</p>",
                 }],
-                onchanges: {},
+            },
+            'mass.mailing': {
+                fields: {
+                    display_name: { string: "Displayed name", type: "char" },
+                    body_html: {string: "Message Body inline (to send)", type: "html"},
+                    body_arch: {string: "Message Body for edition", type: "html"},
+                },
+                records: [{
+                    id: 1,
+                    display_name: "first record",
+                    body_html: "<div class='field_body' style='background-color: red;'>yep</div>",
+                    body_arch: "<div class='field_body'>yep</div>",
+                }],
             },
         };
     }
@@ -31,64 +76,132 @@ QUnit.test('field html widget', function (assert) {
     var done = assert.async();
     assert.expect(3);
 
-    var form = testUtils.createView({
+    testUtils.createAsyncView({
         View: FormView,
-        model: 'mass.mailing',
+        model: 'note.note',
         data: this.data,
-        arch: '<form string="Partners">' +
+        arch: '<form>' +
                 '<field name="body" widget="html" style="height: 100px"/>' +
             '</form>',
         res_id: 1,
-    });
+        debug: true
+    }).then(function (form) {
+        var $field = form.$('.oe_form_field[name="body"]');
+        assert.strictEqual($field.children('.o_readonly').html(),
+            '<p>toto toto toto</p><p>tata</p>',
+            "should have rendered a div with correct content in readonly");
+        assert.strictEqual($field.attr('style'), 'height: 100px',
+            "should have applied the style correctly");
 
-    assert.strictEqual(form.$('.field_body').text(), 'yep',
-        "should have rendered a div with correct content in readonly");
-    assert.strictEqual(form.$('div[name=body]').attr('style'), 'height: 100px',
-        "should have applied the style correctly");
+        form.$buttons.find('.o_form_button_edit').click();
 
-    form.$buttons.find('.o_form_button_edit').click();
-
-    assert.strictEqual(form.$('.note-editable').html(), '<div class="field_body">yep</div>',
+        $field = form.$('.oe_form_field[name="body"]');
+        assert.strictEqual($field.find('.note-editable').html(),
+            '<p>toto toto toto</p><p>tata</p>',
             "should have rendered the field correctly in edit");
 
-    // summernote invokes handlers after a setTimeout, so we must wait as well
-    // before destroying the widget (otherwise we'll have a crash later on)
-    setTimeout(function () {
         form.destroy();
         done();
-    }, 0);
+    });
 });
 
-QUnit.test('field html widget (with options inline-style)', function (assert) {
+QUnit.test('field html widget: inline-style', function (assert) {
     var done = assert.async();
-    assert.expect(3);
+    assert.expect(2);
 
-    var form = testUtils.createView({
+    this.data['note.note'].records[0].body = '<p class="pull-right" style="float: right;">toto toto toto</p><p>tata</p>';
+
+    testUtils.createAsyncView({
         View: FormView,
-        model: 'mass.mailing',
+        model: 'note.note',
         data: this.data,
-        arch: '<form string="Partners">' +
+        arch: '<form>' +
                 '<field name="body" widget="html" style="height: 100px" options="{\'style-inline\': true}"/>' +
             '</form>',
         res_id: 1,
-    });
+    }).then(function (form) {
+        var $field = form.$('.oe_form_field[name="body"]');
 
-    assert.strictEqual(form.$('iframe').length, 1,
-        "should have rendered an iframe without crashing in readonly");
-    assert.strictEqual(form.$('div[name=body]').attr('style'), 'height: 100px',
-        "should have applied the style correctly");
+        assert.strictEqual($field.children('.o_readonly').html(), '<p class="pull-right" style="float: right;">toto toto toto</p><p>tata</p>',
+            "should have rendered a div with correct content in readonly");
 
-    form.$buttons.find('.o_form_button_edit').click();
+        form.$buttons.find('.o_form_button_edit').click();
 
-    assert.strictEqual(form.$('.note-editable').html(), '<div class="field_body">yep</div>',
-            "should have rendered the field correctly in edit");
+        $field = form.$('.oe_form_field[name="body"]');
+        assert.strictEqual($field.find('.note-editable').html(), '<p class="pull-right">toto toto toto</p><p>tata</p>',
+            "should have rendered the field correctly in edit (remove style inline who used class)");
 
-    // summernote invokes handlers after a setTimeout, so we must wait as well
-    // before destroying the widget (otherwise we'll have a crash later on)
-    setTimeout(function () {
         form.destroy();
         done();
-    }, 0);
+    });
+});
+
+QUnit.test('field html widget: colorpicker', function (assert) {
+    var done = assert.async();
+    assert.expect(6);
+
+    testUtils.createAsyncView({
+        View: FormView,
+        model: 'note.note',
+        data: this.data,
+        arch: '<form>' +
+                '<field name="body" widget="html" style="height: 100px"/>' +
+            '</form>',
+        res_id: 1,
+        debug: true,
+    }).then(function (form) {
+        form.$buttons.find('.o_form_button_edit').click();
+        var $field = form.$('.oe_form_field[name="body"]');
+
+        // select the text
+        var pText = $field.find('.note-editable p').first().contents()[0];
+        Wysiwyg.setRange(pText, 1, pText, 10);
+        // text is selected
+
+        var range = Wysiwyg.getRange($field[0]);
+        assert.strictEqual(range.sc, pText,
+            "should select the text");
+
+        $field.find('.note-toolbar .note-bg-color button:first').mousedown().click();
+
+        assert.ok($field.find('.note-bg-color').hasClass('show') && $field.find('.note-bg-color .dropdown-menu').hasClass('show'),
+            "should display the color picker");
+
+        $field.find('.note-toolbar .note-bg-color button[data-value="#00FFFF"]').click();
+
+        assert.ok(!$field.find('.note-bg-color').hasClass('show') && !$field.find('.note-bg-color .dropdown-menu').hasClass('show'),
+            "should close the color picker");
+
+        assert.strictEqual($field.find('.note-editable').html(),
+            '<p>t<font style="background-color: rgb(0, 255, 255);">oto toto&nbsp;</font>toto</p><p>tata</p>',
+            "should have rendered the field correctly in edit");
+
+        var fontContent = $field.find('.note-editable font').contents()[0];
+        var rangeControl = {
+            sc: fontContent,
+            so: 0,
+            ec: fontContent,
+            eo: fontContent.length,
+        };
+        range = Wysiwyg.getRange($field[0]);
+        assert.deepEqual(_.pick(range, 'sc', 'so', 'ec', 'eo'), rangeControl,
+            "should select the text after color change");
+
+        // select the text
+        pText = $field.find('.note-editable p').first().contents()[2];
+        Wysiwyg.setRange(fontContent, 5, pText, 2);
+        // text is selected
+
+        $field.find('.note-toolbar .note-bg-color button:first').mousedown().click();
+        $field.find('.note-toolbar .note-bg-color button[data-value="bg-gamma"]').click();
+
+        assert.strictEqual($field.find('.note-editable').html(),
+            '<p>t<font style="background-color: rgb(0, 255, 255);">oto t</font><font class="bg-gamma">oto&nbsp;to</font>to</p><p>tata</p>',
+            "should have rendered the field correctly in edit");
+
+        form.destroy();
+        done();
+    });
 });
 
 QUnit.test('field html translatable', function (assert) {
@@ -97,11 +210,11 @@ QUnit.test('field html translatable', function (assert) {
     var multiLang = _t.database.multi_lang;
     _t.database.multi_lang = true;
 
-    this.data['mass.mailing'].fields.body.translate = true;
+    this.data['note.note'].fields.body.translate = true;
 
-    var form = testUtils.createView({
+    testUtils.createAsyncView({
         View: FormView,
-        model: 'mass.mailing',
+        model: 'note.note',
         data: this.data,
         arch: '<form string="Partners">' +
                 '<field name="body" widget="html"/>' +
@@ -109,219 +222,25 @@ QUnit.test('field html translatable', function (assert) {
         res_id: 1,
         mockRPC: function (route, args) {
             if (route === '/web/dataset/call_button' && args.method === 'translate_fields') {
-                assert.deepEqual(args.args, ['mass.mailing',1,'body',{}], "should call 'call_button' route");
+                assert.deepEqual(args.args, ['note.note',1,'body',{}], "should call 'call_button' route");
                 return $.when();
             }
             return this._super.apply(this, arguments);
         },
-    });
+    }).then(function (form) {
 
-    assert.strictEqual(form.$('.oe_form_field_html_text .o_field_translate').length, 0,
-        "should not have a translate button in readonly mode");
+        assert.strictEqual(form.$('.oe_form_field_html_text .o_field_translate').length, 0,
+            "should not have a translate button in readonly mode");
 
-    form.$buttons.find('.o_form_button_edit').click();
-    var $button = form.$('.oe_form_field_html_text .o_field_translate');
-    assert.strictEqual($button.length, 1, "should have a translate button");
-    $button.click();
+        form.$buttons.find('.o_form_button_edit').click();
+        var $button = form.$('.oe_form_field_html_text .o_field_translate');
+        assert.strictEqual($button.length, 1, "should have a translate button");
+        $button.click();
 
-    form.destroy();
-    _t.database.multi_lang = multiLang;
-});
-
-QUnit.test('field html_frame widget', function (assert) {
-    assert.expect(6);
-
-    var form = testUtils.createView({
-        View: FormView,
-        model: 'mass.mailing',
-        data: this.data,
-        arch: '<form string="Partners">' +
-                '<field name="body" widget="html_frame" options="{\'editor_url\': \'/logo\'}"/>' +
-            '</form>',
-        res_id: 1,
-        session: {user_context: {lang: "en_us"}},
-        mockRPC: function (route) {
-            if (_.str.startsWith(route, '/logo')) {
-                // those tests will be executed twice, once in readonly and once in edit
-                assert.ok(route.search('model=mass.mailing') > 0,
-                    "the route should specify the correct model");
-                assert.ok(route.search('res_id=1') > 0,
-                    "the route should specify the correct id");
-                return $.when();
-            }
-            return this._super.apply(this, arguments);
-        },
-    });
-
-    assert.strictEqual(form.$('iframe').length, 1, "should have rendered an iframe without crashing");
-
-    form.$buttons.find('.o_form_button_edit').click();
-
-    assert.strictEqual(form.$('iframe').length, 1, "should have rendered an iframe without crashing");
-
-    form.destroy();
-});
-
-QUnit.test('field htmlsimple does not crash when commitChanges is called in mode=readonly', function (assert) {
-    assert.expect(1);
-
-    var form = testUtils.createView({
-        View: FormView,
-        model: 'mass.mailing',
-        data: this.data,
-        arch: '<form string="Partners">' +
-                '<header>' +
-                    '<button name="some_method" class="s" string="Do it" type="object"/>' +
-                '</header>' +
-                '<sheet>' +
-                    '<field name="body"/>' +
-                '</sheet>' +
-            '</form>',
-        res_id: 1,
-        intercepts: {
-            execute_action: function () {
-                assert.step('execute_action');
-            }
-        },
-    });
-
-    form.$('button:contains(Do it)').click();
-    form.destroy();
-});
-
-QUnit.test('html_frame does not crash when saving in readonly', function (assert) {
-    // The 'Save' action may be triggered even in readonly (e.g. when clicking
-    // on a button in the form view)
-    assert.expect(2);
-
-    var form = testUtils.createView({
-        View: FormView,
-        model: 'mass.mailing',
-        data: this.data,
-        arch: '<form string="Partners">' +
-                '<sheet>' +
-                    '<field name="body" widget="html_frame" options="{\'editor_url\': \'/logo\'}"/>' +
-                '</sheet>' +
-            '</form>',
-        res_id: 1,
-        mockRPC: function (route, args) {
-            if (args.method) {
-                assert.step(args.method);
-            }
-            if (_.str.startsWith(route, '/logo')) {
-                // manually call the callback to simulate that the iframe has
-                // been loaded (note: just the content, not the editor)
-                window.odoo[$.deparam(route).callback + '_content'].call();
-                return $.when();
-            }
-            return this._super.apply(this, arguments);
-        },
-    });
-
-    form.saveRecord(); // before the fix done in this commit, it crashed here
-    
-    assert.verifySteps(['read']);
-
-    form.destroy();
-});
-
-QUnit.test('html_frame does not crash when saving in edit mode (editor not loaded)', function (assert) {
-    // The 'Save' action may be triggered when saving in edit mode very fast
-    // so that the editor may be not loaded, even though the content is!
-    assert.expect(2);
-
-    var form = testUtils.createView({
-        View: FormView,
-        model: 'mass.mailing',
-        data: this.data,
-        arch: '<form string="Partners">' +
-                '<sheet>' +
-                    '<field name="display_name"/>' +
-                    '<field name="body" widget="html_frame" options="{\'editor_url\': \'/logo\'}"/>' +
-                '</sheet>' +
-            '</form>',
-        res_id: 1,
-        mockRPC: function (route, args) {
-            if (args.method) {
-                assert.step(args.method);
-            }
-            if (_.str.startsWith(route, '/logo')) {
-                // manually call the callback to simulate that the iframe has
-                // been partially loaded (just the content, not the editor)
-                window.odoo[$.deparam(route).callback + '_content']();
-                return $.when();
-            }
-            return this._super.apply(this, arguments);
-        },
-    });
-
-    form.$buttons.find('.o_form_button_edit').click();
-    form.$('input').val('trululu').trigger('input');
-    form.$buttons.find('.o_form_button_save').click(); // crash without editor fully loaded
-
-    assert.verifySteps(['read']);
-
-    form.destroy();
-});
-
-QUnit.test('html_frame saving in edit mode (editor and content fully loaded)', function (assert) {
-    var done = assert.async();
-    assert.expect(4);
-
-    var editorBar = new web_editor.Class();
-    var loadDeferred = $.Deferred();
-    var writeDeferred = $.Deferred();
-
-    var form = testUtils.createView({
-        View: FormView,
-        model: 'mass.mailing',
-        data: this.data,
-        arch: '<form string="Partners">' +
-                '<sheet>' +
-                    '<field name="display_name"/>' +
-                    '<field name="body" widget="html_frame" options="{\'editor_url\': \'/logo\'}"/>' +
-                '</sheet>' +
-            '</form>',
-        res_id: 1,
-        mockRPC: function (route, args) {
-            if (args.method) {
-                assert.step(args.method);
-                if (args.method === 'write') {
-                    writeDeferred.resolve();    
-                }
-            }
-            if (_.str.startsWith(route, '/logo')) {
-                // manually call the callback to simulate that the iframe has
-                // been fully loaded (content + editor)
-                var callback = $.deparam(route).callback;
-                return loadDeferred.then(function () {
-                    var contentCallback = window.odoo[callback + '_content'];
-                    var editorCallback = window.odoo[callback + '_editor'];
-                    if (editorCallback && contentCallback) {
-                        contentCallback();
-                        editorCallback(editorBar);
-                    }
-                });
-            }
-            return this._super.apply(this, arguments);
-        },
-    });
-
-    form.$buttons.find('.o_form_button_edit').click();
-    form.$('input').val('trululu').trigger('input');
-    form.$buttons.find('.o_form_button_save').click();
-
-    loadDeferred.resolve(); // simulate late loading of html frame
-
-    assert.strictEqual(form.$('.o_field_char').val(), 'trululu',
-        "should have saved the char field text");
-
-    writeDeferred.then( function () { // html_frame is async with write
-        assert.verifySteps(['read', 'write']);
         form.destroy();
-        done();
-    });
+        _t.database.multi_lang = multiLang;
 
+    });
 });
 
 });

@@ -7,30 +7,14 @@ var core = require('web.core');
 var session = require('web.session');
 var ServicesMixin = require('web.ServicesMixin');
 var mixins = require('web.mixins');
-var modulesRegistry = require('web_editor.summernote.plugin.registry');
+var modulesRegistry = require('web_editor.plugin.registry');
 
 var QWeb = core.qweb;
 var _t = core._t;
 
-/**
-TODO:
-
-error: insert video => eject node after video in p => unbreakable
-can save in codeview mode
-
---------------------------------
---------------------------------
-Later:
-
-doubleclick image => showImageDialog
-key.nameFromCode[27] = 'ESCAPE'; ==> cancel
-
-*/
-
 var Wysiwyg = Widget.extend({
     xmlDependencies: [
         '/web_editor/static/src/xml/wysiwyg.xml',
-        '/web_editor/static/src/xml/wysiwyg_colorpicker.xml',
     ],
     /*
      *
@@ -78,19 +62,11 @@ var Wysiwyg = Widget.extend({
         this.$target = this.$el;
         this.$el = null; // temporary null to avoid hidden error, setElement when start
         return this._super()
-            .then(function () { // load color picker template if needed
-                if ('web_editor.colorpicker' in QWeb.templates) {
-                    return;
-                }
-                return this._rpc({
-                    model: 'ir.ui.view',
-                    method: 'read_template',
-                    args: ['web_editor.colorpicker', this.options.recordInfo.context]
-                }).then(function (template) {
-                    QWeb.add_template(template);
-                });
-            }.bind(this))
-            .then(this._loadInstance.bind(this));
+            .then(function () {
+                return modulesRegistry.start(this).then(function () {
+                    return this._loadInstance();
+                }.bind(this));
+            }.bind(this));
     },
     /**
      * start in sync
@@ -321,7 +297,7 @@ var Wysiwyg = Widget.extend({
      * @returns {Object} modules list to load
      */
     _getPlugins: function () {
-        return _.extend({}, $.summernote.options.modules, modulesRegistry.map);
+        return _.extend({}, $.summernote.options.modules, modulesRegistry.plugins());
     },
     /**
      *  @returns object who describe the linked record
@@ -356,6 +332,10 @@ var Wysiwyg = Widget.extend({
 
         this.setElement(this._summernote.layoutInfo.editor);
 
+        var def = $.Deferred();
+        // summernote invokes handlers after a setTimeout, so we must wait as well
+        // before destroying the widget (otherwise we'll have a crash later on)
+        setTimeout(def.resolve.bind(def));
         return $.when();
     },
 
@@ -429,16 +409,16 @@ var Wysiwyg = Widget.extend({
 // Public helper
 //--------------------------------------------------------------------------
 
-Wysiwyg.createReadyFunction = function (Contructor) {
+/**
+ * Load wysiwyg assets if needed
+ *
+ * @see Wysiwyg.createReadyFunction
+ * @param {Widget} parent
+ * @returns {$.Promise}
+*/
+Wysiwyg.prepare = (function () {
     var assetsLoaded = false;
-
-    /**
-     * Load wysiwyg assets if needed
-     *
-     * @param {Widget} parent
-     * @returns {$.Promise}
-    */
-    Contructor.ready = function (parent) {
+    return function prepare (parent) {
         if (assetsLoaded) {
             return $.when();
         }
@@ -446,7 +426,7 @@ Wysiwyg.createReadyFunction = function (Contructor) {
         var timeout = setTimeout(function () {
             throw _t("Can't load assets of the wysiwyg editor");
         }, 10000);
-        var wysiwyg = new Contructor(parent, {recordInfo: {context: {}}});
+        var wysiwyg = new Wysiwyg(parent, {recordInfo: {context: {}}});
         wysiwyg.attachTo($('<textarea>')).then(function () {
             assetsLoaded = true;
             clearTimeout(timeout);
@@ -455,17 +435,10 @@ Wysiwyg.createReadyFunction = function (Contructor) {
         });
         return def;
     };
-};
-/**
- * Load wysiwyg assets if needed
- *
- * @see Wysiwyg.createReadyFunction
- * @param {Widget} parent
- * @returns {$.Promise}
-*/
-Wysiwyg.createReadyFunction(Wysiwyg);
+})();
 /**
  *
+ * @param {DOM node} DOM (editable or node inside)
  * @returns {Object}
  * @returns {Node} sc - start container
  * @returns {Number} so - start offset

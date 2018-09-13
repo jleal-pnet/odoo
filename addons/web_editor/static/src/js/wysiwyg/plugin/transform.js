@@ -1,9 +1,9 @@
-odoo.define('web_editor.summernote.plugin.transform', function (require) {
+odoo.define('web_editor.plugin.transform', function (require) {
 'use strict';
 
 var core = require('web.core');
-var AbstractPlugin = require('web_editor.summernote.plugin.abstract');
-var registry = require('web_editor.summernote.plugin.registry');
+var AbstractPlugin = require('web_editor.plugin.abstract');
+var registry = require('web_editor.plugin.registry');
 
 var _t = core._t;
 

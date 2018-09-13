@@ -257,18 +257,5 @@ var WysiwygTranslate = WysiwygMultizone.extend({
     },
 });
 
-//--------------------------------------------------------------------------
-// Public helper
-//--------------------------------------------------------------------------
-
-/**
- * Load wysiwyg assets if needed
- *
- * @see Wysiwyg.createReadyFunction
- * @param {Widget} parent
- * @returns {$.Promise}
-*/
-Wysiwyg.createReadyFunction(WysiwygTranslate);
-
 return WysiwygTranslate;
 });

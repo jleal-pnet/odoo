@@ -386,18 +386,5 @@ var WysiwygMultizone = Wysiwyg.extend({
     },
 });
 
-//--------------------------------------------------------------------------
-// Public helper
-//--------------------------------------------------------------------------
-
-/**
- * Load wysiwyg assets if needed
- *
- * @see Wysiwyg.createReadyFunction
- * @param {Widget} parent
- * @returns {$.Promise}
-*/
-Wysiwyg.createReadyFunction(WysiwygMultizone);
-
 return WysiwygMultizone;
 });

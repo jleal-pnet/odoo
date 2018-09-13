@@ -1,10 +1,10 @@
-odoo.define('web_editor.summernote.plugin.Font', function (require) {
+odoo.define('web_editor.plugin.Font', function (require) {
 'use strict';
 
 var core = require('web.core');
 var ColorpickerDialog = require('wysiwyg.widgets.ColorpickerDialog');
-var AbstractPlugin = require('web_editor.summernote.plugin.abstract');
-var registry = require('web_editor.summernote.plugin.registry');
+var AbstractPlugin = require('web_editor.plugin.abstract');
+var registry = require('web_editor.plugin.registry');
 
 var QWeb = core.qweb;
 var _t = core._t;
@@ -65,6 +65,15 @@ function moveContent (from, to) {
     }
   }
 }
+function remove(node, to, endPoint) {
+    if (node === endPoint.node) {
+        endPoint = dom.prevPoint(endPoint);
+    }
+    if (to) {
+        moveContent(node, to);
+    }
+    dom.remove(node);
+}
 
 //--------------------------------------------------------------------------
 // Font (colorpicker & font-size)
@@ -81,10 +90,6 @@ var Font = AbstractPlugin.extend({
     //--------------------------------------------------------------------------
 
     colorPickerButton: function ($button) {
-        if (!QWeb.has_template('web_editor.colorpicker')) {
-            return $button;
-        }
-
         var self = this;
         var $palettes = $button.find('.note-palette');
         var $bgPalette = $palettes.first();
@@ -320,15 +325,6 @@ var Font = AbstractPlugin.extend({
             nodes.push(point.node);
         });
         nodes = _.unique(nodes);
-        function remove(node, to) {
-            if (node === endPoint.node) {
-                endPoint = dom.prevPoint(endPoint);
-            }
-            if (to) {
-                moveContent(node, to);
-            }
-            dom.remove(node);
-        }
         // remove node without attributes (move content), and merge the same nodes
         for (i=0; i<nodes.length; i++) {
             node = nodes[i];
@@ -347,21 +343,19 @@ var Font = AbstractPlugin.extend({
             className = orderClass(node);
             style = orderStyle(node);
             if (!className && !style) {
-                remove(node, node.parentNode);
+                remove(node, node.parentNode, endPoint);
                 nodes.splice(i,1);
                 i--;
                 continue;
             }
-            if (i>0 && (font = dom.ancestor(nodes[i-1], dom.isFont))) {
-                if (font === node.previousElementSibling) {
-                    if (font === node.previousElementSibling &&
-                        node !== font && className === font.getAttribute('class') && style === font.getAttribute('style')) {
-                        remove(node, font);
-                        nodes.splice(i,1);
-                        i--;
-                        continue;
-                    }
-                }
+            var prev = font.previousElementSibling;
+            if (prev &&
+                font.tagName === prev.tagName &&
+                className === orderClass(prev) && style === orderStyle(prev)) {
+                remove(font, prev, endPoint);
+                nodes.splice(i,1);
+                i--;
+                continue;
             }
         }
 
@@ -459,6 +453,21 @@ _.extend(sLang.color, {
 });
 
 registry.add('Font', Font);
+
+registry.addXmlDependency('/web_editor/static/src/xml/wysiwyg_colorpicker.xml');
+registry.addJob(function (wysiwyg) {
+    if ('web_editor.colorpicker' in QWeb.templates) {
+        return;
+    }
+    return wysiwyg._rpc({
+        model: 'ir.ui.view',
+        method: 'read_template',
+        args: ['web_editor.colorpicker', wysiwyg.options.recordInfo.context]
+    }).then(function (template) {
+        QWeb.add_template(template);
+    });
+});
+
 
 return Font;
 

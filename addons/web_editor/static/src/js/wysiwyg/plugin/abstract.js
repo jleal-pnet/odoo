@@ -1,4 +1,4 @@
-odoo.define('web_editor.summernote.plugin.abstract', function (require) {
+odoo.define('web_editor.plugin.abstract', function (require) {
 'use strict';
 
 var Class = require('web.Class');
@@ -138,6 +138,7 @@ var AbstractPlugin = Class.extend({
             this.$editable.trigger('change');
         }.bind(this);
     },
+
 });
 
 return AbstractPlugin;

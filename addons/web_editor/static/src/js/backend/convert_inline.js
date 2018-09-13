@@ -334,7 +334,7 @@ function styleToClass($editable) {
             }
         });
         css = ($c.attr('style', style).attr('style') || '').split(/\s*;\s*/);
-        style = $target.attr('style') || '';
+        style = ($target.attr('style') || '').replace(/\s*:\s*/, ':').replace(/\s*;\s*/, ';');
         _.each(css, function (v) {
             style = style.replace(v, '');
         });

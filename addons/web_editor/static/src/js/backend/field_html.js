@@ -14,32 +14,6 @@ var TranslatableFieldMixin = basic_fields.TranslatableFieldMixin;
 var QWeb = core.qweb;
 var _t = core._t;
 
-
-// mass_mailing: /mass_mailing/static/src/css/basic_theme_readonly.css
-
-console.error('insert js mass_mailing');
-/*
-
-todo:
-
-restart animation on cancel
-trigger change when drop snippet
-
-/\S|\u00A0/
-
-mass_mailing/static/src/js/mass_mailing_editor.js
-
-To remove: 
-
-FieldTextHtmlInline
-on_change_model_and_list
-
-ask to fp:
-
-remove choice template crap in mass_mailing
-
-*/
-
 /**
  * FieldHtml Widget
  * Intended to display HTML content. This widget uses the wysiwyg editor
@@ -65,7 +39,7 @@ var FieldHtml = basic_fields.DebouncedField.extend(TranslatableFieldMixin, {
 
     willStart: function () {
         var defAsset = this.nodeOptions.cssReadonly && ajax.loadAsset(this.nodeOptions.cssReadonly);
-        return $.when(this._super().then(Wysiwyg.ready.bind(null, this)), defAsset);
+        return $.when(this._super().then(Wysiwyg.prepare.bind(Wysiwyg, this)), defAsset);
     },
 
     //--------------------------------------------------------------------------
@@ -342,3 +316,36 @@ field_registry.add('html', FieldHtml);
 
 return FieldHtml;
 });
+
+
+
+
+console.error('insert js mass_mailing');
+/*
+
+todo:
+
+remove choice template crap in mass_mailing
+restart animation on cancel
+trigger change when drop snippet
+traduction dans le backend
+
+/\S|\u00A0/
+
+mass_mailing/static/src/js/mass_mailing_editor.js
+
+
+TODO WYSIWYG:
+
+error: insert video => eject node after video in p => unbreakable
+can save in codeview mode
+
+--------------------------------
+--------------------------------
+Later:
+
+doubleclick image => showImageDialog
+key.nameFromCode[27] = 'ESCAPE'; ==> cancel
+
+*/
+
