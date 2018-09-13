@@ -19,7 +19,7 @@
         <!-- set default order confirmation template for electronic Payment -->
         <record id="default_sale_confirmation_template" model="ir.config_parameter">
             <field name="key">sale.sale_confirmation_template</field>
-            <field name="value" ref="sale.order_confirmation_mail_template"/>
+            <field name="value" ref="sale.email_template_order_confirmation_mail"/>
         </record>
     </data>
 </odoo>

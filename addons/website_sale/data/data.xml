@@ -46,7 +46,7 @@
         <!-- set default e-commerce order confirmation template -->
         <record id="default_ecommerce_confirmation_template" model="ir.config_parameter">
             <field name="key">website_sale.ecommerce_confirmation_template</field>
-            <field name="value" ref="sale.order_confirmation_mail_template"/>
+            <field name="value" ref="sale.email_template_order_confirmation_mail"/>
         </record>
     </data>
     <data>
