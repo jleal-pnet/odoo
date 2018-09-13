@@ -405,8 +405,7 @@
                     <separator />
                     <filter string="Unread Messages" name="message_needaction" domain="[('message_needaction','=',True)]"/>
                     <separator />
-                    <filter string="Current" name="current" domain="[('active', '=', True)]"/>
-                    <filter string="Archived" name="archived" domain="[('active', '=', False)]"/>
+                    <filter string="Lost" name="lost" domain="['&amp;', ('probability', '=', 0), ('active', '=', False)]"/>
                     <separator />
                     <filter string="Exclude blacklisted"
                         name='not_blacklisted' domain="[('is_blacklisted', '=', False)]"
