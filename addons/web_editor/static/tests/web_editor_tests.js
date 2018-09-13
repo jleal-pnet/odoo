@@ -1,6 +1,7 @@
 odoo.define('web_editor.web_editor_tests', function (require) {
 "use strict";
 
+var ajax = require('web.ajax');
 var FormView = require('web.FormView');
 var testUtils = require('web.test_utils');
 var core = require('web.core');
@@ -331,6 +332,65 @@ QUnit.test('field html widget: media dialog: icon', function (assert) {
         }, 200);
     });
 });
+
+// todo add test save
+
+QUnit.test('field html widget with cssReadonly', function (assert) {
+    var done = assert.async();
+    assert.expect(3);
+
+    testUtils.patch(ajax, {
+        loadAsset: function (xmlId) {
+            if (xmlId !== 'template.assets') {
+                throw 'Wrong template';
+            }
+            return $.when({cssLibs: [], cssContents: ['body {background-color: red;}']});
+        },
+    });
+
+    testUtils.createAsyncView({
+        View: FormView,
+        model: 'note.note',
+        data: this.data,
+        arch: '<form>' +
+                '<field name="body" widget="html" style="height: 100px" options="{\'cssReadonly\': \'template.assets\'}"/>' +
+            '</form>',
+        res_id: 1,
+        debug: true
+    }).then(function (form) {
+        var $field = form.$('.oe_form_field[name="body"]');
+        $field.children('iframe.o_readonly').on('load', function () {
+            var doc = $(this).contents()[0];
+            assert.strictEqual($(doc).find('#iframe_target').html(),
+                '<p>toto toto toto</p><p>tata</p>',
+                "should have rendered a div with correct content in readonly");
+
+            assert.strictEqual(doc.defaultView.getComputedStyle(doc.body).backgroundColor,
+                'rgb(255, 0, 0)',
+                "should load the asset css");
+
+            form.$buttons.find('.o_form_button_edit').click();
+
+            $field = form.$('.oe_form_field[name="body"]');
+            assert.strictEqual($field.find('.note-editable').html(),
+                '<p>toto toto toto</p><p>tata</p>',
+                "should have rendered the field correctly in edit");
+
+            testUtils.unpatch(ajax);
+
+            form.destroy();
+            done();
+        });
+    });
+});
+
+// todo add test cssEdit + color + open dialog
+
+// todo add test cssEdit save
+
+// todo add test cssEdit & snippet + drop a snippet
+// todo add test cssEdit & snippet + customize snippet
+
 
 QUnit.test('field html translatable', function (assert) {
     assert.expect(3);
