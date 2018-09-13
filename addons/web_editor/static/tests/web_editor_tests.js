@@ -203,7 +203,7 @@ QUnit.test('field html widget: colorpicker', function (assert) {
     });
 });
 
-QUnit.test('field html widget: media dialog', function (assert) {
+QUnit.test('field html widget: media dialog: image', function (assert) {
     var done = assert.async();
     assert.expect(1);
 
@@ -258,13 +258,70 @@ QUnit.test('field html widget: media dialog', function (assert) {
 
         // load static xml file (dialog, media dialog, unsplash image widget)
         defMediaDialog.then(function () {
-            $('.modal .o_select_media_dialog .o_image:first').click();
+            $('.modal #editor-media-image .o_image:first').click();
             $('.modal .modal-footer button.btn-primary').click();
 
             var $editable = form.$('.oe_form_field[name="body"] .note-editable');
 
             assert.strictEqual($editable.html(),
                 '<p>t<img class="img-fluid o_we_custom_image" data-src="/web_editor/static/src/img/transparent.png">oto toto toto</p><p>tata</p>',
+                "should have the image in the dom");
+
+            testUtils.unpatch(MediaDialog);
+
+            form.destroy();
+            done();
+        }, 200);
+    });
+});
+
+QUnit.test('field html widget: media dialog: icon', function (assert) {
+    var done = assert.async();
+    assert.expect(1);
+
+    testUtils.createAsyncView({
+        View: FormView,
+        model: 'note.note',
+        data: this.data,
+        arch: '<form>' +
+                '<field name="body" widget="html" style="height: 100px"/>' +
+            '</form>',
+        res_id: 1,
+        mockRPC: function (route, args) {
+            if (args.model === 'ir.attachment') {
+                return $.when([]);
+            }
+            return this._super(route, args);
+        },
+    }).then(function (form) {
+        form.$buttons.find('.o_form_button_edit').click();
+        var $field = form.$('.oe_form_field[name="body"]');
+
+        // the dialog load some xml assets
+        var defMediaDialog = $.Deferred();
+        testUtils.patch(MediaDialog, {
+            init: function () {
+                this._super.apply(this, arguments);
+                this.opened(defMediaDialog.resolve.bind(defMediaDialog));
+            }
+        });
+
+        var pText = $field.find('.note-editable p').first().contents()[0];
+        Wysiwyg.setRange(pText, 1);
+
+        $field.find('.note-toolbar .note-insert button:has(.note-icon-picture)').mousedown().click();
+
+        // load static xml file (dialog, media dialog, unsplash image widget)
+        defMediaDialog.then(function () {
+            $('.modal .tab-content .tab-pane').removeClass('fade'); // to be sync in test
+            $('.modal a[aria-controls="editor-media-icon"]').click();
+            $('.modal #editor-media-icon .font-icons-icon.fa-glass').click();
+            $('.modal .modal-footer button.btn-primary').click();
+
+            var $editable = form.$('.oe_form_field[name="body"] .note-editable');
+
+            assert.strictEqual($editable.html(),
+                '<p>t<span class="fa fa-glass"> </span>oto toto toto</p><p>tata</p>',
                 "should have the image in the dom");
 
             testUtils.unpatch(MediaDialog);

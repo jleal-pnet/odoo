@@ -641,7 +641,7 @@ var IconWidget = MediaWidget.extend({
         }
         this.$media.attr({
             class: _.compact(finalClasses).join(' '),
-            style: style,
+            style: style || null,
         });
         return this.media;
     },
