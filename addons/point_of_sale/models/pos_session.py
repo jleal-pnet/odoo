@@ -29,8 +29,7 @@ class PosSession(models.Model):
                 if order.state not in ('paid'):
                     raise UserError(_("You cannot confirm all orders of this session, because they have not the 'paid' status"))
                 order.action_pos_order_done()
-            orders_to_reconcile = session.order_ids.filtered(lambda order: order.state in ['invoiced', 'done'] and order.partner_id)
-            orders_to_reconcile.sudo()._reconcile_payments()
+            session.order_ids._reconcile_payments()
 
     config_id = fields.Many2one(
         'pos.config', string='Point of Sale',

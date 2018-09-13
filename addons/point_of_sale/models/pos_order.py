@@ -387,7 +387,7 @@ class PosOrder(models.Model):
         return True
 
     def _reconcile_payments(self):
-        for order in self:
+        for order in self._filtered_for_reconciliation().sudo():
             aml = order.statement_ids.mapped('journal_entry_ids').mapped('line_ids') | order.account_move.line_ids | order.invoice_id.move_id.line_ids
             aml = aml.filtered(lambda r: not r.reconciled and r.account_id.internal_type == 'receivable' and r.partner_id == order.partner_id.commercial_partner_id)
 
@@ -406,6 +406,12 @@ class PosOrder(models.Model):
                 # It may be interesting to have the Traceback logged anyway
                 # for debugging and support purposes
                 _logger.exception('Reconciliation did not work for order %s', order.name)
+
+    def _filtered_for_reconciliation(self):
+        filter_states = ['invoiced', 'done']
+        if self.env['ir.config_parameter'].get_param('point_of_sale.order_reconcile_mode', 'all') == 'partner_only':
+            return self.filtered(lambda order: order.state in filter_states and order.partner_id)
+        return self.filtered(lambda order: order.state in filter_states)
 
     def _default_session(self):
         return self.env['pos.session'].search([('state', '=', 'opened'), ('user_id', '=', self.env.uid)], limit=1)
